@@ -1,8 +1,11 @@
 from rest_framework import viewsets, generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.contrib.auth.models import User
-from .serializers import RegisterSerializer
+from django.contrib.auth import get_user_model
+from .serializers import RegisterSerializer, EmailTokenObtainSerializer
+from rest_framework.views import APIView
+
+User = get_user_model()
 
 # Registration view
 class RegisterView(generics.CreateAPIView):
@@ -10,9 +13,17 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
 
-# Logout view
-from rest_framework.views import APIView
+# Email Login view
+class EmailTokenObtainPairView(APIView):
+    permission_classes = (AllowAny,)
 
+    def post(self, request, *args, **kwargs):
+        serializer = EmailTokenObtainSerializer(data=request.data,
+                                                context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data)
+
+# Logout view
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 

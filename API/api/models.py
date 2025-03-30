@@ -29,3 +29,68 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+class ModuleType(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+class UserModule(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    module = models.ForeignKey(ModuleType, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    order = models.IntegerField()
+    is_enabled = models.BooleanField(default=False)
+    is_read_only = models.BooleanField(default=False)
+    is_checkable = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+class FieldType(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+class FieldTypeRule(models.Model):
+    field_type = models.ForeignKey(FieldType, on_delete=models.CASCADE)
+    rule = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.rule
+
+class ListField(models.Model):
+    user_module = models.ForeignKey(UserModule, on_delete=models.CASCADE)
+    field_type = models.ForeignKey(FieldType, on_delete=models.CASCADE)
+    field_name = models.CharField(max_length=255)
+    is_mandatory = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.field_name
+
+class ListFieldRule(models.Model):
+    list_field = models.ForeignKey(ListField, on_delete=models.CASCADE)
+    field_type_rule = models.ForeignKey(FieldTypeRule, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.list_field.field_name} - {self.field_type_rule.rule}"
+
+class ListItem(models.Model):
+    user_module = models.ForeignKey(UserModule, on_delete=models.CASCADE)
+    is_completed = models.BooleanField(default=False)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user_module.name} - {self.modified_at}"
+
+class ListItemField(models.Model):
+    list_item = models.ForeignKey(ListItem, on_delete=models.CASCADE)
+    list_field = models.ForeignKey(ListField, on_delete=models.CASCADE)
+    field_value = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.list_field.field_name} - {self.field_value}"

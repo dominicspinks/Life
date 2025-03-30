@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import CustomUser
+from .models import CustomUser, ModuleType, UserModule
 
 User = get_user_model()
 
@@ -60,3 +60,31 @@ class EmailTokenObtainSerializer(serializers.Serializer):
                 'email': user.email
             }
         }
+
+class ModuleTypeSerializer(serializers.ModelSerializer):
+    """Serializer for ModuleType objects"""
+    class Meta:
+        model = ModuleType
+        fields = ['id', 'name']
+
+
+class UserModuleSerializer(serializers.ModelSerializer):
+    """Serializer for UserModule objects"""
+    # Add the module type name as a read-only field
+    module_name = serializers.CharField(source='module.name', read_only=True)
+
+    class Meta:
+        model = UserModule
+        fields = [
+            'id',
+            'module',
+            'module_name',
+            'name',
+            'order',
+            'is_enabled',
+            'is_read_only',
+            'is_checkable',
+            'created_at',
+            'modified_at'
+        ]
+        read_only_fields = ['created_at', 'modified_at']

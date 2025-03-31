@@ -68,6 +68,7 @@ class ListField(models.Model):
     field_type = models.ForeignKey(FieldType, on_delete=models.CASCADE)
     field_name = models.CharField(max_length=255)
     is_mandatory = models.BooleanField(default=False)
+    order = models.IntegerField()
 
     def __str__(self):
         return self.field_name
@@ -79,18 +80,18 @@ class ListFieldRule(models.Model):
     def __str__(self):
         return f"{self.list_field.field_name} - {self.field_type_rule.rule}"
 
+class ListFieldOption(models.Model):
+    list_field = models.ForeignKey(ListField, on_delete=models.CASCADE)
+    option_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.option_name
+
 class ListItem(models.Model):
     user_module = models.ForeignKey(UserModule, on_delete=models.CASCADE)
     is_completed = models.BooleanField(default=False)
     modified_at = models.DateTimeField(auto_now=True)
+    fields = models.JSONField(default=list)
 
     def __str__(self):
         return f"{self.user_module.name} - {self.modified_at}"
-
-class ListItemField(models.Model):
-    list_item = models.ForeignKey(ListItem, on_delete=models.CASCADE)
-    list_field = models.ForeignKey(ListField, on_delete=models.CASCADE)
-    field_value = models.CharField(max_length=255)
-
-    def __str__(self):
-        return f"{self.list_field.field_name} - {self.field_value}"

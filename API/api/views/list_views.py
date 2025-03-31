@@ -4,6 +4,7 @@ from ..serializers import ListConfigurationSerializer, ListDataSerializer, ListI
 from ..models import UserModule, ListField, ListFieldRule, ListFieldOption, ListItem
 from django.db import transaction
 from datetime import datetime
+from django.shortcuts import get_object_or_404
 
 class ListConfigurationViewSet(viewsets.ModelViewSet):
     """
@@ -132,10 +133,13 @@ class ListItemViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         list_id = self.kwargs.get('list_id')
-        return ListItem.objects.filter(
-            user_module__user=self.request.user,
-            user_module_id=list_id
+
+        user_module = get_object_or_404(
+            UserModule.objects.filter(user=self.request.user),
+            id=list_id
         )
+
+        return ListItem.objects.filter(user_module=user_module)
 
     def perform_create(self, serializer):
         list_id = self.kwargs.get('list_id')
@@ -162,6 +166,9 @@ class ListItemViewSet(viewsets.ModelViewSet):
         2. Required fields are present
         3. Field values match the expected type
         """
+        if not field_values:
+            return
+
         # Get all valid fields for this list
         valid_fields = {
             field.id: field for field in ListField.objects.filter(user_module_id=list_id)

@@ -65,9 +65,8 @@ class ListConfigurationViewSet(viewsets.ModelViewSet):
 
                         # Handle rules
                         if 'rules' in field_data:
-                            # Similar approach for rules - update existing, add new, remove old
                             existing_rules = ListFieldRule.objects.filter(list_field=field)
-                            existing_rules.delete()  # Simplified for now, could be enhanced
+                            existing_rules.delete()
 
                             for rule_data in field_data.get('rules', []):
                                 ListFieldRule.objects.create(
@@ -77,9 +76,8 @@ class ListConfigurationViewSet(viewsets.ModelViewSet):
 
                         # Handle options for dropdown fields
                         if field.field_type.name == 'dropdown' and 'options' in field_data:
-                            # Similar approach for options
                             existing_options = ListFieldOption.objects.filter(list_field=field)
-                            existing_options.delete()  # Simplified for now, could be enhanced
+                            existing_options.delete()
 
                             for option_data in field_data.get('options', []):
                                 ListFieldOption.objects.create(

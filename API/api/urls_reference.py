@@ -1,11 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import reference_views
+from .views import FieldTypeViewSet
 
 
 router = DefaultRouter()
-router.register(r'field-types', reference_views.FieldTypeViewSet, basename='field-type')
-router.register(r'field-type-details', reference_views.FieldTypeViewSet, basename='field-type-full')
+router.register(r'field-types', FieldTypeViewSet, basename='field-type')
 
 urlpatterns = [
     path('', include(router.urls)),

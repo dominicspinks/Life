@@ -1,5 +1,4 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.response import Response
+from rest_framework import viewsets, permissions
 from ..models import ModuleType, UserModule
 from ..serializers import ModuleTypeSerializer, UserModuleSerializer
 
@@ -22,13 +21,7 @@ class UserModuleViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Return modules that belong to the current authenticated user
-        """
         return UserModule.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        """
-        When creating a new module, automatically set the user to the current user
-        """
         serializer.save(user=self.request.user)

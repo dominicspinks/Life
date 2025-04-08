@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import CustomUser, ModuleType, UserModule, FieldType, FieldTypeRule, ListField, ListFieldOption, ListFieldRule, ListItem
+from drf_spectacular.utils import extend_schema_field
 
 User = get_user_model()
 
@@ -62,6 +63,9 @@ class EmailTokenObtainSerializer(serializers.Serializer):
             }
         }
 
+class LogoutSerializer(serializers.Serializer):
+    detail = serializers.CharField(read_only=True)
+
 ## Field Types
 class FieldTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -80,6 +84,7 @@ class FieldTypeDetailSerializer(serializers.ModelSerializer):
         model = FieldType
         fields = ['id', 'name', 'rules']
 
+    @extend_schema_field(FieldTypeRuleSerializer(many=True))
     def get_rules(self, obj):
         rules = FieldTypeRule.objects.filter(field_type=obj)
         return FieldTypeRuleSerializer(rules, many=True).data
@@ -143,10 +148,12 @@ class ListFieldSerializer(serializers.ModelSerializer):
             'options'
         ]
 
+    @extend_schema_field(ListFieldRuleSerializer(many=True))
     def get_rules(self, obj):
         rules = ListFieldRule.objects.filter(list_field=obj)
         return ListFieldRuleSerializer(rules, many=True).data
 
+    @extend_schema_field(ListFieldOptionSerializer(many=True))
     def get_options(self, obj):
         # Only return options if this is a dropdown field
         if obj.field_type.name == 'dropdown':
@@ -160,19 +167,10 @@ class ListConfigurationSerializer(UserModuleSerializer):
     class Meta(UserModuleSerializer.Meta):
         fields = UserModuleSerializer.Meta.fields + ['list_fields']
 
+    @extend_schema_field(ListFieldSerializer(many=True))
     def get_list_fields(self, obj):
         list_fields = ListField.objects.filter(user_module=obj).order_by('order')
         return ListFieldSerializer(list_fields, many=True).data
-
-class ListDataSerializer(ListConfigurationSerializer):
-    list_items = serializers.SerializerMethodField()
-
-    class Meta(ListConfigurationSerializer.Meta):
-        fields = ListConfigurationSerializer.Meta.fields + ['list_items']
-
-    def get_list_items(self, obj):
-        list_items = ListItem.objects.filter(user_module=obj)
-        return ListItemSerializer(list_items, many=True).data
 
 class ListItemSerializer(serializers.ModelSerializer):
     field_values = serializers.JSONField(source='fields')
@@ -198,3 +196,14 @@ class ListItemSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Each item must have a 'value' property")
 
         return value
+
+class ListDataSerializer(ListConfigurationSerializer):
+    list_items = serializers.SerializerMethodField()
+
+    class Meta(ListConfigurationSerializer.Meta):
+        fields = ListConfigurationSerializer.Meta.fields + ['list_items']
+
+    @extend_schema_field(ListItemSerializer(many=True))
+    def get_list_items(self, obj):
+        list_items = ListItem.objects.filter(user_module=obj)
+        return ListItemSerializer(list_items, many=True).data

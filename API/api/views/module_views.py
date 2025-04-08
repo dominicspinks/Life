@@ -20,6 +20,9 @@ class UserModuleViewSet(viewsets.ModelViewSet):
     serializer_class = UserModuleSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    lookup_field = 'id'
+    lookup_value_regex = r'\d+'
+
     def get_queryset(self):
         return UserModule.objects.filter(user=self.request.user)
 

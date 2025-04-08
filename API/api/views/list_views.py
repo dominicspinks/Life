@@ -14,6 +14,9 @@ class ListConfigurationViewSet(viewsets.ModelViewSet):
     serializer_class = ListConfigurationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    lookup_field = 'id'
+    lookup_value_regex = r'\d+'
+
     def get_queryset(self):
         """
         Return lists that belong to the current authenticated user
@@ -120,6 +123,9 @@ class ListDataViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = ListDataSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    lookup_field = 'id'
+    lookup_value_regex = r'\d+'
 
     def get_queryset(self):
         return UserModule.objects.filter(user=self.request.user, module__name='list')

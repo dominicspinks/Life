@@ -2,8 +2,10 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
-from ..serializers import RegisterSerializer, EmailTokenObtainSerializer
+from ..serializers import LogoutSerializer, RegisterSerializer, EmailTokenObtainSerializer
 from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
+from drf_spectacular.utils import extend_schema
 
 User = get_user_model()
 
@@ -26,12 +28,16 @@ class EmailTokenObtainPairView(APIView):
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data)
 
-class LogoutView(APIView):
+class LogoutView(GenericAPIView):
     """
     API endpoint for user logout
     """
     permission_classes = (IsAuthenticated,)
+    serializer_class = LogoutSerializer
 
+    @extend_schema(
+        responses={200: LogoutSerializer}
+    )
     def post(self, request):
         return Response(
             {"detail": "Successfully logged out."},

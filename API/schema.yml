@@ -1,0 +1,1311 @@
+openapi: 3.0.3
+info:
+  title: Life API
+  version: 1.0.0
+  description: API for my Life Management application
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/login/refresh/:
+    post:
+      operationId: auth_login_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: API endpoint for user logout
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Logout'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Logout'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Logout'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Logout'
+          description: ''
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: API endpoint for user registration
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /api/lists/configurations/:
+    get:
+      operationId: lists_configurations_list
+      description: |-
+        API endpoint for CRUD operations on list configurations
+        Allows users to view, create, update and delete their list configurations
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedListConfigurationList'
+          description: ''
+    post:
+      operationId: lists_configurations_create
+      description: |-
+        API endpoint for CRUD operations on list configurations
+        Allows users to view, create, update and delete their list configurations
+      tags:
+      - lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListConfiguration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ListConfiguration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ListConfiguration'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListConfiguration'
+          description: ''
+  /api/lists/configurations/{id}/:
+    get:
+      operationId: lists_configurations_retrieve
+      description: |-
+        API endpoint for CRUD operations on list configurations
+        Allows users to view, create, update and delete their list configurations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListConfiguration'
+          description: ''
+    put:
+      operationId: lists_configurations_update
+      description: |-
+        API endpoint for CRUD operations on list configurations
+        Allows users to view, create, update and delete their list configurations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListConfiguration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ListConfiguration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ListConfiguration'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListConfiguration'
+          description: ''
+    patch:
+      operationId: lists_configurations_partial_update
+      description: |-
+        API endpoint for CRUD operations on list configurations
+        Allows users to view, create, update and delete their list configurations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedListConfiguration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedListConfiguration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedListConfiguration'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListConfiguration'
+          description: ''
+    delete:
+      operationId: lists_configurations_destroy
+      description: |-
+        API endpoint for CRUD operations on list configurations
+        Allows users to view, create, update and delete their list configurations
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/lists/data/:
+    get:
+      operationId: lists_data_list
+      description: API endpoint for view list configuration with the data
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedListDataList'
+          description: ''
+  /api/lists/data/{id}/:
+    get:
+      operationId: lists_data_retrieve
+      description: API endpoint for view list configuration with the data
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListData'
+          description: ''
+  /api/lists/data/{list_id}/items/:
+    get:
+      operationId: lists_data_items_list
+      description: API endpoint for CRUD operations on list items
+      parameters:
+      - in: path
+        name: list_id
+        schema:
+          type: integer
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedListItemList'
+          description: ''
+    post:
+      operationId: lists_data_items_create
+      description: API endpoint for CRUD operations on list items
+      parameters:
+      - in: path
+        name: list_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListItem'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ListItem'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ListItem'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListItem'
+          description: ''
+  /api/lists/data/{list_id}/items/{id}/:
+    get:
+      operationId: lists_data_items_retrieve
+      description: API endpoint for CRUD operations on list items
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: list_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListItem'
+          description: ''
+    put:
+      operationId: lists_data_items_update
+      description: API endpoint for CRUD operations on list items
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: list_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListItem'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ListItem'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ListItem'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListItem'
+          description: ''
+    patch:
+      operationId: lists_data_items_partial_update
+      description: API endpoint for CRUD operations on list items
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: list_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedListItem'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedListItem'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedListItem'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListItem'
+          description: ''
+    delete:
+      operationId: lists_data_items_destroy
+      description: API endpoint for CRUD operations on list items
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: list_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - lists
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/modules/types/:
+    get:
+      operationId: modules_types_list
+      description: |-
+        API endpoint for viewing module types.
+        Provides read-only access to all available module types.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - modules
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedModuleTypeList'
+          description: ''
+  /api/modules/types/{id}/:
+    get:
+      operationId: modules_types_retrieve
+      description: |-
+        API endpoint for viewing module types.
+        Provides read-only access to all available module types.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this module type.
+        required: true
+      tags:
+      - modules
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModuleType'
+          description: ''
+  /api/modules/user-modules/:
+    get:
+      operationId: modules_user_modules_list
+      description: |-
+        API endpoint for CRUD operations on user modules.
+        Allows users to view, create, update and delete their modules.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - modules
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserModuleList'
+          description: ''
+    post:
+      operationId: modules_user_modules_create
+      description: |-
+        API endpoint for CRUD operations on user modules.
+        Allows users to view, create, update and delete their modules.
+      tags:
+      - modules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserModule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserModule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserModule'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserModule'
+          description: ''
+  /api/modules/user-modules/{id}/:
+    get:
+      operationId: modules_user_modules_retrieve
+      description: |-
+        API endpoint for CRUD operations on user modules.
+        Allows users to view, create, update and delete their modules.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - modules
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserModule'
+          description: ''
+    put:
+      operationId: modules_user_modules_update
+      description: |-
+        API endpoint for CRUD operations on user modules.
+        Allows users to view, create, update and delete their modules.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - modules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserModule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserModule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserModule'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserModule'
+          description: ''
+    patch:
+      operationId: modules_user_modules_partial_update
+      description: |-
+        API endpoint for CRUD operations on user modules.
+        Allows users to view, create, update and delete their modules.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - modules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserModule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserModule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserModule'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserModule'
+          description: ''
+    delete:
+      operationId: modules_user_modules_destroy
+      description: |-
+        API endpoint for CRUD operations on user modules.
+        Allows users to view, create, update and delete their modules.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - modules
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/reference/field-types/:
+    get:
+      operationId: reference_field_types_list
+      description: |-
+        API endpoint for viewing field types and their rules.
+        Provides read-only access to all available field types.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - reference
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFieldTypeList'
+          description: ''
+  /api/reference/field-types/{id}/:
+    get:
+      operationId: reference_field_types_retrieve
+      description: |-
+        API endpoint for viewing field types and their rules.
+        Provides read-only access to all available field types.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this field type.
+        required: true
+      tags:
+      - reference
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldTypeDetail'
+          description: ''
+components:
+  schemas:
+    FieldType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - name
+    FieldTypeDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldTypeRule'
+          readOnly: true
+      required:
+      - id
+      - name
+      - rules
+    FieldTypeRule:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        rule:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - rule
+    ListConfiguration:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        module:
+          type: integer
+        module_name:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        is_enabled:
+          type: boolean
+        is_read_only:
+          type: boolean
+        is_checkable:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+        list_fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListField'
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - list_fields
+      - modified_at
+      - module
+      - module_name
+      - name
+      - order
+    ListData:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        module:
+          type: integer
+        module_name:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        is_enabled:
+          type: boolean
+        is_read_only:
+          type: boolean
+        is_checkable:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+        list_fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListField'
+          readOnly: true
+        list_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListItem'
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - list_fields
+      - list_items
+      - modified_at
+      - module
+      - module_name
+      - name
+      - order
+    ListField:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        field_name:
+          type: string
+          maxLength: 255
+        field_type:
+          type: string
+          readOnly: true
+        is_mandatory:
+          type: boolean
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListFieldRule'
+          readOnly: true
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListFieldOption'
+          readOnly: true
+      required:
+      - field_name
+      - field_type
+      - id
+      - options
+      - order
+      - rules
+    ListFieldOption:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        option_name:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - option_name
+    ListFieldRule:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        field_type_rule:
+          allOf:
+          - $ref: '#/components/schemas/FieldTypeRule'
+          readOnly: true
+      required:
+      - field_type_rule
+      - id
+    ListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        is_completed:
+          type: boolean
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+        field_values: {}
+      required:
+      - field_values
+      - id
+      - modified_at
+    Logout:
+      type: object
+      properties:
+        detail:
+          type: string
+          readOnly: true
+      required:
+      - detail
+    ModuleType:
+      type: object
+      description: Serializer for ModuleType objects
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - name
+    PaginatedFieldTypeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldType'
+    PaginatedListConfigurationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListConfiguration'
+    PaginatedListDataList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListData'
+    PaginatedListItemList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListItem'
+    PaginatedModuleTypeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModuleType'
+    PaginatedUserModuleList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserModule'
+    PatchedListConfiguration:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        module:
+          type: integer
+        module_name:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        is_enabled:
+          type: boolean
+        is_read_only:
+          type: boolean
+        is_checkable:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+        list_fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListField'
+          readOnly: true
+    PatchedListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        is_completed:
+          type: boolean
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+        field_values: {}
+    PatchedUserModule:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        module:
+          type: integer
+        module_name:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        is_enabled:
+          type: boolean
+        is_read_only:
+          type: boolean
+        is_checkable:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+    Register:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    TokenObtainPair:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - email
+      - password
+      - refresh
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
+    UserModule:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        module:
+          type: integer
+        module_name:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        is_enabled:
+          type: boolean
+        is_read_only:
+          type: boolean
+        is_checkable:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - modified_at
+      - module
+      - module_name
+      - name
+      - order
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

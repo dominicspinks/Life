@@ -1,0 +1,46 @@
+<div class="login-container">
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Sign In</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email" placeholder="Email" type="email" required>
+                    <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
+                        Email is required
+                    </mat-error>
+                    <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
+                        Please enter a valid email address
+                    </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Password</mat-label>
+                    <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" required>
+                    <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+                        <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                    </button>
+                    <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+                        Password is required
+                    </mat-error>
+                </mat-form-field>
+
+                <div class="button-container">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading"
+                        class="full-width">
+                        <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+                        <span *ngIf="!isLoading">Sign In</span>
+                    </button>
+                </div>
+            </form>
+        </mat-card-content>
+        <mat-card-actions>
+            <div class="register-link">
+                <span>Don't have an account?</span>
+                <a routerLink="/register">Sign Up</a>
+            </div>
+        </mat-card-actions>
+    </mat-card>
+</div>

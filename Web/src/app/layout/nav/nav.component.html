@@ -1,0 +1,111 @@
+<nav class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <!-- Logo and primary navigation -->
+            <div class="flex">
+                <!-- Logo/Brand -->
+                <div class="flex-shrink-0 flex items-center">
+                    <h1 class="text-xl font-bold text-blue-600">Life</h1>
+                </div>
+
+                <!-- Main navigation items -->
+                <div class="hidden sm:ml-6 sm:flex sm:space-x-4">
+                    <!-- Always visible items -->
+                    <a routerLink="/dashboard" routerLinkActive="bg-gray-100 text-gray-900"
+                        class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                        Dashboard
+                    </a>
+
+                    <!-- Dynamic modules - Rendered conditionally -->
+                    @for (module of userModules; track module.route) {
+                    <a [routerLink]="module.route" routerLinkActive="bg-gray-100 text-gray-900"
+                        class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                        {{ module.module_name }}
+                    </a>
+                    }
+                </div>
+            </div>
+
+            <!-- Right side items (user menu, logout) -->
+            <div class="flex items-center">
+                <!-- User button -->
+                <div class="ml-3 relative">
+                    <div>
+                        <button type="button" (click)="isUserMenuOpen = !isUserMenuOpen"
+                            class="flex items-center max-w-xs bg-white rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span class="text-sm font-medium text-gray-700">{{ userEmail }}</span>
+                            <svg class="ml-1 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Dropdown menu -->
+                    @if (isUserMenuOpen) {
+                    <div
+                        class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                        <div class="py-1" role="menu" aria-orientation="vertical">
+                            <button (click)="logout()"
+                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                role="menuitem">
+                                Sign out
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Mobile menu button -->
+            <div class="flex items-center sm:hidden">
+                <button type="button" (click)="isMobileMenuOpen = !isMobileMenuOpen"
+                    class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                    <span class="sr-only">Open main menu</span>
+                    @if (!isMobileMenuOpen) {
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    } @else {
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile menu -->
+    @if (isMobileMenuOpen) {
+    <div class="sm:hidden">
+        <div class="pt-2 pb-3 space-y-1">
+            <!-- Always visible items -->
+            <a routerLink="/dashboard" routerLinkActive="bg-blue-50 text-blue-700"
+                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                Dashboard
+            </a>
+
+            <!-- Dynamic modules -->
+            @for (module of userModules; track module.route) {
+            <a [routerLink]="module.route" routerLinkActive="bg-blue-50 text-blue-700"
+                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                {{ module.module_name }}
+            </a>
+            }
+
+            <!-- Mobile sign out button -->
+            <button (click)="logout()"
+                class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                Sign out
+            </button>
+        </div>
+    </div>
+    }
+</nav>

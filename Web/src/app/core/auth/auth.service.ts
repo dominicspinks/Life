@@ -1,8 +1,9 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { Observable, of, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
     providedIn: 'root'
@@ -10,6 +11,7 @@ import { environment } from '../../environments/environment';
 export class AuthService {
     private readonly JWT_TOKEN = 'JWT_TOKEN';
     private readonly REFRESH_TOKEN = 'REFRESH_TOKEN';
+    private readonly USER_EMAIL = 'USER_EMAIL';
     private readonly apiUrl = environment.apiUrl;
 
     // Using signals for auth state
@@ -27,6 +29,7 @@ export class AuthService {
             .pipe(
                 tap(tokens => {
                     this.storeTokens(tokens);
+                    this.storeUserEmail(email);
                     this.isLoggedInSignal.set(true);
                 })
             );
@@ -43,6 +46,7 @@ export class AuthService {
             .pipe(
                 tap(() => {
                     this.removeTokens();
+                    localStorage.removeItem(this.USER_EMAIL);
                     this.isLoggedInSignal.set(false);
                     this.router.navigate(['/login']);
                 })
@@ -57,6 +61,36 @@ export class AuthService {
                 this.storeJwtToken(tokens.access);
             })
         );
+    }
+
+    // New method to match the interface expected by app.component.ts
+    isAuthenticated(): Observable<boolean> {
+        return of(this.isLoggedIn());
+    }
+
+    // New method to get user email
+    getUserEmail(): Observable<string> {
+        // Try to get email from localStorage first
+        const storedEmail = localStorage.getItem(this.USER_EMAIL);
+        if (storedEmail) {
+            return of(storedEmail);
+        }
+
+        // If not in localStorage, try to extract from JWT token
+        try {
+            const token = this.getJwtToken();
+            if (token) {
+                const decoded: any = jwtDecode(token);
+                if (decoded.email) {
+                    this.storeUserEmail(decoded.email);
+                    return of(decoded.email);
+                }
+            }
+        } catch (error) {
+            console.error('Error decoding JWT token:', error);
+        }
+
+        return of('');
     }
 
     getJwtToken(): string {
@@ -78,6 +112,10 @@ export class AuthService {
     private storeTokens(tokens: any): void {
         localStorage.setItem(this.JWT_TOKEN, tokens.access);
         localStorage.setItem(this.REFRESH_TOKEN, tokens.refresh);
+    }
+
+    private storeUserEmail(email: string): void {
+        localStorage.setItem(this.USER_EMAIL, email);
     }
 
     private removeTokens(): void {

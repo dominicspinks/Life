@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app/app.routes';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS, provideHttpClient } from '@angular/common/http';
-import { TokenInterceptor } from './app/auth/token.interceptor';
+import { TokenInterceptor } from './app/core/auth/token.interceptor';
 
 bootstrapApplication(AppComponent, {
     providers: [

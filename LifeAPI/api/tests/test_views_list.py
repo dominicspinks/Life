@@ -1,17 +1,15 @@
-from django.test import TestCase
+from rest_framework.test import APITestCase
 from django.urls import reverse
-from rest_framework.test import APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from api.models import (
     ModuleType, UserModule, FieldType,
     ListField, ListFieldRule, ListFieldOption, ListItem, FieldTypeRule
 )
-from django.db import transaction
 
 User = get_user_model()
 
-class ListConfigurationViewSetTests(TestCase):
+class ListConfigurationViewSetTests(APITestCase):
     """Test the List Configuration ViewSet functionality"""
 
     def setUp(self):
@@ -77,9 +75,6 @@ class ListConfigurationViewSetTests(TestCase):
             list_field=self.priority_field,
             option_name='Low'
         )
-
-        # Set up the API client
-        self.client = APIClient()
 
         # URLs for testing
         self.list_configuration_url = reverse('configuration-list')
@@ -315,8 +310,128 @@ class ListConfigurationViewSetTests(TestCase):
         # Check response - should be 404 since queryset is filtered by user
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+class ListConfigurationFieldViewSetTests(APITestCase):
+    def setUp(self):
+        """Set up test data and authenticated client"""
+        # Create test users
+        self.user1 = User.objects.create_user(
+            email='user1@example.com',
+            password='password123'
+        )
+        self.user2 = User.objects.create_user(
+            email='user2@example.com',
+            password='password123'
+        )
 
-class ListDataViewSetTests(TestCase):
+        # Get existing types from migration
+        self.module_type = ModuleType.objects.get(name='list')
+        self.number_field_type = FieldType.objects.get(name='number')
+        self.number_field_rule = FieldTypeRule.objects.get(field_type=self.number_field_type, rule='integer')
+
+        # Create module and field
+        self.user1_module = UserModule.objects.create(
+            user=self.user1,
+            module=self.module_type,
+            name='My List',
+            order=1,
+            is_enabled=True
+        )
+
+        self.user1_list_field = ListField.objects.create(
+            user_module=self.user1_module,
+            field_type=self.number_field_type,
+            field_name='Amount',
+            is_mandatory=True,
+            order=1
+        )
+
+        # Add associated rule
+        ListFieldRule.objects.create(list_field=self.user1_list_field, field_type_rule=self.number_field_rule)
+
+        self.user2_module = UserModule.objects.create(
+            user=self.user2,
+            module=self.module_type,
+            name='User2 List',
+            order=1,
+            is_enabled=True
+        )
+
+        self.user2_list_field = ListField.objects.create(
+            user_module=self.user2_module,
+            field_type=self.number_field_type,
+            field_name='Other Field',
+            is_mandatory=True,
+            order=1
+        )
+
+        # Add associated rule
+        ListFieldRule.objects.create(list_field=self.user2_list_field, field_type_rule=self.number_field_rule)
+
+        self.detail_url = reverse('configuration-fields-detail', args=[self.user1_module.id, self.user1_list_field.id])
+
+    def test_list_configurations_unauthenticated(self):
+        """Test that unauthenticated requests are rejected"""
+        response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_field_detail(self):
+        # Authenticate as user1
+        self.client.force_authenticate(user=self.user1)
+
+        response = self.client.get(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['field_name'], 'Amount')
+
+    def test_update_field_and_rules(self):
+        # Authenticate as user1
+        self.client.force_authenticate(user=self.user1)
+
+        update_data = {
+            'field_name': 'Total Cost',
+            'field_type': self.number_field_type.id,
+            'is_mandatory': False,
+            'order': 1,
+            'rules': [
+                {'field_type_rule': self.number_field_rule.id}
+            ]
+        }
+        response = self.client.put(self.detail_url, update_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['field_name'], 'Total Cost')
+
+    def test_patch_field_name_only(self):
+        # Authenticate as user1
+        self.client.force_authenticate(user=self.user1)
+
+        response = self.client.patch(self.detail_url, {'field_name': 'Updated Name'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['field_name'], 'Updated Name')
+
+    def test_delete_field(self):
+        # Authenticate as user1
+        self.client.force_authenticate(user=self.user1)
+
+        response = self.client.delete(self.detail_url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(ListField.objects.filter(id=self.user1_list_field.id).exists())
+        self.assertEqual(ListFieldRule.objects.filter(list_field=self.user1_list_field).count(), 0)
+
+    def test_cannot_access_other_users_field(self):
+        # Authenticate as user1
+        self.client.force_authenticate(user=self.user1)
+
+        url = reverse('configuration-fields-detail', args=[self.user2_module.id,self.user2_list_field.id])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.client.patch(url, {'field_name': 'Hack'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+class ListDataViewSetTests(APITestCase):
     """Test the List Data ViewSet functionality"""
 
     def setUp(self):
@@ -360,9 +475,6 @@ class ListDataViewSetTests(TestCase):
             is_completed=True,
             fields=[{'field': self.task_name_field.id, 'value': 'Task 2'}]
         )
-
-        # Set up the API client
-        self.client = APIClient()
 
         # URLs for testing
         self.list_data_url = reverse('data-list')
@@ -428,8 +540,7 @@ class ListDataViewSetTests(TestCase):
         self.assertEqual(len(response.data['list_fields']), 1)
         self.assertEqual(len(response.data['list_items']), 2)
 
-
-class ListItemViewSetTests(TestCase):
+class ListItemViewSetTests(APITestCase):
     """Test the List Item ViewSet functionality"""
 
     def setUp(self):
@@ -506,12 +617,9 @@ class ListItemViewSetTests(TestCase):
             ]
         )
 
-        # Set up the API client
-        self.client = APIClient()
-
         # URLs for testing
-        self.list_items_url = reverse('list-items', args=[self.user1_list.id])
-        self.list_item_detail_url = reverse('list-item-detail', args=[self.user1_list.id, self.list_item1.id])
+        self.list_items_url = reverse('list-items-list', args=[self.user1_list.id])
+        self.list_item_detail_url = reverse('list-items-detail', args=[self.user1_list.id, self.list_item1.id])
 
     def test_list_items_unauthenticated(self):
         """Test that unauthenticated requests are rejected"""

@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions, status, serializers
 from rest_framework.response import Response
-from ..serializers import ListConfigurationSerializer, ListDataSerializer, ListItemSerializer
+from ..serializers import ListConfigurationSerializer, ListDataSerializer, ListItemSerializer, ListFieldSerializer
 from ..models import UserModule, ListField, ListFieldRule, ListFieldOption, ListItem
 from django.db import transaction
 from datetime import datetime
@@ -116,6 +116,56 @@ class ListConfigurationViewSet(viewsets.ModelViewSet):
             return Response(self.get_serializer(instance).data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ListConfigurationFieldViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint to retrieve, update, or delete individual list fields (with associated rules/options).
+    """
+    serializer_class = ListFieldSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    lookup_field = 'id'
+    lookup_value_regex = r'\d+'
+
+    def get_queryset(self):
+        """
+        Return only fields owned by the current user
+        """
+        return ListField.objects.filter(user_module__user=self.request.user)
+
+    def perform_update(self, serializer):
+        """
+        Handle rule/option updates if provided
+        """
+        instance = serializer.save()
+
+        data = self.request.data
+
+        if 'rules' in data:
+            ListFieldRule.objects.filter(list_field=instance).delete()
+            for rule in data['rules']:
+                ListFieldRule.objects.create(
+                    list_field=instance,
+                    field_type_rule_id=rule.get('field_type_rule')
+                )
+
+        if instance.field_type.name == 'dropdown' and 'options' in data:
+            ListFieldOption.objects.filter(list_field=instance).delete()
+            for opt in data['options']:
+                ListFieldOption.objects.create(
+                    list_field=instance,
+                    option_name=opt.get('option_name')
+                )
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete field along with related rules/options
+        """
+        instance = self.get_object()
+        ListFieldRule.objects.filter(list_field=instance).delete()
+        ListFieldOption.objects.filter(list_field=instance).delete()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ListDataViewSet(viewsets.ReadOnlyModelViewSet):
     """

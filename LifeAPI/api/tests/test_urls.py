@@ -66,12 +66,20 @@ class URLTests(TestCase):
         self.assertEqual(url, '/api/lists/data/1/')
 
         # Test list items URL
-        url = reverse('list-items', args=[1])
+        url = reverse('list-items-list', args=[1])
         self.assertEqual(url, '/api/lists/data/1/items/')
 
         # Test list item detail URL
-        url = reverse('list-item-detail', args=[1, 2])
+        url = reverse('list-items-detail', args=[1, 2])
         self.assertEqual(url, '/api/lists/data/1/items/2/')
+
+        # Test list configuration field URL
+        url = reverse('configuration-fields-list', args=[1])
+        self.assertEqual(url, '/api/lists/configurations/1/fields/')
+
+        # Test list configuration field detail URL
+        url = reverse('configuration-fields-detail', args=[1, 2])
+        self.assertEqual(url, '/api/lists/configurations/1/fields/2/')
 
     def test_reference_urls(self):
         """Test reference data URL patterns."""
@@ -94,5 +102,5 @@ class URLTests(TestCase):
         url = '/api/lists/data/1/items/2/'
         resolver = resolve(url)
         self.assertEqual(resolver.func.cls, ListItemViewSet)
-        self.assertEqual(resolver.kwargs['list_id'], 1)
-        self.assertEqual(resolver.kwargs['pk'], 2)
+        self.assertEqual(resolver.kwargs['list_id'], '1')
+        self.assertEqual(resolver.kwargs['id'], '2')

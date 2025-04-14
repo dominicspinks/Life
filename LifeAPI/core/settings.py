@@ -165,7 +165,7 @@ else:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-LOG_PATH = os.environ.get('LOG_PATH', BASE_DIR / 'debug.log')
+LOG_PATH = os.environ.get('LOG_PATH', os.path.join(BASE_DIR,'debug.log'))
 
 LOGGING = {
     'version': 1,
@@ -185,7 +185,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'debug.log',
+            'filename': LOG_PATH,
             'formatter': 'verbose',
         },
     },

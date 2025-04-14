@@ -7,9 +7,11 @@ djangorestframework_simplejwt==5.5.0
 dotenv==0.9.9
 drf-nested-routers==0.94.1
 drf-spectacular==0.28.0
+gunicorn==23.0.0
 inflection==0.5.1
 jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
+packaging==24.2
 psycopg2-binary==2.9.10
 PyJWT==2.9.0
 python-dotenv==1.1.0
@@ -19,3 +21,4 @@ rpds-py==0.24.0
 sqlparse==0.5.3
 typing_extensions==4.13.1
 uritemplate==4.1.1
+whitenoise==6.9.0

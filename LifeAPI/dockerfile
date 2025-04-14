@@ -1,0 +1,47 @@
+# ---------- Build stage ----------
+FROM python:3.12-alpine AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache \
+    build-base \
+    python3-dev \
+    postgresql-dev \
+    libffi-dev \
+    jpeg-dev \
+    zlib-dev
+
+# Install Python packages into /install
+COPY requirements.txt .
+RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
+
+# ---------- Final stage ----------
+FROM python:3.12-alpine
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    libpq \
+    libjpeg \
+    zlib \
+    libffi
+
+# Copy installed Python packages
+COPY --from=builder /install /usr/local
+
+# Copy your project files
+COPY . .
+
+# Collect static files
+RUN python manage.py collectstatic --noinput
+
+# Default command
+CMD ["sh", "-c", "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:8000"]

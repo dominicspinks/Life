@@ -20,8 +20,16 @@ export const routes: Routes = [
                 path: 'dashboard',
                 loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
             },
-            { path: '', redirectTo: '/dashboard', pathMatch: 'full' }
+            {
+                path: 'modules',
+                loadComponent: () =>
+                    import('./features/manage-modules/manage-modules.component').then(m => m.ManageModulesComponent)
+            },
+            { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
         ]
     },
-    { path: '**', redirectTo: '/dashboard' }
+    {
+        path: '**',
+        redirectTo: '/dashboard'
+    }
 ];

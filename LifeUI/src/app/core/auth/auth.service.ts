@@ -36,13 +36,9 @@ export class AuthService {
     }
 
     logout(): Observable<any> {
-        const headers = new HttpHeaders({
-            'Authorization': `Bearer ${this.getJwtToken()}`
-        });
-
         return this.http.post(`${this.apiUrl}/auth/logout/`, {
             'refresh': this.getRefreshToken()
-        }, { headers })
+        })
             .pipe(
                 tap(() => {
                     this.removeTokens();

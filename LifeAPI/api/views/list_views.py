@@ -137,6 +137,9 @@ class ListItemViewSet(viewsets.ModelViewSet):
     serializer_class = ListItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    lookup_field = 'id'
+    lookup_value_regex = r'\d+'
+
     def get_queryset(self):
         list_id = self.kwargs.get('list_id')
 

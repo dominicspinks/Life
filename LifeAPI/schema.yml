@@ -328,7 +328,8 @@ paths:
       - in: path
         name: list_id
         schema:
-          type: integer
+          type: string
+          pattern: ^\d+$
         required: true
       - name: page
         required: false
@@ -354,7 +355,8 @@ paths:
       - in: path
         name: list_id
         schema:
-          type: integer
+          type: string
+          pattern: ^\d+$
         required: true
       tags:
       - lists
@@ -387,12 +389,14 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
+          type: string
+          pattern: ^\d+$
         required: true
       - in: path
         name: list_id
         schema:
-          type: integer
+          type: string
+          pattern: ^\d+$
         required: true
       tags:
       - lists
@@ -412,12 +416,14 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
+          type: string
+          pattern: ^\d+$
         required: true
       - in: path
         name: list_id
         schema:
-          type: integer
+          type: string
+          pattern: ^\d+$
         required: true
       tags:
       - lists
@@ -449,12 +455,14 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
+          type: string
+          pattern: ^\d+$
         required: true
       - in: path
         name: list_id
         schema:
-          type: integer
+          type: string
+          pattern: ^\d+$
         required: true
       tags:
       - lists
@@ -485,12 +493,14 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
+          type: string
+          pattern: ^\d+$
         required: true
       - in: path
         name: list_id
         schema:
-          type: integer
+          type: string
+          pattern: ^\d+$
         required: true
       tags:
       - lists

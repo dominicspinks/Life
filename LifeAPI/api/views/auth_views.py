@@ -32,7 +32,7 @@ class LogoutView(GenericAPIView):
     """
     API endpoint for user logout
     """
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     serializer_class = LogoutSerializer
 
     @extend_schema(

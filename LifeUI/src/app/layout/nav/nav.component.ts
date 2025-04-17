@@ -18,7 +18,12 @@ import {
     ],
     templateUrl: './nav.component.html',
     styleUrl: './nav.component.css',
-    viewProviders: [provideIcons({ ionChevronDown, ionChevronUp, ionClose, ionMenu })]
+    viewProviders: [provideIcons({
+        ionChevronDown,
+        ionChevronUp,
+        ionClose,
+        ionMenu
+    })]
 })
 export class NavComponent {
     userEmail: string = '';

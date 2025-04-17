@@ -1,0 +1,24 @@
+@if (show()) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-lg overflow-hidden">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">{{ title() }}</h3>
+            <button (click)="close()" class="text-gray-500 hover:text-gray-700">
+                <span class="sr-only">Close</span>
+                <ng-icon name="ionClose" size="24" />
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="p-4">
+            <ng-content select="[modal-content]"></ng-content>
+        </div>
+
+        <!-- Actions -->
+        <div class="p-3 border-t border-gray-100 bg-gray-50">
+            <ng-content select="[modal-actions]"></ng-content>
+        </div>
+    </div>
+</div>
+}

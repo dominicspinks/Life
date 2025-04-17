@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { ModuleService } from '../../core/services/module.service';
 import { ModuleType } from '../../core/models/moduleType.model';
 import { UserModule } from '../../core/models/userModule.model';
+import { ModalComponent } from "../../layout/modal/modal.component";
 
 @Component({
     selector: 'app-manage-modules',
     standalone: true,
-    imports: [],
+    imports: [ModalComponent],
     templateUrl: './manage-modules.component.html'
 })
 export class ManageModulesComponent implements OnInit {
@@ -35,6 +36,7 @@ export class ManageModulesComponent implements OnInit {
     }
 
     closeAddModal() {
+        console.log("close modal")
         this.isAddModalOpen = false;
     }
 }

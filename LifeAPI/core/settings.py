@@ -165,7 +165,12 @@ else:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-LOG_PATH = os.environ.get('LOG_PATH', os.path.join(BASE_DIR,'debug.log'))
+# Logging
+log_path = os.environ.get('LOG_PATH', 'debug.log')
+if not os.path.isabs(log_path):
+    log_path = os.path.join(BASE_DIR, log_path)
+
+LOG_PATH = log_path
 
 LOGGING = {
     'version': 1,

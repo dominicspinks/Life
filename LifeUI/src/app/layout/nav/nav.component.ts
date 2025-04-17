@@ -12,6 +12,7 @@ import {
 
 @Component({
     selector: 'app-nav',
+    standalone: true,
     imports: [
         RouterLink,
         NgIcon

@@ -3,6 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import {
+    ionMail,
+    ionLockClosed,
+    ionEye,
+    ionEyeOff
+} from '@ng-icons/ionicons';
+import { SpinningIconComponent } from '../../../layout/icons/spinning-icon/spinning-icon.component';
 
 @Component({
     selector: 'app-login',
@@ -10,10 +18,19 @@ import { AuthService } from '../../../core/auth/auth.service';
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        RouterLink
+        RouterLink,
+        NgIcon,
+        SpinningIconComponent
     ],
     templateUrl: './login.component.html',
-    styleUrls: ['./login.component.css']
+    providers: [
+        provideIcons({
+            ionMail,
+            ionLockClosed,
+            ionEye,
+            ionEyeOff
+        }),
+    ]
 })
 export class LoginComponent {
     loginForm: FormGroup;

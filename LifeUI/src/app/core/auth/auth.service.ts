@@ -59,11 +59,6 @@ export class AuthService {
         );
     }
 
-    // New method to match the interface expected by app.component.ts
-    isAuthenticated(): Observable<boolean> {
-        return of(this.isLoggedIn());
-    }
-
     // New method to get user email
     getUserEmail(): Observable<string> {
         // Try to get email from localStorage first
@@ -106,6 +101,7 @@ export class AuthService {
     }
 
     private storeTokens(tokens: any): void {
+        console.log(tokens);
         localStorage.setItem(this.JWT_TOKEN, tokens.access);
         localStorage.setItem(this.REFRESH_TOKEN, tokens.refresh);
     }

@@ -1,4 +1,3 @@
-// src/app/auth/token.interceptor.ts
 import { Injectable } from '@angular/core';
 import {
     HttpRequest,
@@ -10,6 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, filter, take, switchMap } from 'rxjs/operators';
+import { excludedRoutes } from './excludedRoutes';
 
 @Injectable()
 export class TokenInterceptor implements HttpInterceptor {
@@ -19,7 +19,9 @@ export class TokenInterceptor implements HttpInterceptor {
     constructor(private authService: AuthService) { }
 
     intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-        if (this.authService.getJwtToken()) {
+        const isExcluded = excludedRoutes.some(route => request.url.includes(route));
+
+        if (!isExcluded && this.authService.getJwtToken()) {
             request = this.addToken(request, this.authService.getJwtToken());
         }
 
@@ -43,6 +45,7 @@ export class TokenInterceptor implements HttpInterceptor {
     }
 
     private handle401Error(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+        console.error('handle401Error');
         if (!this.isRefreshing) {
             this.isRefreshing = true;
             this.refreshTokenSubject.next(null);

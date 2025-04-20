@@ -25,6 +25,16 @@ export const routes: Routes = [
                 loadComponent: () =>
                     import('./features/manage-modules/manage-modules.component').then(m => m.ManageModulesComponent)
             },
+            {
+                path: 'modules/list/:id',
+                loadComponent: () =>
+                    import('./features/view-list-module/view-list-module.component').then(m => m.ViewListModuleComponent)
+            },
+            {
+                path: 'modules/list/:id/edit',
+                loadComponent: () =>
+                    import('./features/edit-list-module/edit-list-module.component').then(m => m.EditListModuleComponent)
+            },
             { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
         ]
     },

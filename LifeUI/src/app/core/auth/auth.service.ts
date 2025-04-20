@@ -89,7 +89,17 @@ export class AuthService {
     }
 
     private hasToken(): boolean {
-        return !!this.getJwtToken();
+        const token = this.getJwtToken();
+        if (!token) return false;
+
+        try {
+            const decoded: any = jwtDecode(token);
+            const now = Math.floor(Date.now() / 1000);
+            return decoded.exp && decoded.exp > now;
+        } catch (err) {
+            console.error('Invalid JWT token', err);
+            return false;
+        }
     }
 
     private getRefreshToken(): string {
@@ -101,7 +111,6 @@ export class AuthService {
     }
 
     private storeTokens(tokens: any): void {
-        console.log(tokens);
         localStorage.setItem(this.JWT_TOKEN, tokens.access);
         localStorage.setItem(this.REFRESH_TOKEN, tokens.refresh);
     }

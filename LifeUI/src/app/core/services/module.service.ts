@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
-import { UserModule } from '../models/userModule.model';
+import { CreateUserModule, UserModule } from '../models/userModule.model';
 import { ModuleType } from '../models/moduleType.model';
 
 interface UserModulesResponse {
@@ -10,6 +10,13 @@ interface UserModulesResponse {
     next: string | null;
     previous: string | null;
     results: UserModule[];
+}
+
+interface ModuleTypeResponse {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: ModuleType[];
 }
 
 @Injectable({
@@ -24,7 +31,15 @@ export class ModuleService {
         return this.http.get<UserModulesResponse>(`${this.apiUrl}/modules/user-modules/`);
     }
 
-    getModuleTypes(): Observable<ModuleType[]> {
-        return this.http.get<ModuleType[]>(`${this.apiUrl}/modules/types/`);
+    getModuleTypes(): Observable<ModuleTypeResponse> {
+        return this.http.get<ModuleTypeResponse>(`${this.apiUrl}/modules/types/`);
+    }
+
+    addModule(module: CreateUserModule): Observable<UserModule> {
+        return this.http.post<UserModule>(`${this.apiUrl}/modules/user-modules/`, module);
+    }
+
+    deleteModule(moduleId: number): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/modules/user-modules/${moduleId}/`);
     }
 }

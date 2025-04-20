@@ -19,7 +19,6 @@ export class ModalComponent {
     closed = output<void>();
 
     close(): void {
-        console.log("close")
         this.closed.emit();
     }
 }

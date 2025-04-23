@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
 from ..models import ModuleType, UserModule
 from ..serializers import ModuleTypeSerializer, UserModuleSerializer
+from ..pagination import Unpaginatable
 
 class ModuleTypeViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -10,6 +11,7 @@ class ModuleTypeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ModuleType.objects.all()
     serializer_class = ModuleTypeSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = Unpaginatable
 
 
 class UserModuleViewSet(viewsets.ModelViewSet):
@@ -19,6 +21,7 @@ class UserModuleViewSet(viewsets.ModelViewSet):
     """
     serializer_class = UserModuleSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = Unpaginatable
 
     lookup_field = 'id'
     lookup_value_regex = r'\d+'

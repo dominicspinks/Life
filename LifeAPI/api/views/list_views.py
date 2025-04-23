@@ -5,6 +5,7 @@ from ..models import UserModule, ListField, ListFieldRule, ListFieldOption, List
 from django.db import transaction
 from datetime import datetime
 from django.shortcuts import get_object_or_404
+from ..pagination import Unpaginatable
 
 class ListConfigurationViewSet(viewsets.ModelViewSet):
     """
@@ -13,6 +14,7 @@ class ListConfigurationViewSet(viewsets.ModelViewSet):
     """
     serializer_class = ListConfigurationSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = Unpaginatable
 
     lookup_field = 'id'
     lookup_value_regex = r'\d+'
@@ -123,6 +125,7 @@ class ListConfigurationFieldViewSet(viewsets.ModelViewSet):
     """
     serializer_class = ListFieldSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = Unpaginatable
 
     lookup_field = 'id'
     lookup_value_regex = r'\d+'
@@ -173,6 +176,7 @@ class ListDataViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = ListDataSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = Unpaginatable
 
     lookup_field = 'id'
     lookup_value_regex = r'\d+'
@@ -186,6 +190,7 @@ class ListItemViewSet(viewsets.ModelViewSet):
     """
     serializer_class = ListItemSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = Unpaginatable
 
     lookup_field = 'id'
     lookup_value_regex = r'\d+'

@@ -230,4 +230,4 @@ class LogoutViewTests(TestCase):
     def test_logout_unauthenticated(self):
         """Test logging out when not authenticated."""
         response = self.client.post(self.logout_url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

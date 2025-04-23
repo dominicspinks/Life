@@ -50,39 +50,26 @@ class FieldTypeViewSetTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_field_types_list(self):
-        """Test listing all field types"""
-        # Authenticate the user
+        """Test listing all field types (non-paginated)"""
         self.client.force_authenticate(user=self.user)
 
-        # Make the request
         response = self.client.get(self.field_types_url)
-
-        # Check response
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # Check if response is paginated
-        if 'results' in response.data:
-            # Handle paginated response
-            field_types = response.data['results']
-        else:
-            # Handle non-paginated response
-            field_types = response.data
+        # Response should be a plain list
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 4)
 
-        # We created 4 field types, make sure they're all there
-        self.assertEqual(len(field_types), 4)
-
-        # Check that the correct field types are returned
-        field_type_names = [item['name'] for item in field_types]
+        # Check that all expected field types are present
+        field_type_names = [ft['name'] for ft in response.data]
         self.assertIn('text', field_type_names)
         self.assertIn('number', field_type_names)
         self.assertIn('date', field_type_names)
         self.assertIn('dropdown', field_type_names)
 
-        # Check that fields are correct
-        for field_type in field_types:
+        for field_type in response.data:
             self.assertIn('id', field_type)
             self.assertIn('name', field_type)
-            # Rules should not be included in the list view
             self.assertNotIn('rules', field_type)
 
     def test_field_type_detail(self):
@@ -109,45 +96,34 @@ class FieldTypeViewSetTests(TestCase):
         self.assertIn('email', rule_values)
         self.assertIn('mobile', rule_values)
 
-def test_field_type_detail_with_query_param(self):
-    """Test retrieving field types with detailed=true query param"""
-    # Authenticate the user
-    self.client.force_authenticate(user=self.user)
+    def test_field_type_detail_with_query_param(self):
+        """Test retrieving field types with detailed=true returns full list with rules"""
+        self.client.force_authenticate(user=self.user)
 
-    # Make the request with detailed=true
-    response = self.client.get(f"{self.field_types_url}?detailed=true")
+        response = self.client.get(f"{self.field_types_url}?detailed=true")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    # Check response
-    self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 4)
 
-    # Handle potential pagination
-    if 'results' in response.data:
-        field_types = response.data['results']
-    else:
-        field_types = response.data
+        for field_type in response.data:
+            self.assertIn('rules', field_type)
 
-    # Check that all field types include rules
-    for field_type in field_types:
-        self.assertIn('rules', field_type)
+            if field_type['name'] == 'text':
+                self.assertEqual(len(field_type['rules']), 2)
+                rule_values = [rule['rule'] for rule in field_type['rules']]
+                self.assertIn('email', rule_values)
+                self.assertIn('mobile', rule_values)
 
-        # Check that rules match what we expect based on your initial data
-        if field_type['name'] == 'text':
-            self.assertEqual(len(field_type['rules']), 2)
-            rule_values = [rule['rule'] for rule in field_type['rules']]
-            self.assertIn('email', rule_values)
-            self.assertIn('mobile', rule_values)
-        elif field_type['name'] == 'number':
-            self.assertEqual(len(field_type['rules']), 3)  # Changed to 3 rules
-            rule_values = [rule['rule'] for rule in field_type['rules']]
-            self.assertIn('positive_only', rule_values)
-            self.assertIn('integer', rule_values)
-            self.assertIn('money', rule_values)
-        elif field_type['name'] == 'date':
-            # Date has no rules in your data
-            self.assertEqual(len(field_type['rules']), 0)
-        elif field_type['name'] == 'dropdown':
-            # Dropdown has no rules in your data
-            self.assertEqual(len(field_type['rules']), 0)
+            elif field_type['name'] == 'number':
+                self.assertEqual(len(field_type['rules']), 3)
+                rule_values = [rule['rule'] for rule in field_type['rules']]
+                self.assertIn('positive_only', rule_values)
+                self.assertIn('integer', rule_values)
+                self.assertIn('money', rule_values)
+
+            elif field_type['name'] in ['date', 'dropdown']:
+                self.assertEqual(len(field_type['rules']), 0)
 
     def test_field_type_create_not_allowed(self):
         """Test that POST requests are not allowed (read-only viewset)"""

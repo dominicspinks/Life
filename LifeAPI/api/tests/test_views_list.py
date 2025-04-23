@@ -310,6 +310,18 @@ class ListConfigurationViewSetTests(APITestCase):
         # Check response - should be 404 since queryset is filtered by user
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_get_list_configurations_with_get_all(self):
+        """Test retrieving list configurations with get_all=true returns raw list"""
+        self.client.force_authenticate(user=self.user1)
+        response = self.client.get(self.list_configuration_url, {'get_all': 'true'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # It should return a list, not a paginated dict
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['name'], 'My Tasks')
+
 class ListConfigurationFieldViewSetTests(APITestCase):
     def setUp(self):
         """Set up test data and authenticated client"""
@@ -539,6 +551,16 @@ class ListDataViewSetTests(APITestCase):
         self.assertEqual(response.data['name'], 'My Tasks')
         self.assertEqual(len(response.data['list_fields']), 1)
         self.assertEqual(len(response.data['list_items']), 2)
+
+    def test_get_list_data_with_get_all(self):
+        """Test retrieving list data with get_all=true returns raw list"""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.list_data_url, {'get_all': 'true'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['name'], 'My Tasks')
 
 class ListItemViewSetTests(APITestCase):
     """Test the List Item ViewSet functionality"""
@@ -843,3 +865,13 @@ class ListItemViewSetTests(APITestCase):
         # Try to delete an item
         response = self.client.delete(self.list_item_detail_url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_list_items_with_get_all(self):
+        """Test retrieving list items with get_all=true returns raw list"""
+        self.client.force_authenticate(user=self.user1)
+        response = self.client.get(self.list_items_url, {'get_all': 'true'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], self.list_item1.id)

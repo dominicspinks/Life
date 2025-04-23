@@ -77,6 +77,7 @@ paths:
               $ref: '#/components/schemas/Logout'
       security:
       - jwtAuth: []
+      - {}
       responses:
         '200':
           content:
@@ -921,13 +922,6 @@ paths:
       description: |-
         API endpoint for viewing field types and their rules.
         Provides read-only access to all available field types.
-      parameters:
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
       tags:
       - reference
       security:
@@ -937,7 +931,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedFieldTypeList'
+                type: array
+                items:
+                  $ref: '#/components/schemas/FieldType'
           description: ''
   /api/reference/field-types/{id}/:
     get:
@@ -1111,10 +1107,14 @@ components:
         id:
           type: integer
           readOnly: true
+        user_module:
+          type: integer
         field_name:
           type: string
           maxLength: 255
         field_type:
+          type: integer
+        field_type_name:
           type: string
           readOnly: true
         is_mandatory:
@@ -1136,10 +1136,12 @@ components:
       required:
       - field_name
       - field_type
+      - field_type_name
       - id
       - options
       - order
       - rules
+      - user_module
     ListFieldOption:
       type: object
       properties:
@@ -1203,29 +1205,6 @@ components:
       required:
       - id
       - name
-    PaginatedFieldTypeList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/FieldType'
     PaginatedListConfigurationList:
       type: object
       required:
@@ -1407,10 +1386,14 @@ components:
         id:
           type: integer
           readOnly: true
+        user_module:
+          type: integer
         field_name:
           type: string
           maxLength: 255
         field_type:
+          type: integer
+        field_type_name:
           type: string
           readOnly: true
         is_mandatory:

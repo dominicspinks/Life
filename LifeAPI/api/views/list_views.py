@@ -136,6 +136,28 @@ class ListConfigurationFieldViewSet(viewsets.ModelViewSet):
         """
         return ListField.objects.filter(user_module__user=self.request.user)
 
+    def perform_create(self, serializer):
+        """
+        Handle rule/option creation if provided
+        """
+        instance = serializer.save()
+
+        data = self.request.data
+
+        if 'rules' in data:
+            for rule in data['rules']:
+                ListFieldRule.objects.create(
+                    list_field=instance,
+                    field_type_rule_id=rule.get('field_type_rule')
+                )
+
+        if instance.field_type.name == 'dropdown' and 'options' in data:
+            for opt in data['options']:
+                ListFieldOption.objects.create(
+                    list_field=instance,
+                    option_name=opt.get('option_name')
+                )
+
     def perform_update(self, serializer):
         """
         Handle rule/option updates if provided

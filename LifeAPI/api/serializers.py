@@ -132,7 +132,10 @@ class ListFieldRuleSerializer(serializers.ModelSerializer):
         fields = ['id', 'field_type_rule']
 
 class ListFieldSerializer(serializers.ModelSerializer):
-    field_type = serializers.StringRelatedField()
+    field_type = serializers.PrimaryKeyRelatedField(
+        queryset=FieldType.objects.all()
+    )
+    field_type_name = serializers.StringRelatedField(source='field_type', read_only=True)
     rules = serializers.SerializerMethodField()
     options = serializers.SerializerMethodField()
 
@@ -140,8 +143,10 @@ class ListFieldSerializer(serializers.ModelSerializer):
         model = ListField
         fields = [
             'id',
+            'user_module',
             'field_name',
             'field_type',
+            'field_type_name',
             'is_mandatory',
             'order',
             'rules',

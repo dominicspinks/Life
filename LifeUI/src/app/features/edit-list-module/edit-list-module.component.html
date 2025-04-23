@@ -1,4 +1,186 @@
-<div class="max-w-3xl mx-auto p-6">
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Edit List Module</h1>
-    <p class="text-gray-600">Module ID: {{ moduleId }}</p>
+@if (isLoading) {
+<div class="flex justify-center mt-10">
+    <app-spinning-icon class="h-10 w-10 text-blue-600" />
 </div>
+} @else {
+<div class="space-y-6">
+    <!-- Title -->
+    <h1 class="text-2xl font-bold text-gray-800">Edit List Configuration</h1>
+
+    <!-- Details Section -->
+    <div class="bg-white shadow rounded p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><strong>Name:</strong> {{ moduleData?.name }}</div>
+            <div><strong>Order:</strong> {{ moduleData?.order }}</div>
+            <div><strong>Enabled:</strong> {{ moduleData?.is_enabled ? 'Yes' : 'No' }}</div>
+            <div><strong>Read Only:</strong> {{ moduleData?.is_read_only ? 'Yes' : 'No' }}</div>
+            <div><strong>Checklist:</strong> {{ moduleData?.is_checkable ? 'Yes' : 'No' }}</div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="mt-4 flex gap-4 justify-end w-full">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                (click)="openEditDetailsModal()">Edit</button>
+            <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                (click)="confirmDeleteModule()">Delete</button>
+
+        </div>
+    </div>
+
+    <!-- Fields Section -->
+    <div class="bg-white shadow rounded p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold">Fields</h2>
+            <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                (click)="openSetFieldModal()">Add Field</button>
+        </div>
+
+        <div class="space-y-4">
+            @for (field of moduleData?.list_fields || []; track field.id) {
+            <div class="border p-4 rounded shadow-sm bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-medium">{{ field.field_name }}</h3>
+                        <p class="text-sm text-gray-600">Type: {{ field.field_type_name }}</p>
+                        @if (field.rules.length) {
+                        <p class="text-sm text-gray-600">Rules:</p>
+                        <ul class="list-disc pl-4">
+                            @for (rule of field.rules; track rule.id) {
+                            <li class="text-sm text-gray-600">{{ rule.field_type_rule.rule }}</li>
+                            }
+                        </ul>
+                        }
+                        @if (field.options.length) {
+                        <p class="text-sm text-gray-600">Options:</p>
+                        <ul class="list-disc pl-4">
+                            @for (option of field.options; track option.id) {
+                            <li class="text-sm text-gray-600">{{ option.option_name }}</li>
+                            }
+                        </ul>
+                        }
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="text-blue-600 hover:text-blue-300" (click)="openSetFieldModal(field)">
+                            <ng-icon name="ionPencil" size="24" />
+                        </button>
+                        <button class="text-red-600 hover:text-red-300" (click)="confirmDeleteField(field.id!)">
+                            <ng-icon name="ionTrashBin" size="24" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Edit Details Modal -->
+    <app-modal [show]="isEditDetailsModalOpen" (closed)="closeEditModal()" title="Edit Module">
+        <div modal-content>
+            <!-- Module Name -->
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input [(ngModel)]="editDetailsForm.name" type="text" class="w-full mb-4 border rounded px-3 py-2" />
+
+            <!-- Order -->
+            <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
+            <input [(ngModel)]="editDetailsForm.order" type="number" min="0"
+                class="w-full mb-4 border rounded px-3 py-2" />
+
+            <!-- Enabled -->
+            <label class="inline-flex items-center space-x-2 mb-2">
+                <input type="checkbox" [(ngModel)]="editDetailsForm.is_enabled" class="form-checkbox" />
+                <span class="text-sm text-gray-700">Enabled</span>
+            </label><br />
+
+            <!-- Read Only -->
+            <label class="inline-flex items-center space-x-2 mb-2">
+                <input type="checkbox" [(ngModel)]="editDetailsForm.is_read_only" class="form-checkbox" />
+                <span class="text-sm text-gray-700">Read Only</span>
+            </label><br />
+
+            <!-- Checklist -->
+            <label class="inline-flex items-center space-x-2 mb-2">
+                <input type="checkbox" [(ngModel)]="editDetailsForm.is_checkable" class="form-checkbox" />
+                <span class="text-sm text-gray-700">Is Checklist?</span>
+            </label>
+        </div>
+
+        <div modal-actions class="flex justify-end gap-2">
+            <button (click)="closeEditModal()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
+            <button (click)="saveEditedModule()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Save
+            </button>
+        </div>
+    </app-modal>
+
+    <!-- Add/Edit Field Modal -->
+    <app-modal [show]="isSetFieldModalOpen" (closed)="closeSetFieldModal()"
+        [title]="`${ setFieldForm.id ? 'Edit' : 'Add'} Field`">
+        <div modal-content>
+            <!-- Module Name -->
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input [(ngModel)]="setFieldForm.field_name" type="text" class="w-full mb-4 border rounded px-3 py-2" />
+
+            <!-- Field Type -->
+            <label class="block text-sm font-medium text-gray-700 mb-1">Field Type</label>
+            <select [(ngModel)]="setFieldForm.field_type" (ngModelChange)="onFieldTypeChange($event)"
+                [disabled]="!!setFieldForm.id"
+                class="w-full mb-4 border rounded px-3 py-2 capitalize disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed">
+                @for (fieldType of fieldTypes; track fieldType.id) {
+                <option [value]="fieldType.id" class="capitalize">{{ fieldType.name }}</option>
+                }
+            </select>
+
+            <!-- Options for dropdown list -->
+            @if (setFieldForm.field_type_name === 'dropdown') {
+            <div class="flex justify-between">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Options</label>
+                <button (click)="addOption()" class="px-4 text-blue-800 hover:text-blue-300">
+                    <ng-icon name="ionAdd" size="24" />
+                </button>
+            </div>
+            @for (option of setFieldForm.options; track $index) {
+            <div class="flex flex-row items-center mb-2">
+                <label class="block w-5 text-sm font-medium text-gray-700">{{ $index + 1 }}</label>
+                <input [(ngModel)]="option.option_name" type="text" class="w-full border rounded px-3 py-2" />
+                <input [(ngModel)]="option.id" type="hidden" />
+            </div>
+            } <br />
+            }
+
+            <!-- Rules -->
+            @if (hasRules()) {
+            <label class="block text-sm font-medium text-gray-700 mb-1">Rules</label>
+            <div class="flex flex-col gap-2 mb-2">
+                @for (rule of selectedRules; track rule.id) {
+                <label class="inline-flex items-center space-x-2 capitalize">
+                    <input type="checkbox" [checked]="isRuleSelected(rule.id)" (change)="toggleRule(rule)"
+                        class="form-checkbox" />
+                    <span class="text-sm text-gray-700">{{ rule.rule }}</span>
+                </label>
+                }
+            </div>
+            }
+
+            <!-- Order -->
+            <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
+            <input [(ngModel)]="setFieldForm.order" type="number" min="0"
+                class="w-full mb-4 border rounded px-3 py-2" />
+
+            <!-- Mandatory -->
+            <label class="inline-flex items-center space-x-2 mb-2">
+                <input type="checkbox" [(ngModel)]="setFieldForm.is_mandatory" class="form-checkbox" />
+                <span class="text-sm text-gray-700">Mandatory</span>
+            </label><br />
+        </div>
+
+        <div modal-actions class="flex justify-end gap-2">
+            <button (click)="closeSetFieldModal()"
+                class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
+            <button (click)="saveSetField()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Save
+            </button>
+        </div>
+    </app-modal>
+</div>
+}

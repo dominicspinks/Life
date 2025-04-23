@@ -10,7 +10,7 @@
                 </a>
 
                 <!-- Main navigation items -->
-                <div class="hidden sm:ml-6 sm:flex sm:space-x-4">
+                <div class="hidden sm:ml-6 sm:flex sm:space-x-4 items-center">
 
                     <!-- Settings dropdown -->
                     <div class="ml-4 relative flex items-center" (mouseleave)="toggleSettingsMenu(false)">
@@ -30,13 +30,64 @@
                         }
                     </div>
 
-                    <!-- Dynamic modules - Rendered conditionally -->
-                    @for (module of userModules; track module.route) {
-                    <a [routerLink]="module.route" routerLinkActive="bg-gray-100 text-gray-900"
+                    <!-- Active List Modules -->
+                    @if (activeLists.length <= 3) { @for (module of activeLists; track module.id) { <a
+                        [routerLink]="`/modules/list/${module.id}`" routerLinkActive="bg-gray-100 text-gray-900"
                         class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
-                        {{ module.module_name }}
-                    </a>
-                    }
+                        {{ module.name }}
+                        </a>
+                        }
+                        } @else {
+                        <div class="ml-2 relative flex items-center" (mouseleave)="toggleListMenu(false)">
+                            <button type="button" (mouseenter)="toggleListMenu(true)" (click)="toggleListMenu()"
+                                class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                Lists
+                                <ng-icon [name]="isListsMenuOpen ? 'ionChevronUp' : 'ionChevronDown'" />
+                            </button>
+
+                            @if (isListsMenuOpen) {
+                            <div class="absolute right-0 top-full mt-0 w-48 p-1 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+                                (mouseenter)="toggleListMenu(true)">
+                                @for (module of activeLists; track module.id) {
+                                <a [routerLink]="`/modules/list/${module.id}`"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    {{ module.name }}
+                                </a>
+                                }
+                            </div>
+                            }
+                        </div>
+                        }
+
+                        <!-- Active Budget Modules -->
+                        @if (activeBudgets.length <= 3) { @for (module of activeBudgets; track module.id) { <a
+                            [routerLink]="`/modules/list/${module.id}`" routerLinkActive="bg-gray-100 text-gray-900"
+                            class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                            {{ module.name }}</a>
+                            }
+                            }
+                            @else {
+                            <div class="ml-2 relative flex items-center" (mouseleave)="toggleBudgetsMenu(false)">
+                                <button type="button" (mouseenter)="toggleBudgetsMenu(true)"
+                                    (click)="toggleBudgetsMenu()"
+                                    class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                    Lists
+                                    <ng-icon [name]="isBudgetsMenuOpen ? 'ionChevronUp' : 'ionChevronDown'" />
+                                </button>
+
+                                @if (isBudgetsMenuOpen) {
+                                <div class="absolute right-0 top-full mt-0 w-48 p-1 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+                                    (mouseenter)="toggleBudgetsMenu(true)">
+                                    @for (module of activeBudgets; track module.id) {
+                                    <a [routerLink]="`/modules/list/${module.id}`"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        {{ module.name }}
+                                    </a>
+                                    }
+                                </div>
+                                }
+                            </div>
+                            }
                 </div>
             </div>
 
@@ -90,10 +141,10 @@
             </a>
 
             <!-- Modules -->
-            @for (module of userModules; track module.route) {
-            <a [routerLink]="module.route" routerLinkActive="bg-blue-50 text-blue-700"
+            @for (module of activeLists; track module.id) {
+            <a [routerLink]="`/modules/list/${module.id}`" routerLinkActive="bg-blue-50 text-blue-700"
                 class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
-                {{ module.module_name }}
+                {{ module.name }}
             </a>
             }
 

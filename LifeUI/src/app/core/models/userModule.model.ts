@@ -11,17 +11,12 @@ export interface UserModule {
     modified_at: Date;
 }
 
-export interface CreateUserModule {
-    module: number;
-    name: string;
-    order: number;
-    is_enabled: boolean;
-    is_read_only: boolean;
-    is_checkable: boolean;
-}
+export type CreateUserModule = Pick<
+    UserModule,
+    'module' | 'name' | 'order' | 'is_enabled' | 'is_read_only' | 'is_checkable'
+>;
 
-export interface UserModuleMenu {
-    id: number;
-    module_name: string;
-    route: string;
-}
+
+
+export type UserModuleMenu = Pick<UserModule,
+    'id' | 'name'>

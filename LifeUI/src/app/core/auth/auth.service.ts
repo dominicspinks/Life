@@ -89,7 +89,7 @@ export class AuthService {
     }
 
     private hasToken(): boolean {
-        const token = this.getJwtToken();
+        const token = this.getRefreshToken();
         if (!token) return false;
 
         try {
@@ -97,7 +97,7 @@ export class AuthService {
             const now = Math.floor(Date.now() / 1000);
             return decoded.exp && decoded.exp > now;
         } catch (err) {
-            console.error('Invalid JWT token', err);
+            console.error('Invalid refresh token', err);
             return false;
         }
     }

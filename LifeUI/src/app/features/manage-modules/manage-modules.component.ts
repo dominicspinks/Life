@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { ModuleService } from '../../core/services/module.service';
 import { ModuleType } from '../../core/models/moduleType.model';
 import { CreateUserModule, UserModule } from '../../core/models/userModule.model';
@@ -19,6 +19,9 @@ import {
     providers: [provideIcons({ ionEye, ionPencil })]
 })
 export class ManageModulesComponent implements OnInit {
+    private moduleService = inject(ModuleService);
+    private router = inject(Router);
+
     modules: UserModule[] = [];
     moduleTypes: ModuleType[] = [];
     isAddModalOpen = false;
@@ -28,8 +31,6 @@ export class ManageModulesComponent implements OnInit {
     newModuleName = '';
     isCheckable = false;
     listTypeId: number | null = null;
-
-    constructor(private moduleService: ModuleService, private router: Router) { }
 
     getDefaultModuleTypeId(types: ModuleType[]): number {
         // Default type is 'list'
@@ -45,7 +46,7 @@ export class ManageModulesComponent implements OnInit {
         // Load module types
         this.moduleService.getModuleTypes().subscribe({
             next: (res) => {
-                this.moduleTypes = res.results;
+                this.moduleTypes = res;
 
                 const listType = this.moduleTypes.find(t => t.name === 'list');
                 this.listTypeId = listType?.id ?? null;
@@ -56,7 +57,7 @@ export class ManageModulesComponent implements OnInit {
         });
 
         // Load users modules
-        this.moduleService.getUserModules().subscribe({
+        this.moduleService.getUserModules(true).subscribe({
             next: (res) => this.modules = res.results,
             error: (err) => console.error('Failed to load modules', err)
         });

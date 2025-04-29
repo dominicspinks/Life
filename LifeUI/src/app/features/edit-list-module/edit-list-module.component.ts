@@ -211,20 +211,6 @@ export class EditListModuleComponent {
             this.setFieldForm.options = [];
         }
 
-        // Validate the selected rules belong to the selected field type
-        const fieldType = this.fieldTypes.find(t => t.id === this.setFieldForm.field_type);
-        if (!fieldType) {
-            alert('Invalid field type');
-            return;
-        }
-
-        const selectedRuleIds = this.setFieldForm.rules.map(r => r.id);
-        const invalidRules = fieldType.rules?.filter(r => !selectedRuleIds.includes(r.id));
-        if (invalidRules?.length) {
-            alert('Invalid rules selected');
-            return;
-        }
-
         if (this.setFieldForm.id) {
             this.listService.updateField(this.moduleId, this.setFieldForm.id!, this.setFieldForm).subscribe({
                 next: (field: ListField) => {

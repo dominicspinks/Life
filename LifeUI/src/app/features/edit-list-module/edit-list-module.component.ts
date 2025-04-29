@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ListService } from '../../core/services/list.service';
 import { SpinningIconComponent } from '../../layout/icons/spinning-icon/spinning-icon.component';
-import { ListConfiguration, ListConfigurationDetails, ListField } from '../../core/models/list.model';
+import { ListConfiguration, ListConfigurationDetails, ListField, ListFieldOption } from '../../core/models/list.model';
 import { ModalComponent } from '../../layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';
 import { ModuleService } from '../../core/services/module.service';
@@ -133,9 +133,7 @@ export class EditListModuleComponent {
         if (!this.moduleData) return;
 
         if (field) {
-            this.setFieldForm = {
-                ...field,
-            };
+            this.setFieldForm = structuredClone(field);
         } else {
             this.setFieldForm = {
                 id: undefined,
@@ -183,6 +181,10 @@ export class EditListModuleComponent {
 
     get selectedRules() {
         return this.fieldTypes.find(t => t.id === this.setFieldForm.field_type)?.rules ?? [];
+    }
+
+    get sortedFields() {
+        return this.moduleData?.list_fields.sort((a, b) => a.order - b.order) ?? [];
     }
 
     onFieldTypeChange(value: number): void {
@@ -266,5 +268,14 @@ export class EditListModuleComponent {
                 console.error(error);
             }
         });
+    }
+
+    removeOption(option: ListFieldOption, index: number): void {
+        // if option.id is not defined, use index to remove the option, otherwise use option.id
+        if (!option.id) {
+            this.setFieldForm.options.splice(index, 1);
+            return;
+        }
+        this.setFieldForm.options = this.setFieldForm.options.filter(o => o.id !== option.id);
     }
 }

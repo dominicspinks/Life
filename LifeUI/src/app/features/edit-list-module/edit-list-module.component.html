@@ -5,7 +5,12 @@
 } @else {
 <div class="space-y-6">
     <!-- Title -->
-    <h1 class="text-2xl font-bold text-gray-800">Edit List Configuration</h1>
+    <div class="flex justify-between">
+        <h1 class="text-2xl font-bold text-gray-800">Edit List Configuration</h1>
+        <a href="/modules/list/{{ moduleData?.id }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            View Data
+        </a>
+    </div>
 
     <!-- Details Section -->
     <div class="bg-white shadow rounded p-6">
@@ -36,12 +41,12 @@
         </div>
 
         <div class="space-y-4">
-            @for (field of moduleData?.list_fields || []; track field.id) {
+            @for (field of sortedFields || []; track field.id) {
             <div class="border p-4 rounded shadow-sm bg-gray-50">
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="font-medium">{{ field.field_name }}</h3>
-                        <p class="text-sm text-gray-600">Type: {{ field.field_type_name }}</p>
+                        <p class="text-sm text-gray-600 capitalize">Type: {{ field.field_type_name }}</p>
                         @if (field.rules.length) {
                         <p class="text-sm text-gray-600">Rules:</p>
                         <ul class="list-disc pl-4">
@@ -53,7 +58,7 @@
                         @if (field.options.length) {
                         <p class="text-sm text-gray-600">Options:</p>
                         <ul class="list-disc pl-4">
-                            @for (option of field.options; track option.id) {
+                            @for (option of field.options; track $index) {
                             <li class="text-sm text-gray-600">{{ option.option_name }}</li>
                             }
                         </ul>
@@ -144,6 +149,9 @@
                 <label class="block w-5 text-sm font-medium text-gray-700">{{ $index + 1 }}</label>
                 <input [(ngModel)]="option.option_name" type="text" class="w-full border rounded px-3 py-2" />
                 <input [(ngModel)]="option.id" type="hidden" />
+                <button (click)="removeOption(option, $index)" class="px-4 text-red-800 hover:text-red-300">
+                    <ng-icon name="ionTrashBin" size="24" />
+                </button>
             </div>
             } <br />
             }

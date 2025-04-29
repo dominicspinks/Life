@@ -35,3 +35,16 @@ export interface ListConfigurationDetails {
     is_read_only: boolean;
     is_checkable: boolean;
 }
+
+export interface ListItemField {
+    field: number;
+    value: string;
+}
+
+export interface ListItem {
+    id?: number
+    user_module: number
+    is_completed: boolean
+    modified_at?: Date
+    field_values: ListItemField[]
+}

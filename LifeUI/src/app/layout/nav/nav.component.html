@@ -13,7 +13,7 @@
                 <div class="hidden sm:ml-6 sm:flex sm:space-x-4 items-center">
 
                     <!-- Settings dropdown -->
-                    <div class="ml-4 relative flex items-center" (mouseleave)="toggleSettingsMenu(false)">
+                    <div class="ml-4 relative flex items-center h-full" (mouseleave)="toggleSettingsMenu(false)">
                         <button type="button" (mouseenter)="toggleSettingsMenu(true)" (click)="toggleSettingsMenu()"
                             class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
                             Settings
@@ -38,7 +38,7 @@
                         </a>
                         }
                         } @else {
-                        <div class="ml-2 relative flex items-center" (mouseleave)="toggleListMenu(false)">
+                        <div class="ml-2 relative flex items-center h-full" (mouseleave)="toggleListMenu(false)">
                             <button type="button" (mouseenter)="toggleListMenu(true)" (click)="toggleListMenu()"
                                 class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
                                 Lists

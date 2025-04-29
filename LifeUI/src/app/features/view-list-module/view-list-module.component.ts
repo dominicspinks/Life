@@ -46,7 +46,25 @@ export class ViewListModuleComponent {
     };
 
     ngOnInit() {
-        // Load list configuration
+        this.route.paramMap.subscribe(params => {
+            this.moduleId = Number(params.get('id'));
+
+            this.loadModule();
+            this.loadListData();
+        });
+
+        this.referenceService.getFieldTypesWithRules().subscribe({
+            next: (res) => {
+                this.fieldTypes = res;
+            },
+            error: (error) => {
+                console.error(error);
+            }
+        });
+    }
+
+    private loadModule() {
+        this.isLoading = true;
         this.listService.getModule(this.moduleId).subscribe({
             next: (res) => {
                 this.listConfiguration = res;
@@ -58,8 +76,9 @@ export class ViewListModuleComponent {
                 this.router.navigate(['/modules']);
             }
         });
+    }
 
-        // Load list data
+    private loadListData() {
         this.listService.getListData(this.moduleId).subscribe({
             next: (res) => {
                 this.listData = res;
@@ -68,17 +87,7 @@ export class ViewListModuleComponent {
             error: (error) => {
                 console.error(error);
             }
-        })
-
-        // Load field types
-        this.referenceService.getFieldTypesWithRules().subscribe({
-            next: (res) => {
-                this.fieldTypes = res;
-            },
-            error: (error) => {
-                console.error(error);
-            }
-        })
+        });
     }
 
     loadPage(direction: 'next' | 'previous') {

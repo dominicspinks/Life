@@ -225,7 +225,7 @@ class ListItemViewSet(viewsets.ModelViewSet):
             id=list_id
         )
 
-        return ListItem.objects.filter(user_module=user_module)
+        return ListItem.objects.filter(user_module=user_module).order_by('-modified_at')
 
     def perform_create(self, serializer):
         list_id = self.kwargs.get('list_id')

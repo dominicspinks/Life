@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ListService } from '../../core/services/list.service';
 import { SpinningIconComponent } from '../../layout/icons/spinning-icon/spinning-icon.component';
@@ -19,7 +19,7 @@ import {
 @Component({
     standalone: true,
     selector: 'app-edit-list-module',
-    imports: [CommonModule, SpinningIconComponent, ModalComponent, FormsModule, NgIcon],
+    imports: [CommonModule, SpinningIconComponent, ModalComponent, FormsModule, NgIcon, RouterLink],
     providers: [provideIcons({
         ionAdd,
         ionTrashBin,

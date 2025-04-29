@@ -4,7 +4,7 @@ import { ModuleType } from '../../core/models/moduleType.model';
 import { CreateUserModule, UserModule } from '../../core/models/userModule.model';
 import { ModalComponent } from "../../layout/modal/modal.component";
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
     ionEye,
@@ -14,7 +14,7 @@ import {
 @Component({
     selector: 'app-manage-modules',
     standalone: true,
-    imports: [ModalComponent, FormsModule, NgIcon],
+    imports: [ModalComponent, FormsModule, NgIcon, RouterLink],
     templateUrl: './manage-modules.component.html',
     providers: [provideIcons({ ionEye, ionPencil })]
 })

@@ -17,10 +17,6 @@ export const routes: Routes = [
         canActivate: [authGuard],
         children: [
             {
-                path: 'dashboard',
-                loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
-            },
-            {
                 path: 'modules',
                 loadComponent: () =>
                     import('./features/manage-modules/manage-modules.component').then(m => m.ManageModulesComponent)
@@ -40,6 +36,6 @@ export const routes: Routes = [
     },
     {
         path: '**',
-        redirectTo: '/dashboard'
+        redirectTo: '/modules'
     }
 ];

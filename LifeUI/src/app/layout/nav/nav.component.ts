@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { AuthService } from '../../core/auth/auth.service';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { UserModule, UserModuleMenu } from '../../core/models/userModule.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
@@ -16,6 +16,7 @@ import { ModuleService } from '../../core/services/module.service';
     standalone: true,
     imports: [
         RouterLink,
+        RouterLinkActive,
         NgIcon
     ],
     templateUrl: './nav.component.html',

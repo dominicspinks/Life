@@ -1,10 +1,10 @@
-<nav class="bg-white shadow-sm">
+<nav class="bg-white shadow-sm z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <!-- Logo and primary navigation -->
             <div class="flex">
                 <!-- Logo/Brand -->
-                <a routerLink="/dashboard" routerLinkActive="bg-gray-100 text-gray-900"
+                <a routerLink="/modules"
                     class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex justify-center items-center">
                     <h1 class="text-xl font-bold text-blue-600">Life</h1>
                 </a>
@@ -13,7 +13,8 @@
                 <div class="hidden sm:ml-6 sm:flex sm:space-x-4 items-center">
 
                     <!-- Settings dropdown -->
-                    <div class="ml-4 relative flex items-center h-full" (mouseleave)="toggleSettingsMenu(false)">
+                    <!-- Keeping for when settings are added -->
+                    <!-- <div class="ml-4 relative flex items-center h-full" (mouseleave)="toggleSettingsMenu(false)">
                         <button type="button" (mouseenter)="toggleSettingsMenu(true)" (click)="toggleSettingsMenu()"
                             class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
                             Settings
@@ -23,12 +24,19 @@
                         @if (isSettingsMenuOpen) {
                         <div class="absolute right-0 top-full mt-0 w-48 p-1 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50"
                             (mouseenter)="toggleSettingsMenu(true)">
-                            <a routerLink="/modules" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                Manage Modules
+                            <a routerLink="/url" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                Page name
                             </a>
                         </div>
                         }
-                    </div>
+                    </div> -->
+
+                    <!-- My Modules Tab -->
+                    <a [routerLink]="'/modules'" routerLinkActive="bg-gray-100 text-gray-900"
+                        [routerLinkActiveOptions]="{exact: true}"
+                        class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                        My Modules
+                    </a>
 
                     <!-- Active List Modules -->
                     @if (activeLists.length <= 3) { @for (module of activeLists; track module.id) { <a
@@ -111,9 +119,9 @@
             </div>
 
             <!-- Mobile menu button -->
-            <div class="flex items-center sm:hidden">
+            <div class="flex items-center sm:hidden z-50">
                 <button type="button" (click)="isMobileMenuOpen = !isMobileMenuOpen"
-                    class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                    class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
                     <span class="sr-only">Open main menu</span>
                     @if (!isMobileMenuOpen) {
                     <ng-icon name="ionMenu" size="24" />
@@ -127,49 +135,56 @@
 
     <!-- Mobile menu -->
     @if (isMobileMenuOpen) {
-    <div class="sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <!-- Email -->
-            <div class="px-3 py-2 text-gray-700 text-base font-medium bg-gray-300">
-                {{ userEmail }}
-            </div>
+    <div class="fixed inset-0 z-40 sm:hidden">
+        <!-- Backdrop -->
+        <div class="absolute top-16 inset-0 bg-black/20" (click)="isMobileMenuOpen = false"></div>
+        <div class="absolute top-16 left-0 w-full max-h-[80%] bg-white z-50 sm:hidden shadow-lg">
+            <div class="pt-2 pb-3 space-y-1">
+                <!-- Email -->
+                <div class="px-3 py-2 text-gray-700 text-base font-medium bg-gray-300">
+                    {{ userEmail }}
+                </div>
 
-            <!-- Dashboard -->
-            <a routerLink="/dashboard" routerLinkActive="bg-blue-50 text-blue-700"
-                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
-                Dashboard
-            </a>
+                <!-- My Modules -->
+                <a routerLink="/modules" routerLinkActive="bg-blue-50 text-blue-700"
+                    [routerLinkActiveOptions]="{exact: true}" (click)="isMobileMenuOpen = false"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                    My Modules
+                </a>
 
-            <!-- Modules -->
-            @for (module of activeLists; track module.id) {
-            <a [routerLink]="`/modules/list/${module.id}`" routerLinkActive="bg-blue-50 text-blue-700"
-                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
-                {{ module.name }}
-            </a>
-            }
+                <!-- Modules -->
+                @for (module of activeLists; track module.id) {
+                <a [routerLink]="`/modules/list/${module.id}`" routerLinkActive="bg-blue-50 text-blue-700"
+                    (click)="isMobileMenuOpen = false"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                    {{ module.name }}
+                </a>
+                }
 
 
-            <!-- Settings toggle -->
-            <button (click)="isMobileSettingsOpen = !isMobileSettingsOpen"
-                class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
-                Settings <ng-icon [name]="isMobileSettingsOpen ? 'ionChevronUp' : 'ionChevronDown'" />
-            </button>
+                <!-- Settings toggle -->
+                <!-- Keeping for when settings are added -->
+                <!-- <button (click)="isMobileSettingsOpen = !isMobileSettingsOpen"
+                    class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                    Settings <ng-icon [name]="isMobileSettingsOpen ? 'ionChevronUp' : 'ionChevronDown'" />
+                </button> -->
 
-            <!-- Settings submenu -->
-            <div [class.max-h-0]="!isMobileSettingsOpen" [class.max-h-40]="isMobileSettingsOpen"
+                <!-- Settings submenu -->
+                <!-- <div [class.max-h-0]="!isMobileSettingsOpen" [class.max-h-40]="isMobileSettingsOpen"
                 [class.opacity-0]="!isMobileSettingsOpen" [class.opacity-100]="isMobileSettingsOpen"
                 class="overflow-hidden transition-all duration-500 ease-in-out pl-6">
-                <a routerLink="/modules"
+                <a routerLink="/url"
                     class="block px-3 py-2 rounded-md text-base text-gray-700 hover:bg-gray-50 hover:text-gray-900">
-                    Manage Modules
+                    Page name
                 </a>
-            </div>
+            </div> -->
 
-            <!-- Sign out -->
-            <button (click)="logout()"
-                class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
-                Sign out
-            </button>
+                <!-- Sign out -->
+                <button (click)="logout()"
+                    class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                    Sign out
+                </button>
+            </div>
         </div>
     </div>
     }

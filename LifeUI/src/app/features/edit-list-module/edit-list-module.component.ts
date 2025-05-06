@@ -15,6 +15,7 @@ import {
     ionTrashBin,
     ionPencil
 } from '@ng-icons/ionicons';
+import { LoggerService } from '../../core/services/logger.service';
 
 @Component({
     standalone: true,
@@ -33,6 +34,7 @@ export class EditListModuleComponent {
     private listService = inject(ListService);
     private moduleService = inject(ModuleService);
     private referenceService = inject(ReferenceService);
+    private logger = inject(LoggerService);
 
     moduleId = Number(this.route.snapshot.paramMap.get('id'));
     moduleData: ListConfiguration | null = null;
@@ -76,7 +78,7 @@ export class EditListModuleComponent {
                 this.fieldTypes = res;
             },
             error: (error) => {
-                console.error(error);
+                this.logger.error('Error fetching field types', error);
             }
         })
     }
@@ -104,7 +106,7 @@ export class EditListModuleComponent {
                 this.moduleData = res;
             },
             error: (error) => {
-                console.error(error);
+                this.logger.error('Error updating module details', error);
             }
         });
 
@@ -124,7 +126,7 @@ export class EditListModuleComponent {
                 this.router.navigate(['/modules']);
             },
             error: (error) => {
-                console.error(error);
+                this.logger.error('Error deleting module', error);
             }
         });
     }
@@ -226,7 +228,7 @@ export class EditListModuleComponent {
                     this.moduleData!.list_fields = this.moduleData!.list_fields.map(f => f.id === field.id ? field : f);
                 },
                 error: (error) => {
-                    console.error(error);
+                    this.logger.error('Error updating field', error);
                 }
             });
         }
@@ -237,7 +239,7 @@ export class EditListModuleComponent {
                     this.moduleData!.list_fields.push(field);
                 },
                 error: (error) => {
-                    console.error(error);
+                    this.logger.error('Error adding field', error);
                 }
             });
         }
@@ -259,7 +261,7 @@ export class EditListModuleComponent {
                 };
             },
             error: (error) => {
-                console.error(error);
+                this.logger.error('Error deleting field', error);
             }
         });
     }

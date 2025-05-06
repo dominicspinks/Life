@@ -46,7 +46,6 @@ export class TokenInterceptor implements HttpInterceptor {
     }
 
     private handle401Error(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-        console.error('handle401Error');
         if (!this.isRefreshing) {
             this.isRefreshing = true;
             this.refreshTokenSubject.next(null);

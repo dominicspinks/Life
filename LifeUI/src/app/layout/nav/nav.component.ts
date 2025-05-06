@@ -10,6 +10,7 @@ import {
     ionMenu,
 } from '@ng-icons/ionicons';
 import { ModuleService } from '../../core/services/module.service';
+import { LoggerService } from '../../core/services/logger.service';
 
 @Component({
     selector: 'app-nav',
@@ -31,6 +32,7 @@ import { ModuleService } from '../../core/services/module.service';
 export class NavComponent {
     private moduleService = inject(ModuleService);
     private authService = inject(AuthService);
+    private logger = inject(LoggerService);
 
     userEmail: string = '';
     isUserMenuOpen = false;
@@ -68,13 +70,13 @@ export class NavComponent {
                         name: m.name
                     }));
             },
-            error: (err) => console.error('Failed to load user modules', err)
+            error: (err) => this.logger.error('Failed to load user modules', err)
         });
     }
 
     logout(): void {
         this.authService.logout().subscribe({
-            error: (err) => console.error("logout error", err),
+            error: (err) => this.logger.error("logout error", err),
         });
     }
 

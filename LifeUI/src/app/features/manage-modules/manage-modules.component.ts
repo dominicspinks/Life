@@ -10,6 +10,7 @@ import {
     ionEye,
     ionPencil,
 } from '@ng-icons/ionicons';
+import { LoggerService } from '../../core/services/logger.service';
 
 @Component({
     selector: 'app-manage-modules',
@@ -21,6 +22,7 @@ import {
 export class ManageModulesComponent implements OnInit {
     private moduleService = inject(ModuleService);
     private router = inject(Router);
+    private logger = inject(LoggerService);
 
     modules: UserModule[] = [];
     moduleTypes: ModuleType[] = [];
@@ -53,13 +55,15 @@ export class ManageModulesComponent implements OnInit {
 
                 this.selectedType = this.getDefaultModuleTypeId(this.moduleTypes);
             },
-            error: (err) => console.error('Failed to load module types', err)
+            error: (err) => {
+                this.logger.error('Failed to load module types', err);
+            }
         });
 
         // Load users modules
         this.moduleService.getUserModules(true).subscribe({
             next: (res) => this.modules = res.results,
-            error: (err) => console.error('Failed to load modules', err)
+            error: (err) => this.logger.error('Failed to load modules', err)
         });
     }
 
@@ -100,7 +104,7 @@ export class ManageModulesComponent implements OnInit {
                 }
             },
             error: (err) => {
-                console.error('Failed to add module:', err);
+                this.logger.error('Failed to add module:', err);
                 alert('Failed to save module. Please try again.');
             }
         });

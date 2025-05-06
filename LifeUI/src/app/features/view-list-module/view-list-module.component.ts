@@ -13,6 +13,7 @@ import { FieldType } from '../../core/models/fieldType.model';
 import { PaginatedResponse } from '../../core/models/pagination.model';
 import { ModalComponent } from '../../layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';
+import { LoggerService } from '../../core/services/logger.service';
 
 @Component({
     selector: 'app-view-list-module',
@@ -30,6 +31,7 @@ export class ViewListModuleComponent {
     private router = inject(Router);
     private listService = inject(ListService);
     private referenceService = inject(ReferenceService);
+    private logger = inject(LoggerService);
 
 
     moduleId = Number(this.route.snapshot.paramMap.get('id'));
@@ -58,7 +60,7 @@ export class ViewListModuleComponent {
                 this.fieldTypes = res;
             },
             error: (error) => {
-                console.error(error);
+                this.logger.error('Error fetching field types', error);
             }
         });
     }
@@ -85,7 +87,7 @@ export class ViewListModuleComponent {
                 this.currentPage = 1;
             },
             error: (error) => {
-                console.error(error);
+                this.logger.error('Error fetching list data', error);
             }
         });
     }
@@ -110,7 +112,7 @@ export class ViewListModuleComponent {
                 this.listData = res;
             },
             error: (error) => {
-                console.error(error);
+                this.logger.error('Error fetching list data', error);
             }
         });
     }
@@ -137,11 +139,11 @@ export class ViewListModuleComponent {
     toggleCompleted(item: ListItem): void {
         this.listService.updateListItemCompletion(this.moduleId, item.id!, !item.is_completed).subscribe({
             next: () => {
-                console.log('Item updated');
+                this.logger.info('Item updated');
                 item.is_completed = !item.is_completed;
             },
             error: (error) => {
-                console.error(error);
+                this.logger.error('Error updating item', error);
             }
         });
     }
@@ -158,7 +160,7 @@ export class ViewListModuleComponent {
                 this.deleteItemLocally(itemId);
             },
             error: (error) => {
-                console.error(error);
+                this.logger.error('Error deleting item', error);
             }
         });
     }
@@ -189,7 +191,7 @@ export class ViewListModuleComponent {
                 this.isLoading = false;
             },
             error: (error) => {
-                console.error(error);
+                this.logger.error('Error fetching list data', error);
                 this.isLoading = false;
             }
         });
@@ -226,7 +228,7 @@ export class ViewListModuleComponent {
                     this.updateItemLocally(res);
                 },
                 error: (error) => {
-                    console.error(error);
+                    this.logger.error('Error updating item', error);
                 }
             });
         } else {
@@ -237,7 +239,7 @@ export class ViewListModuleComponent {
                     this.addItemLocally(res);
                 },
                 error: (error) => {
-                    console.error(error);
+                    this.logger.error('Error adding item', error);
                 }
             });
         }

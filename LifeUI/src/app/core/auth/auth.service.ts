@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { jwtDecode } from 'jwt-decode';
+import { LoggerService } from '../services/logger.service';
 
 @Injectable({
     providedIn: 'root'
@@ -11,6 +12,7 @@ import { jwtDecode } from 'jwt-decode';
 export class AuthService {
     private http = inject(HttpClient);
     private router = inject(Router);
+    private logger = inject(LoggerService);
 
     private readonly JWT_TOKEN = 'JWT_TOKEN';
     private readonly REFRESH_TOKEN = 'REFRESH_TOKEN';
@@ -79,7 +81,7 @@ export class AuthService {
                 }
             }
         } catch (error) {
-            console.error('Error decoding JWT token:', error);
+            this.logger.error('Error decoding JWT token', error);
         }
 
         return of('');
@@ -98,7 +100,7 @@ export class AuthService {
             const now = Math.floor(Date.now() / 1000);
             return decoded.exp && decoded.exp > now;
         } catch (err) {
-            console.error('Invalid refresh token', err);
+            this.logger.error('Invalid refresh token', err);
             return false;
         }
     }

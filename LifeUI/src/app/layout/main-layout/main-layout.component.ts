@@ -10,6 +10,4 @@ import { NavComponent } from '../nav/nav.component';
     templateUrl: './main-layout.component.html'
 })
 export class MainLayoutComponent {
-    constructor() {
-    }
 }

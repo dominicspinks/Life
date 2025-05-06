@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ListService } from '../../core/services/list.service';
-import { SpinningIconComponent } from '../../layout/icons/spinning-icon/spinning-icon.component';
+import { SpinningIconComponent } from '../../shared/icons/spinning-icon/spinning-icon.component';
 import { ListConfiguration, ListConfigurationDetails, ListField, ListFieldOption } from '../../core/models/list.model';
 import { ModalComponent } from '../../layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';

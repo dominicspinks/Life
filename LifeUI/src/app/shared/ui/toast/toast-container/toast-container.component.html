@@ -1,0 +1,5 @@
+<div class="fixed top-4 right-4 z-50 space-y-3 max-w-sm w-full">
+    @for (msg of toastService.messages(); track msg.id) {
+    <app-toast-message [message]="msg.message" [type]="msg.type" [id]="msg.id" [duration]="msg.duration" />
+    }
+</div>

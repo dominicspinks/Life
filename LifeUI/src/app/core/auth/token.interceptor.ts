@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
     HttpRequest,
     HttpHandler,
@@ -13,10 +13,9 @@ import { excludedRoutes } from './excludedRoutes';
 
 @Injectable()
 export class TokenInterceptor implements HttpInterceptor {
+    private authService = inject(AuthService);
     private isRefreshing = false;
     private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
-
-    constructor(private authService: AuthService) { }
 
     intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
         const isExcluded = excludedRoutes.some(route => request.url.includes(route));
@@ -27,7 +26,9 @@ export class TokenInterceptor implements HttpInterceptor {
 
         return next.handle(request).pipe(
             catchError(error => {
-                if (error instanceof HttpErrorResponse && error.status === 401) {
+                const isExcluded = excludedRoutes.some(route => request.url.includes(route));
+
+                if (!isExcluded && error instanceof HttpErrorResponse && error.status === 401) {
                     return this.handle401Error(request, next);
                 } else {
                     return throwError(() => error);

@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, tap } from 'rxjs';
@@ -9,6 +9,9 @@ import { jwtDecode } from 'jwt-decode';
     providedIn: 'root'
 })
 export class AuthService {
+    private http = inject(HttpClient);
+    private router = inject(Router);
+
     private readonly JWT_TOKEN = 'JWT_TOKEN';
     private readonly REFRESH_TOKEN = 'REFRESH_TOKEN';
     private readonly USER_EMAIL = 'USER_EMAIL';
@@ -17,8 +20,6 @@ export class AuthService {
     // Using signals for auth state
     private isLoggedInSignal = signal<boolean>(this.hasToken());
     isLoggedIn = this.isLoggedInSignal.asReadonly();
-
-    constructor(private http: HttpClient, private router: Router) { }
 
     register(email: string, password: string): Observable<any> {
         return this.http.post(`${this.apiUrl}/auth/register/`, { email, password });

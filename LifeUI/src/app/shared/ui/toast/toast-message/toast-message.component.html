@@ -1,0 +1,18 @@
+<div class="rounded-lg px-4 py-3 flex items-center justify-between shadow-lg my-1 hover:opacity-90" [class]="bgClass">
+    <p class="text-sm pr-4">{{ message() }}</p>
+
+    <div class="relative w-6 h-6 flex-shrink-0 self-center">
+        @if (duration() > 0) {
+        <svg class="absolute top-0 left-0 w-full h-full" viewBox="0 0 36 36">
+            <circle class="text-white/30" cx="18" cy="18" r="16" stroke="currentColor" stroke-width="4" fill="none" />
+            <circle [attr.stroke-dasharray]="'100, 100'" [attr.stroke-dashoffset]="100 - progress" class="text-white"
+                cx="18" cy="18" r="16" stroke="currentColor" stroke-width="4" fill="none" transform="rotate(-90 18 18)"
+                style="transition: stroke-dashoffset 0.1s linear;" />
+        </svg>
+        }
+        <button (click)="close()"
+            class="absolute inset-0 flex items-center justify-center text-white hover:text-gray-400 hover:cursor-pointer hover:scale-125">
+            <ng-icon name="ionClose" size="16" />
+        </button>
+    </div>
+</div>

@@ -187,10 +187,18 @@ export class EditListModuleComponent {
         return this.moduleData?.list_fields.sort((a, b) => a.order - b.order) ?? [];
     }
 
+    get optionName() {
+        return this.fieldTypes.find(t => t.id === this.setFieldForm.field_type)?.name;
+    }
+
     onFieldTypeChange(value: number): void {
         this.setFieldForm.field_type = +value;
         this.setFieldForm.rules = [];
         this.setFieldForm.options = [];
+
+        if (this.optionName === 'dropdown') {
+            this.addOption();
+        }
     }
 
     saveSetField(): void {

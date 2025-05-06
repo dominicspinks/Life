@@ -138,7 +138,7 @@
             </select>
 
             <!-- Options for dropdown list -->
-            @if (setFieldForm.field_type_name === 'dropdown') {
+            @if (optionName === 'dropdown') {
             <div class="flex justify-between">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Options</label>
                 <button (click)="addOption()" class="px-4 text-blue-800 hover:text-blue-300">

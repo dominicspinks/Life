@@ -95,3 +95,35 @@ class ListItem(models.Model):
 
     def __str__(self):
         return f"{self.user_module.name} - {self.modified_at}"
+
+
+class BudgetCategory(models.Model):
+    user_module = models.ForeignKey(UserModule, on_delete=models.CASCADE)
+    name = models.TextField()
+    weekly_target = models.IntegerField(default=0)
+    excluded_from_budget = models.BooleanField(default=False)
+    order = models.IntegerField()
+    is_enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user_module', 'name')
+        ordering = ['order']
+
+    def __str__(self):
+        return self.name
+
+class BudgetPurchase(models.Model):
+    user_module = models.ForeignKey(UserModule, on_delete=models.CASCADE)
+    purchase_date = models.DateField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(null=True,blank=True)
+    category = models.ForeignKey(BudgetCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-purchase_date', '-modified_at']
+
+    def __str__(self):
+        return f"{self.purchase_date} - {self.description or ''}"

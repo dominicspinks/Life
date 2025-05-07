@@ -8,11 +8,14 @@ from ..filters import PurchaseFilterSet
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema, extend_schema_view
+from django.contrib.auth.decorators import login_required
 
 class BudgetViewSet(viewsets.ModelViewSet):
     """
     API endpoint for viewing and updating budget details
     """
+    queryset = UserModule.objects.none()
     serializer_class = BudgetSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = Unpaginatable
@@ -43,6 +46,7 @@ class BudgetCategoryViewSet(viewsets.ModelViewSet):
     API endpoint for CRUD operations on budget categories
     Allows users to view, create, update and delete their budget categories
     """
+    queryset = BudgetCategory.objects.none()
     serializer_class = BudgetCategorySerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = None
@@ -76,6 +80,7 @@ class BudgetPurchaseViewSet(viewsets.ModelViewSet):
     API endpoint for CRUD operations on budget purchases
     Allows users to view, create, update and delete their budget purchases
     """
+    queryset = BudgetPurchase.objects.none()
     serializer_class = BudgetPurchaseSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = Unpaginatable

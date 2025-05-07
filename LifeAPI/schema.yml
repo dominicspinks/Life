@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Life API
-  version: 1.0.0
+  version: 1.1.0
   description: API for my Life Management application
 paths:
   /api/auth/login/:
@@ -113,6 +113,578 @@ paths:
               schema:
                 $ref: '#/components/schemas/Register'
           description: ''
+  /api/budgets/:
+    get:
+      operationId: budgets_list
+      description: API endpoint for viewing and updating budget details
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBudgetList'
+          description: ''
+    post:
+      operationId: budgets_create
+      description: API endpoint for viewing and updating budget details
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Budget'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Budget'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Budget'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+          description: ''
+  /api/budgets/{budget_id}/categories/:
+    get:
+      operationId: budgets_categories_list
+      description: |-
+        API endpoint for CRUD operations on budget categories
+        Allows users to view, create, update and delete their budget categories
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BudgetCategory'
+          description: ''
+    post:
+      operationId: budgets_categories_create
+      description: |-
+        API endpoint for CRUD operations on budget categories
+        Allows users to view, create, update and delete their budget categories
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetCategory'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BudgetCategory'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BudgetCategory'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetCategory'
+          description: ''
+  /api/budgets/{budget_id}/categories/{id}/:
+    get:
+      operationId: budgets_categories_retrieve
+      description: |-
+        API endpoint for CRUD operations on budget categories
+        Allows users to view, create, update and delete their budget categories
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetCategory'
+          description: ''
+    put:
+      operationId: budgets_categories_update
+      description: |-
+        API endpoint for CRUD operations on budget categories
+        Allows users to view, create, update and delete their budget categories
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetCategory'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BudgetCategory'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BudgetCategory'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetCategory'
+          description: ''
+    patch:
+      operationId: budgets_categories_partial_update
+      description: |-
+        API endpoint for CRUD operations on budget categories
+        Allows users to view, create, update and delete their budget categories
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetCategory'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetCategory'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetCategory'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetCategory'
+          description: ''
+    delete:
+      operationId: budgets_categories_destroy
+      description: |-
+        API endpoint for CRUD operations on budget categories
+        Allows users to view, create, update and delete their budget categories
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/budgets/{budget_id}/purchases/:
+    get:
+      operationId: budgets_purchases_list
+      description: |-
+        API endpoint for CRUD operations on budget purchases
+        Allows users to view, create, update and delete their budget purchases
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: query
+        name: category
+        schema:
+          type: array
+          items:
+            type: integer
+        explode: true
+        style: form
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: purchase_date__month
+        schema:
+          type: number
+      - in: query
+        name: purchase_date__year
+        schema:
+          type: number
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBudgetPurchaseList'
+          description: ''
+    post:
+      operationId: budgets_purchases_create
+      description: |-
+        API endpoint for CRUD operations on budget purchases
+        Allows users to view, create, update and delete their budget purchases
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPurchase'
+          description: ''
+  /api/budgets/{budget_id}/purchases/{id}/:
+    get:
+      operationId: budgets_purchases_retrieve
+      description: |-
+        API endpoint for CRUD operations on budget purchases
+        Allows users to view, create, update and delete their budget purchases
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPurchase'
+          description: ''
+    put:
+      operationId: budgets_purchases_update
+      description: |-
+        API endpoint for CRUD operations on budget purchases
+        Allows users to view, create, update and delete their budget purchases
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPurchase'
+          description: ''
+    patch:
+      operationId: budgets_purchases_partial_update
+      description: |-
+        API endpoint for CRUD operations on budget purchases
+        Allows users to view, create, update and delete their budget purchases
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetPurchase'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetPurchase'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetPurchase'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPurchase'
+          description: ''
+    delete:
+      operationId: budgets_purchases_destroy
+      description: |-
+        API endpoint for CRUD operations on budget purchases
+        Allows users to view, create, update and delete their budget purchases
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/budgets/{id}/:
+    get:
+      operationId: budgets_retrieve
+      description: API endpoint for viewing and updating budget details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+          description: ''
+    put:
+      operationId: budgets_update
+      description: API endpoint for viewing and updating budget details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Budget'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Budget'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Budget'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+          description: ''
+    patch:
+      operationId: budgets_partial_update
+      description: API endpoint for viewing and updating budget details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBudget'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBudget'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBudget'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+          description: ''
+    delete:
+      operationId: budgets_destroy
+      description: API endpoint for viewing and updating budget details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/lists/configurations/:
     get:
       operationId: lists_configurations_list
@@ -961,6 +1533,118 @@ paths:
           description: ''
 components:
   schemas:
+    Budget:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        module:
+          type: integer
+        module_name:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        is_enabled:
+          type: boolean
+        is_read_only:
+          type: boolean
+        is_checkable:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/BudgetCategory'
+          readOnly: true
+      required:
+      - categories
+      - created_at
+      - id
+      - modified_at
+      - module
+      - module_name
+      - name
+      - order
+    BudgetCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+        weekly_target:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        excluded_from_budget:
+          type: boolean
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        is_enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - modified_at
+      - name
+      - order
+    BudgetPurchase:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        purchase_date:
+          type: string
+          format: date
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        description:
+          type: string
+          nullable: true
+        category:
+          type: integer
+          nullable: true
+        category_name:
+          type: string
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - category_name
+      - id
+      - modified_at
+      - purchase_date
     FieldType:
       type: object
       properties:
@@ -1194,7 +1878,6 @@ components:
       - detail
     ModuleType:
       type: object
-      description: Serializer for ModuleType objects
       properties:
         id:
           type: integer
@@ -1205,6 +1888,52 @@ components:
       required:
       - id
       - name
+    PaginatedBudgetList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Budget'
+    PaginatedBudgetPurchaseList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BudgetPurchase'
     PaginatedListConfigurationList:
       type: object
       required:
@@ -1343,6 +2072,97 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserModule'
+    PatchedBudget:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        module:
+          type: integer
+        module_name:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        is_enabled:
+          type: boolean
+        is_read_only:
+          type: boolean
+        is_checkable:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/BudgetCategory'
+          readOnly: true
+    PatchedBudgetCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+        weekly_target:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        excluded_from_budget:
+          type: boolean
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        is_enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedBudgetPurchase:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        purchase_date:
+          type: string
+          format: date
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        description:
+          type: string
+          nullable: true
+        category:
+          type: integer
+          nullable: true
+        category_name:
+          type: string
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
     PatchedListConfiguration:
       type: object
       properties:

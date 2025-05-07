@@ -12,6 +12,7 @@ class ListConfigurationViewSet(viewsets.ModelViewSet):
     API endpoint for CRUD operations on list configurations
     Allows users to view, create, update and delete their list configurations
     """
+    queryset = UserModule.objects.none()
     serializer_class = ListConfigurationSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = Unpaginatable
@@ -123,6 +124,7 @@ class ListConfigurationFieldViewSet(viewsets.ModelViewSet):
     """
     API endpoint to retrieve, update, or delete individual list fields (with associated rules/options).
     """
+    queryset = ListField.objects.none()
     serializer_class = ListFieldSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = Unpaginatable
@@ -196,6 +198,7 @@ class ListDataViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint for view list configuration with the data
     """
+    queryset = UserModule.objects.none()
     serializer_class = ListDataSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = Unpaginatable
@@ -210,6 +213,7 @@ class ListItemViewSet(viewsets.ModelViewSet):
     """
     API endpoint for CRUD operations on list items
     """
+    queryset = ListItem.objects.none()
     serializer_class = ListItemSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = Unpaginatable

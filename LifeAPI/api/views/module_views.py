@@ -19,6 +19,7 @@ class UserModuleViewSet(viewsets.ModelViewSet):
     API endpoint for CRUD operations on user modules.
     Allows users to view, create, update and delete their modules.
     """
+    queryset = UserModule.objects.none()
     serializer_class = UserModuleSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = Unpaginatable

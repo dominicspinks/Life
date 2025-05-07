@@ -209,6 +209,6 @@ APPEND_SLASH = True
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Life API',
     'DESCRIPTION': 'API for my Life Management application',
-    'VERSION': '1.0.0',
+    'VERSION': '1.1.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }

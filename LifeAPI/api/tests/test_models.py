@@ -1,7 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
-from django.core.exceptions import ValidationError
 from api.models import (
     ModuleType,
     UserModule,

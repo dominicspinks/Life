@@ -1,8 +1,21 @@
 from django.test import TestCase
 from django.urls import reverse, resolve
-from api.views import RegisterView, LogoutView, ListItemViewSet, BudgetViewSet, BudgetCategoryViewSet, BudgetPurchaseViewSet, FieldTypeViewSet, ModuleTypeViewSet, UserModuleViewSet, ListConfigurationViewSet, ListDataViewSet, ListConfigurationFieldViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from api.views import (
+    RegisterView,
+    LogoutView,
+    ListItemViewSet,
+    BudgetViewSet,
+    BudgetCategoryViewSet,
+    BudgetPurchaseViewSet,
+    FieldTypeViewSet,
+    ModuleTypeViewSet,
+    UserModuleViewSet,
+    ListConfigurationViewSet,
+    ListDataViewSet,
+    ListConfigurationFieldViewSet
+)
 
 class AuthURLTests(TestCase):
     """Test authentication URL patterns."""

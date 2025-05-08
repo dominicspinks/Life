@@ -1,5 +1,6 @@
 import django_filters
-from .models import BudgetPurchase, BudgetCategory
+
+from api.models import BudgetPurchase, BudgetCategory
 
 class PurchaseFilterSet(django_filters.FilterSet):
     category = django_filters.ModelMultipleChoiceFilter(

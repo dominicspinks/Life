@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions
-from ..models import FieldType
-from ..serializers import FieldTypeSerializer, FieldTypeDetailSerializer
-from ..pagination import Unpaginatable
+
+from api.serializers.serializers_reference import FieldTypeSerializer, FieldTypeDetailSerializer
+from api.models import FieldType
 
 class FieldTypeViewSet(viewsets.ReadOnlyModelViewSet):
     """

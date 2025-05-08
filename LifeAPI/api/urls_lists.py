@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ListConfigurationViewSet, ListDataViewSet, ListItemViewSet, ListConfigurationFieldViewSet
 from rest_framework_nested.routers import NestedDefaultRouter
+
+from api.views import ListConfigurationViewSet, ListDataViewSet, ListItemViewSet, ListConfigurationFieldViewSet
 
 router = DefaultRouter()
 router.register(r'configurations', ListConfigurationViewSet, basename='configuration')

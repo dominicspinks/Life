@@ -1,7 +1,8 @@
 from rest_framework import viewsets, permissions
-from ..models import ModuleType, UserModule
-from ..serializers import ModuleTypeSerializer, UserModuleSerializer
-from ..pagination import Unpaginatable
+
+from api.serializers.serializers_modules import ModuleTypeSerializer, UserModuleSerializer
+from api.models import ModuleType, UserModule
+from api.pagination import Unpaginatable
 
 class ModuleTypeViewSet(viewsets.ReadOnlyModelViewSet):
     """

@@ -13,21 +13,11 @@ from api.models import (
     BudgetCategory,
     BudgetPurchase
 )
-from api.serializers import (
-    RegisterSerializer,
-    EmailTokenObtainSerializer,
-    ModuleTypeSerializer,
-    UserModuleSerializer,
-    FieldTypeSerializer,
-    FieldTypeDetailSerializer,
-    ListConfigurationSerializer,
-    ListDataSerializer,
-    ListFieldSerializer,
-    ListItemSerializer,
-    BudgetCategorySerializer,
-    BudgetPurchaseSerializer,
-    BudgetSerializer
-)
+from api.serializers.serializers_auth import EmailTokenObtainSerializer, RegisterSerializer
+from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer
+from api.serializers.serializers_lists import ListConfigurationSerializer, ListDataSerializer, ListFieldSerializer, ListItemSerializer
+from api.serializers.serializers_modules import ModuleTypeSerializer, UserModuleSerializer
+from api.serializers.serializers_reference import FieldTypeDetailSerializer, FieldTypeSerializer
 
 User = get_user_model()
 

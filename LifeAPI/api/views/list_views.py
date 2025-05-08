@@ -1,11 +1,12 @@
+from django.db import transaction
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, status, serializers
 from rest_framework.response import Response
-from ..serializers import ListConfigurationSerializer, ListDataSerializer, ListItemSerializer, ListFieldSerializer
-from ..models import UserModule, ListField, ListFieldRule, ListFieldOption, ListItem
-from django.db import transaction
 from datetime import datetime
-from django.shortcuts import get_object_or_404
-from ..pagination import Unpaginatable
+
+from api.serializers.serializers_lists import ListConfigurationSerializer, ListFieldSerializer, ListItemSerializer, ListDataSerializer
+from api.models import UserModule, ListField, ListFieldRule, ListFieldOption, ListItem
+from api.pagination import Unpaginatable
 
 class ListConfigurationViewSet(viewsets.ModelViewSet):
     """

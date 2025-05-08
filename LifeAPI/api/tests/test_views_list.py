@@ -399,6 +399,7 @@ class ListConfigurationFieldViewSetTests(APITestCase):
         self.client.force_authenticate(user=self.user1)
 
         update_data = {
+            'user_module': self.user1_module.id,
             'field_name': 'Total Cost',
             'field_type': self.number_field_type.id,
             'is_mandatory': False,

@@ -3,11 +3,47 @@ from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
 from django.core.exceptions import ValidationError
 from api.models import (
-    ModuleType, UserModule, FieldType, FieldTypeRule,
-    ListField, ListFieldRule, ListFieldOption, ListItem
+    ModuleType,
+    UserModule,
+    FieldType,
+    FieldTypeRule,
+    ListField,
+    ListFieldRule,
+    ListFieldOption,
+    ListItem,
+    BudgetCategory,
+    BudgetPurchase
 )
 
 User = get_user_model()
+
+class ReferenceDataTests(TestCase):
+    def test_static_reference_data_exists(self):
+        """Ensure all expected static reference data exists in the DB."""
+
+        # Module types
+        expected_modules = {'budget', 'list'}
+        actual_modules = set(ModuleType.objects.values_list('name', flat=True))
+        for name in expected_modules:
+            self.assertIn(name, actual_modules, f"Missing ModuleType: {name}")
+
+        # Field types
+        expected_field_types = {'dropdown', 'text', 'date', 'number'}
+        actual_field_types = set(FieldType.objects.values_list('name', flat=True))
+        for name in expected_field_types:
+            self.assertIn(name, actual_field_types, f"Missing FieldType: {name}")
+
+        # FieldType rules
+        expected_rules = {
+            'text': {'email', 'mobile'},
+            'number': {'positive_only', 'integer', 'money'}
+        }
+
+        for field_type_name, rules in expected_rules.items():
+            field_type = FieldType.objects.get(name=field_type_name)
+            actual_rules = set(FieldTypeRule.objects.filter(field_type=field_type).values_list('rule', flat=True))
+            for rule in rules:
+                self.assertIn(rule, actual_rules, f"Missing rule '{rule}' for FieldType '{field_type_name}'")
 
 class UserModelTests(TestCase):
     def setUp(self):
@@ -47,7 +83,7 @@ class UserModelTests(TestCase):
 
 class ModuleTypeTests(TestCase):
     def setUp(self):
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
 
     def test_module_type_creation(self):
         self.assertEqual(self.module_type.name, 'list')
@@ -61,7 +97,7 @@ class UserModuleTests(TestCase):
             email='test@example.com',
             password='password123'
         )
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
         self.user_module = UserModule.objects.create(
             user=self.user,
             module=self.module_type,
@@ -88,7 +124,7 @@ class UserModuleTests(TestCase):
 
 class FieldTypeTests(TestCase):
     def setUp(self):
-        self.field_type = FieldType.objects.create(name='text')
+        self.field_type = FieldType.objects.get(name='text')
 
     def test_field_type_creation(self):
         self.assertEqual(self.field_type.name, 'text')
@@ -98,18 +134,18 @@ class FieldTypeTests(TestCase):
 
 class FieldTypeRuleTests(TestCase):
     def setUp(self):
-        self.field_type = FieldType.objects.create(name='number')
-        self.field_rule = FieldTypeRule.objects.create(
+        self.field_type = FieldType.objects.get(name='number')
+        self.field_rule = FieldTypeRule.objects.get(
             field_type=self.field_type,
-            rule='min_value'
+            rule='integer'
         )
 
     def test_field_type_rule_creation(self):
         self.assertEqual(self.field_rule.field_type, self.field_type)
-        self.assertEqual(self.field_rule.rule, 'min_value')
+        self.assertEqual(self.field_rule.rule, 'integer')
 
     def test_field_type_rule_string_representation(self):
-        self.assertEqual(str(self.field_rule), 'min_value')
+        self.assertEqual(str(self.field_rule), 'integer')
 
 class ListFieldTests(TestCase):
     def setUp(self):
@@ -117,7 +153,7 @@ class ListFieldTests(TestCase):
             email='test@example.com',
             password='password123'
         )
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
         self.user_module = UserModule.objects.create(
             user=self.user,
             module=self.module_type,
@@ -125,7 +161,7 @@ class ListFieldTests(TestCase):
             order=1,
             is_enabled=True
         )
-        self.field_type = FieldType.objects.create(name='text')
+        self.field_type = FieldType.objects.get(name='text')
         self.list_field = ListField.objects.create(
             user_module=self.user_module,
             field_type=self.field_type,
@@ -150,7 +186,7 @@ class ListFieldRuleTests(TestCase):
             email='test@example.com',
             password='password123'
         )
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
         self.user_module = UserModule.objects.create(
             user=self.user,
             module=self.module_type,
@@ -158,10 +194,10 @@ class ListFieldRuleTests(TestCase):
             order=1,
             is_enabled=True
         )
-        self.field_type = FieldType.objects.create(name='text')
-        self.field_type_rule = FieldTypeRule.objects.create(
+        self.field_type = FieldType.objects.get(name='text')
+        self.field_type_rule = FieldTypeRule.objects.get(
             field_type=self.field_type,
-            rule='max_length'
+            rule='mobile'
         )
         self.list_field = ListField.objects.create(
             user_module=self.user_module,
@@ -180,7 +216,7 @@ class ListFieldRuleTests(TestCase):
         self.assertEqual(self.list_field_rule.field_type_rule, self.field_type_rule)
 
     def test_list_field_rule_string_representation(self):
-        self.assertEqual(str(self.list_field_rule), 'Task Name - max_length')
+        self.assertEqual(str(self.list_field_rule), 'Task Name - mobile')
 
 class ListFieldOptionTests(TestCase):
     def setUp(self):
@@ -188,7 +224,7 @@ class ListFieldOptionTests(TestCase):
             email='test@example.com',
             password='password123'
         )
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
         self.user_module = UserModule.objects.create(
             user=self.user,
             module=self.module_type,
@@ -196,7 +232,7 @@ class ListFieldOptionTests(TestCase):
             order=1,
             is_enabled=True
         )
-        self.field_type = FieldType.objects.create(name='dropdown')
+        self.field_type = FieldType.objects.get(name='dropdown')
         self.list_field = ListField.objects.create(
             user_module=self.user_module,
             field_type=self.field_type,
@@ -222,7 +258,7 @@ class ListItemTests(TestCase):
             email='test@example.com',
             password='password123'
         )
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
         self.user_module = UserModule.objects.create(
             user=self.user,
             module=self.module_type,
@@ -230,7 +266,7 @@ class ListItemTests(TestCase):
             order=1,
             is_enabled=True
         )
-        self.field_type = FieldType.objects.create(name='text')
+        self.field_type = FieldType.objects.get(name='text')
         self.list_field = ListField.objects.create(
             user_module=self.user_module,
             field_type=self.field_type,
@@ -287,3 +323,92 @@ class ListItemTests(TestCase):
         self.assertEqual(len(self.list_item.fields), 2)
         self.assertEqual(self.list_item.fields[0]['value'], 'Task 1')
         self.assertEqual(self.list_item.fields[1]['field'], 999)
+
+class BudgetCategoryTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='password123'
+        )
+        self.module_type = ModuleType.objects.get(name='budget')
+        self.user_module = UserModule.objects.create(
+            user=self.user,
+            module=self.module_type,
+            name='My Budget',
+            order=1,
+            is_enabled=True
+        )
+
+    def test_budget_category_creation(self):
+        category = BudgetCategory.objects.create(
+            user_module=self.user_module,
+            name='Groceries',
+            weekly_target=150,
+            excluded_from_budget=False,
+            order=0
+        )
+        self.assertEqual(category.name, 'Groceries')
+        self.assertEqual(category.weekly_target, 150)
+        self.assertFalse(category.excluded_from_budget)
+        self.assertTrue(category.is_enabled)
+        self.assertEqual(str(category), 'Groceries')
+
+    def test_unique_category_name_per_budget(self):
+        BudgetCategory.objects.create(
+            user_module=self.user_module,
+            name='Groceries',
+            weekly_target=100,
+            order=0
+        )
+        with self.assertRaises(IntegrityError):
+            BudgetCategory.objects.create(
+                user_module=self.user_module,
+                name='Groceries',
+                weekly_target=200,
+                order=1
+            )
+
+
+class BudgetPurchaseTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='password123'
+        )
+        self.module_type = ModuleType.objects.get(name='budget')
+        self.user_module = UserModule.objects.create(
+            user=self.user,
+            module=self.module_type,
+            name='My Budget',
+            order=1,
+            is_enabled=True
+        )
+        self.category = BudgetCategory.objects.create(
+            user_module=self.user_module,
+            name='Groceries',
+            weekly_target=150,
+            order=0
+        )
+
+    def test_budget_purchase_creation(self):
+        purchase = BudgetPurchase.objects.create(
+            user_module=self.user_module,
+            purchase_date='2024-01-01',
+            amount=29.99,
+            description='Weekly shopping',
+            category=self.category
+        )
+        self.assertEqual(purchase.amount, 29.99)
+        self.assertEqual(purchase.description, 'Weekly shopping')
+        self.assertEqual(purchase.category, self.category)
+        self.assertEqual(str(purchase), '2024-01-01 - Weekly shopping')
+
+    def test_purchase_without_category(self):
+        purchase = BudgetPurchase.objects.create(
+            user_module=self.user_module,
+            purchase_date='2024-01-01',
+            amount=15.50,
+            description='Miscellaneous'
+        )
+        self.assertIsNone(purchase.category)
+        self.assertIn('Miscellaneous', str(purchase))

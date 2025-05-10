@@ -4,6 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.filters import OrderingFilter
+from rest_framework.mixins import CreateModelMixin
 
 from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer
 from api.models import BudgetCategory, BudgetPurchase, UserModule
@@ -107,3 +108,47 @@ class BudgetPurchaseViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user_module=self.get_serializer_context()['user_module'])
+
+class BudgetPurchaseBulkViewSet(viewsets.GenericViewSet, CreateModelMixin):
+    """
+    API endpoint for bulk importing purchases into a budget
+    Only supports POST
+    """
+    serializer_class = BudgetPurchaseSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_context(self):
+        budget_id = self.kwargs.get('budget_id')
+        user_module = get_object_or_404(UserModule, id=budget_id, user=self.request.user)
+        return {**super().get_serializer_context(), 'user_module': user_module}
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        if not isinstance(data, list):
+            return Response({"detail": "Expected a list of items."}, status=status.HTTP_400_BAD_REQUEST)
+
+        context = self.get_serializer_context()
+        serializer = self.get_serializer(data=data, many=True, context=context)
+        serializer.is_valid(raise_exception=True)
+        self.perform_bulk_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_bulk_create(self, serializer):
+        # Assumes user_module is injected via context
+        user_module = self.get_serializer_context()['user_module']
+        serializer.save(user_module=user_module)
+
+    def list(self, request, *args, **kwargs):
+        return Response({"detail": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response({"detail": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def update(self, request, *args, **kwargs):
+        return Response({"detail": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def partial_update(self, request, *args, **kwargs):
+        return Response({"detail": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def destroy(self, request, *args, **kwargs):
+        return Response({"detail": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)

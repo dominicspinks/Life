@@ -182,3 +182,23 @@ class BudgetPurchaseViewSetTests(APITestCase):
         response = self.client.post(self.base_url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('category', response.data)
+
+    def test_bulk_purchase(self):
+        self.client.force_authenticate(user=self.user)
+        data = [
+            {
+                'purchase_date': '2024-02-01',
+                'amount': 30.00,
+                'description': 'Aldi',
+                'category': self.category.id
+            },
+            {
+                'purchase_date': '2024-02-01',
+                'amount': 30.00,
+                'description': 'Aldi',
+                'category': self.category.id
+            }
+        ]
+        response = self.client.post(f'{self.base_url}bulk/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data), 2)

@@ -9,6 +9,7 @@ from api.views import (
     BudgetViewSet,
     BudgetCategoryViewSet,
     BudgetPurchaseViewSet,
+    BudgetPurchaseBulkViewSet,
     FieldTypeViewSet,
     ModuleTypeViewSet,
     UserModuleViewSet,
@@ -165,3 +166,9 @@ class BudgetURLTests(TestCase):
         self.assertEqual(resolver.func.cls, BudgetPurchaseViewSet)
         self.assertEqual(resolver.kwargs['budget_id'], '1')
         self.assertEqual(resolver.kwargs['id'], '2')
+
+    def test_budget_bulk_purchase_urls(self):
+        """Test nested budget bulk purchase viewset URLs."""
+        url = reverse('budget-purchase-bulk-list', args=[1])
+        self.assertEqual(url, '/api/budgets/1/purchases/bulk/')
+        self.assertEqual(resolve(url).func.cls, BudgetPurchaseBulkViewSet)

@@ -63,6 +63,17 @@ class BudgetPurchaseSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def create(self, validated_data):
+        user_module = self.context.get('user_module')
+        if isinstance(validated_data, list):
+            for item in validated_data:
+                item['user_module'] = user_module
+            return BudgetPurchase.objects.bulk_create(
+                [BudgetPurchase(**item) for item in validated_data]
+            )
+        else:
+            validated_data['user_module'] = user_module
+            return super().create(validated_data)
 
 class BudgetSerializer(UserModuleSerializer):
     categories = serializers.SerializerMethodField()

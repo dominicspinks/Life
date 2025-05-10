@@ -457,6 +457,28 @@ class BudgetPurchaseSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn('category', serializer.errors)
 
+    def test_bulk_creation(self):
+        data = [
+            {
+                'purchase_date': '2024-01-03',
+                'amount': 15.00,
+                'description': 'Lunch',
+                'category': self.category.id
+            },
+            {
+                'purchase_date': '2024-01-04',
+                'amount': 40.00,
+                'description': 'Groceries',
+                'category': self.category.id
+            }
+        ]
+        serializer = BudgetPurchaseSerializer(data=data, context={'user_module': self.user_module}, many=True)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instances = serializer.save()
+        self.assertEqual(len(instances), 2)
+        self.assertEqual(instances[0].description, 'Lunch')
+        self.assertEqual(instances[1].amount, 40.00)
+
 class BudgetSerializerTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(email='test@example.com', password='testpass123')

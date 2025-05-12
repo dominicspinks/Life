@@ -1,2 +1,39 @@
-<p>budgets-page works!</p>
-<router-outlet></router-outlet>
+<!-- Mobile Dropdown -->
+<div class="sm:hidden mb-4">
+    <select
+        class="block w-full p-2 border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm rounded-none"
+        [value]="currentTab" (change)="onTabChange($event)">
+        <option value="summary">Summary</option>
+        <option value="purchases">Purchases</option>
+        <option value="settings">Settings</option>
+    </select>
+</div>
+
+<!-- Desktop Sidebar -->
+<div class="hidden sm:flex gap-6">
+    <!-- Sidebar -->
+    <nav class="w-48 space-y-1 bg-gray-100 p-1 shadow-sm">
+        <a routerLink="summary" routerLinkActive="bg-blue-100 text-blue-700 font-semibold"
+            class="block px-4 py-2 bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-800 hover:cursor-pointer">
+            Summary
+        </a>
+        <a routerLink="purchases" routerLinkActive="bg-blue-100 text-blue-700 font-semibold"
+            class="block px-4 py-2 bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-800 hover:cursor-pointer">
+            Purchases
+        </a>
+        <a routerLink="settings" routerLinkActive="bg-blue-100 text-blue-700 font-semibold"
+            class="block px-4 py-2 bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-800 hover:cursor-pointer">
+            Settings
+        </a>
+    </nav>
+
+    <!-- Tab content outlet -->
+    <div class="flex-1">
+        <router-outlet></router-outlet>
+    </div>
+</div>
+
+<!-- Mobile tab content -->
+<div class="sm:hidden">
+    <router-outlet></router-outlet>
+</div>

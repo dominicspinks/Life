@@ -15,7 +15,7 @@ import { LoggerService } from '../../core/services/logger.service';
 @Component({
     selector: 'app-manage-modules',
     standalone: true,
-    imports: [ModalComponent, FormsModule, NgIcon, RouterLink],
+    imports: [ModalComponent, FormsModule, NgIcon],
     templateUrl: './manage-modules.component.html',
     providers: [provideIcons({ ionEye, ionPencil })]
 })
@@ -111,10 +111,18 @@ export class ManageModulesComponent implements OnInit {
     }
 
     openViewPage(moduleId: number) {
-        this.router.navigate([`/modules/list/${moduleId}`]);
+        if (this.modules.find(m => m.id === moduleId)?.module_name === 'list') {
+            this.router.navigate([`/modules/list/${moduleId}`]);
+        } else if (this.modules.find(m => m.id === moduleId)?.module_name === 'budget') {
+            this.router.navigate([`/modules/budget/${moduleId}`]);
+        }
     }
 
     openEditPage(moduleId: number) {
-        this.router.navigate([`/modules/list/${moduleId}/edit`]);
+        if (this.modules.find(m => m.id === moduleId)?.module_name === 'list') {
+            this.router.navigate([`/modules/list/${moduleId}/edit`]);
+        } else if (this.modules.find(m => m.id === moduleId)?.module_name === 'budget') {
+            return;
+        }
     }
 }

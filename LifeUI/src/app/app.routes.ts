@@ -31,7 +31,30 @@ export const routes: Routes = [
                 loadComponent: () =>
                     import('./features/edit-list-module/edit-list-module.component').then(m => m.EditListModuleComponent)
             },
-            { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+            {
+                path: 'modules/budget/:id',
+                loadComponent: () =>
+                    import('./features/budgets-page/budgets-page.component').then(m => m.BudgetsPageComponent),
+                children: [
+                    { path: '', redirectTo: 'summary', pathMatch: 'full' },
+                    {
+                        path: 'summary',
+                        loadComponent: () =>
+                            import('./features/budgets-page/tabs/budget-summary-tab/budget-summary-tab.component').then(m => m.BudgetSummaryTabComponent),
+                    },
+                    {
+                        path: 'purchases',
+                        loadComponent: () =>
+                            import('./features/budgets-page/tabs/budget-purchases-tab/budget-purchases-tab.component').then(m => m.BudgetPurchasesTabComponent),
+                    },
+                    {
+                        path: 'settings',
+                        loadComponent: () =>
+                            import('./features/budgets-page/tabs/budget-settings-tab/budget-settings-tab.component').then(m => m.BudgetSettingsTabComponent),
+                    }
+                ]
+            },
+            { path: '', redirectTo: '/modules', pathMatch: 'full' },
         ]
     },
     {

@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import { LoggerService } from '../../core/services/logger.service';
 
 @Component({
     selector: 'app-budgets-page',
     standalone: true,
-    imports: [RouterOutlet, RouterLink, RouterLinkActive],
+    imports: [RouterOutlet],
     templateUrl: './budgets-page.component.html',
     styleUrl: './budgets-page.component.css'
 })
@@ -16,9 +16,27 @@ export class BudgetsPageComponent {
 
     currentTab = 'summary';
 
-    onTabChange(event: Event) {
-        const selectedTab = (event.target as HTMLSelectElement).value;
-        this.currentTab = selectedTab;
-        this.router.navigate([selectedTab], { relativeTo: this.route });
+    tabs = [
+        {
+            name: 'Summary',
+            value: 'summary'
+        },
+        {
+            name: 'Purchases',
+            value: 'purchases'
+        },
+        {
+            name: 'Settings',
+            value: 'settings'
+        }
+    ]
+
+    onTabChange(tab: string) {
+        this.currentTab = tab;
+        this.router.navigate([tab], { relativeTo: this.route });
+    }
+
+    getSelectedTab(event: Event) {
+        return (event.target as HTMLSelectElement).value;
     }
 }

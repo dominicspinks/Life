@@ -1,10 +1,12 @@
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db import transaction
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.filters import OrderingFilter
 from rest_framework.mixins import CreateModelMixin
+from rest_framework.decorators import action
 
 from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer
 from api.models import BudgetCategory, BudgetPurchase, UserModule
@@ -73,6 +75,44 @@ class BudgetCategoryViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user_module=self.get_serializer_context()['user_module'])
+
+    @action(detail=True, methods=['post'], url_path='reorder')
+    def reorder(self, request, budget_id=None, id=None):
+        """
+        Reorders a category by moving it to a new position within the list.
+        Expects 'new_order' in the request body.
+        """
+        new_order = request.data.get('new_order')
+
+        if new_order is None:
+            return Response({'detail': 'new_order is required.'}, status=400)
+
+        try:
+            new_order = int(new_order)
+        except ValueError:
+            return Response({'detail': 'Invalid order value.'}, status=400)
+
+        # Validate user and category ownership
+        user_module = get_object_or_404(UserModule, id=budget_id, user=self.request.user)
+        categories = list(BudgetCategory.objects.filter(user_module=user_module).order_by('order'))
+
+        # Move category within the list
+        category = get_object_or_404(BudgetCategory, id=id, user_module=user_module)
+        original_order = category.order
+
+        if original_order != new_order:
+            moved_category = categories.pop(original_order - 1)
+            categories.insert(new_order - 1, moved_category)
+
+            # Reassign orders
+            with transaction.atomic():
+                for idx, cat in enumerate(categories):
+                    cat.order = idx + 1
+                BudgetCategory.objects.bulk_update(categories, ['order'])
+
+        # Return updated budget config
+        serializer = BudgetSerializer(user_module, context={'request': request})
+        return Response(serializer.data, status=200)
 
 
 class BudgetPurchaseViewSet(viewsets.ModelViewSet):

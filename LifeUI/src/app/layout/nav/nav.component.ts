@@ -41,6 +41,8 @@ export class NavComponent {
     isMobileSettingsOpen = false;
     isListsMenuOpen = false;
     isBudgetsMenuOpen = false;
+    isMobileListMenuOpen = false;
+    isMobileBudgetMenuOpen = false;
 
     activeLists: UserModuleMenu[] = [];
     activeBudgets: UserModuleMenu[] = [];

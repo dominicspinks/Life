@@ -33,7 +33,6 @@ export class BudgetService {
     }
 
     reorderCategories(budgetId: number, categoryId: number, newOrder: number): Observable<BudgetConfiguration> {
-        // Replace with the actual API endpoint for reordering categories
         return this.http.post<BudgetConfiguration>(`${this.apiUrl}/budgets/${budgetId}/categories/${categoryId}/reorder/`, { new_order: newOrder });
     }
 

@@ -42,7 +42,11 @@
                 <div class="flex justify-between items-center w-full">
                     <div>
                         <h3 class="font-medium">{{ category.name }}</h3>
-                        <p class="text-sm text-gray-600 capitalize">Weekly Target: ${{ category.weekly_target }}</p>
+                        <p class="text-sm text-gray-600">Weekly Target: ${{ category.weekly_target }}</p>
+                        <p class="text-sm text-gray-600">Included in Budget:
+                            {{ category.excluded_from_budget ? 'No' : 'Yes' }}</p>
+                        <p class="text-sm text-gray-600 capitalize">Enabled: {{ category.is_enabled ? 'Yes' : 'No' }}
+                        </p>
 
                     </div>
                     <div class="flex gap-2">
@@ -97,14 +101,29 @@
     <app-modal [show]="isSetCategoryModalOpen" (closed)="closeSetCategoryModal()"
         [title]="`${ setCategoryForm.id ? 'Edit' : 'Add'} Category`">
         <div modal-content>
-            <!-- Module Name -->
-            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input [(ngModel)]="setCategoryForm.name" type="text" class="w-full mb-4 border rounded px-3 py-2" />
+            <!-- Category Name -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input [(ngModel)]="setCategoryForm.name" type="text" class="w-full mb-4 border rounded px-3 py-2" />
+            </div>
+
+            <!-- Weekly Target -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Weekly Target</label>
+                <input [(ngModel)]="setCategoryForm.weekly_target" type="number"
+                    class="w-50 mb-4 border rounded px-3 py-2" (keydown)="preventDecimal($event)" />
+            </div>
 
             <!-- Enabled -->
             <label class="inline-flex items-center space-x-2 mb-2">
                 <input type="checkbox" [(ngModel)]="setCategoryForm.is_enabled" class="form-checkbox" />
                 <span class="text-sm text-gray-700">Enabled</span>
+            </label><br />
+
+            <!-- Excluded -->
+            <label class="inline-flex items-center space-x-2 mb-2">
+                <input type="checkbox" [(ngModel)]="setCategoryForm.excluded_from_budget" class="form-checkbox" />
+                <span class="text-sm text-gray-700">Excluded from Budget</span>
             </label><br />
         </div>
 

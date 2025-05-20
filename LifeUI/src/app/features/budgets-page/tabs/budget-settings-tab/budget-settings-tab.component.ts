@@ -15,6 +15,7 @@ import { Router } from '@angular/router';
 import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails } from '../../../../core/models/budget.model';
 import { BudgetContextService } from '../../../../core/contexts/BudgetContext.service';
 import { ModuleService } from '../../../../core/services/module.service';
+import { ToastService } from '../../../../shared/ui/toast/toast.service';
 
 @Component({
     selector: 'app-budget-settings-tab',
@@ -35,6 +36,7 @@ export class BudgetSettingsTabComponent {
     private moduleService = inject(ModuleService);
     private logger = inject(LoggerService);
     private budgetContext = inject(BudgetContextService);
+    private toastService = inject(ToastService);
 
     moduleData: BudgetConfiguration | null = null;
     isLoading = true;
@@ -158,6 +160,19 @@ export class BudgetSettingsTabComponent {
     }
 
     saveSetCategory(): void {
+        // Validate the form
+        // Validate name is filled and unique
+        if (!this.setCategoryForm.name || this.setCategoryForm.name.trim() === '') {
+            this.toastService.show('Name is required', 'error', 3000);
+            return;
+        }
+
+        if (!this.setCategoryForm.weekly_target) {
+            this.toastService.show('Weekly target is required', 'error', 3000);
+            return;
+        }
+
+
         if (this.setCategoryForm.id) {
             this.budgetService.updateCategory(this.moduleData!.id, this.setCategoryForm.id!, this.setCategoryForm).subscribe({
                 next: (category: BudgetCategory) => {
@@ -259,6 +274,12 @@ export class BudgetSettingsTabComponent {
     revertDrag(): void {
         if (this.moduleData) {
             this.moduleData.categories = structuredClone(this.originalCategories);
+        }
+    }
+
+    preventDecimal(event: KeyboardEvent): void {
+        if (event.key === '.' || event.key === ',') {
+            event.preventDefault();
         }
     }
 }

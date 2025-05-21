@@ -161,12 +161,19 @@ export class BudgetSettingsTabComponent {
 
     saveSetCategory(): void {
         // Validate the form
-        // Validate name is filled and unique
+        // Validate name is filled
         if (!this.setCategoryForm.name || this.setCategoryForm.name.trim() === '') {
             this.toastService.show('Name is required', 'error', 3000);
             return;
         }
 
+        // Validate the name is unique
+        if (this.moduleData!.categories.some(c => c.name.toLowerCase() === this.setCategoryForm.name.toLowerCase() && c.id !== this.setCategoryForm.id)) {
+            this.toastService.show('Name must be unique', 'error', 3000);
+            return;
+        }
+
+        // Validate weekly target is filled
         if (!this.setCategoryForm.weekly_target) {
             this.toastService.show('Weekly target is required', 'error', 3000);
             return;

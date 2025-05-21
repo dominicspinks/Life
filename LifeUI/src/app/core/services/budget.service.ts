@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
-import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails } from '../models/budget.model';
+import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetFilter, BudgetPurchase } from '../models/budget.model';
 
 @Injectable({
     providedIn: 'root'
@@ -34,6 +34,42 @@ export class BudgetService {
 
     reorderCategories(budgetId: number, categoryId: number, newOrder: number): Observable<BudgetConfiguration> {
         return this.http.post<BudgetConfiguration>(`${this.apiUrl}/budgets/${budgetId}/categories/${categoryId}/reorder/`, { new_order: newOrder });
+    }
+
+    getBudgetPurchases(id: number, filters?: BudgetFilter): Observable<BudgetPurchase[]> {
+        const filterList: string[] = [];
+        let searchFilters = '';
+        if (filters) {
+            searchFilters += '?';
+
+            if (filters.get_all) {
+                filterList.push('get_all=true');
+            }
+            if (filters.ordering) {
+                filterList.push(`ordering=${filters.ordering.join(',')}`);
+            }
+            if (filters.category && filters.category.length > 0) {
+                for (let cat of filters.category) {
+                    filterList.push(`category=${cat}`);
+                }
+            }
+            if (filterList.length > 0) {
+                searchFilters += filterList.join('&');
+            }
+        }
+        return this.http.get<BudgetPurchase[]>(`${this.apiUrl}/budgets/${id}/purchases/${searchFilters}`);
+    }
+
+    deleteBudgetPurchase(budgetId: number, purchaseId: number): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/budgets/${budgetId}/purchases/${purchaseId}/`);
+    }
+
+    addBudgetPurchase(budgetId: number, purchase: BudgetPurchase): Observable<BudgetPurchase> {
+        return this.http.post<BudgetPurchase>(`${this.apiUrl}/budgets/${budgetId}/purchases/`, purchase);
+    }
+
+    updateBudgetPurchase(budgetId: number, purchaseId: number, purchase: BudgetPurchase): Observable<BudgetPurchase> {
+        return this.http.patch<BudgetPurchase>(`${this.apiUrl}/budgets/${budgetId}/purchases/${purchaseId}/`, purchase);
     }
 
 }

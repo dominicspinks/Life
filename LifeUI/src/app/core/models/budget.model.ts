@@ -17,3 +17,18 @@ export type BudgetConfigurationDetails = Pick<
     UserModule,
     'id' | 'name' | 'order' | 'is_enabled' | 'is_read_only'
 >;
+
+export interface BudgetPurchase {
+    id?: number;
+    purchase_date: string;
+    amount: number;
+    description: string;
+    category: number | null;
+    category_name?: string;
+}
+
+export interface BudgetFilter {
+    get_all?: boolean,
+    ordering?: ('purchase_date' | 'amount' | 'category__name')[],
+    category?: number[]
+}

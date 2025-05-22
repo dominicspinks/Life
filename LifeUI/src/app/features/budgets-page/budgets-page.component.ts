@@ -2,9 +2,7 @@ import { Component, inject } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { LoggerService } from '../../core/services/logger.service';
 import { filter } from 'rxjs';
-import { BudgetService } from '../../core/services/budget.service';
 import { BudgetConfiguration } from '../../core/models/budget.model';
-import { BudgetContextService } from '../../core/contexts/BudgetContext.service';
 
 interface Tab {
     name: string;
@@ -22,8 +20,6 @@ export class BudgetsPageComponent {
     private logger = inject(LoggerService);
     private router = inject(Router);
     private route = inject(ActivatedRoute);
-    private budgetService = inject(BudgetService);
-    private budgetContext = inject(BudgetContextService);
 
     moduleId = Number(this.route.snapshot.paramMap.get('id'));
     moduleData: BudgetConfiguration | null = null;
@@ -60,25 +56,6 @@ export class BudgetsPageComponent {
         if (initialChild) {
             this.currentTab = initialChild;
         }
-
-        // Get budget details from API
-        this.budgetService.getBudgetConfiguration(this.moduleId).subscribe({
-            next: (res) => {
-                this.moduleData = res;
-                this.budgetContext.setModuleData(res);
-                this.isLoading = false;
-            },
-            error: (error) => {
-                this.isLoading = false;
-                this.logger.error('Error fetching budget details', error);
-                alert('Module not found');
-                this.router.navigate(['/modules']);
-            }
-        })
-    }
-
-    ngOnDestroy(): void {
-        this.budgetContext.setModuleData(null);
     }
 
     onTabChange(tab: string) {

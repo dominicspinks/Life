@@ -1,5 +1,4 @@
 import { Component, inject } from '@angular/core';
-import { BudgetContextService } from '../../../../core/contexts/BudgetContext.service';
 import { BudgetConfiguration, BudgetPurchase } from '../../../../core/models/budget.model';
 import { BudgetService } from '../../../../core/services/budget.service';
 import { LoggerService } from '../../../../core/services/logger.service';
@@ -15,6 +14,7 @@ import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ModalComponent } from '../../../../layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';
 import { SpinningIconComponent } from "../../../../shared/icons/spinning-icon/spinning-icon.component";
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
     selector: 'app-budget-purchases-tab',
@@ -30,13 +30,16 @@ import { SpinningIconComponent } from "../../../../shared/icons/spinning-icon/sp
     styleUrl: './budget-purchases-tab.component.css'
 })
 export class BudgetPurchasesTabComponent {
-    private budgetContext = inject(BudgetContextService);
+    private route = inject(ActivatedRoute);
+    private router = inject(Router);
     private budgetService = inject(BudgetService);
     private toastService = inject(ToastService);
     private logger = inject(LoggerService);
 
-    isLoading = true;
+    budgetId = Number(this.route.parent?.snapshot.paramMap.get('id'));
     budgetConfiguration: BudgetConfiguration | null = null;
+
+    isLoading = true;
     purchases: BudgetPurchase[] = [];
 
     showAddMenu = false;
@@ -62,24 +65,32 @@ export class BudgetPurchasesTabComponent {
 
     ngOnInit(): void {
         this.isLoading = true;
-        this.budgetContext.moduleData$.subscribe(module => {
-            if (!module) return;
+        // Get budget details from API
+        this.budgetService.getBudgetConfiguration(this.budgetId).subscribe({
+            next: (res) => {
+                this.budgetConfiguration = res;
+                this.isLoading = false;
+            },
+            error: (error) => {
+                this.isLoading = false;
+                this.logger.error('Error fetching budget details', error);
+                this.toastService.show('Error fetching budget details', 'error', 3000);
+                this.router.navigate(['/modules']);
+            }
+        })
 
-            this.budgetConfiguration = module;
-
-            this.isLoading = true;
-            this.budgetService.getPurchases(this.budgetConfiguration!.id, { get_all: true }).subscribe({
-                next: (res) => {
-                    this.purchases = res;
-                    this.isLoading = false;
-                },
-                error: (error) => {
-                    this.logger.error('Error fetching budget purchases', error);
-                    this.toastService.show('Error fetching budget purchases', 'error', 3000);
-                    this.isLoading = false;
-                }
-            })
-        });
+        // Get purchase history from API
+        this.budgetService.getPurchases(this.budgetId, { get_all: true }).subscribe({
+            next: (res) => {
+                this.purchases = res;
+                this.isLoading = false;
+            },
+            error: (error) => {
+                this.logger.error('Error fetching budget purchases', error);
+                this.toastService.show('Error fetching budget purchases', 'error', 3000);
+                this.isLoading = false;
+            }
+        })
     }
 
     onAddOption(option: 'single' | 'bulk' | 'import') {

@@ -8,9 +8,9 @@
     <div class="bg-white shadow rounded p-6">
         <h2 class="text-lg font-semibold pb-2">Details</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><strong>Name:</strong> {{ moduleData?.name }}</div>
-            <div><strong>Enabled:</strong> {{ moduleData?.is_enabled ? 'Yes' : 'No' }}</div>
-            <div><strong>Read Only:</strong> {{ moduleData?.is_read_only ? 'Yes' : 'No' }}</div>
+            <div><strong>Name:</strong> {{ budgetConfiguration?.name }}</div>
+            <div><strong>Enabled:</strong> {{ budgetConfiguration?.is_enabled ? 'Yes' : 'No' }}</div>
+            <div><strong>Read Only:</strong> {{ budgetConfiguration?.is_read_only ? 'Yes' : 'No' }}</div>
         </div>
 
         <!-- Buttons -->
@@ -29,16 +29,16 @@
             <h2 class="text-lg font-semibold">Categories</h2>
             <button
                 class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                [disabled]="moduleData?.is_read_only" (click)="openSetCategoryModal()">Add Category</button>
+                [disabled]="budgetConfiguration?.is_read_only" (click)="openSetCategoryModal()">Add Category</button>
         </div>
 
         <div class="space-y-4">
             @for (category of sortedCategories || []; track category.id) {
             <div class="border p-4 rounded shadow-sm bg-gray-50 flex gap-2 flex-row"
-                [draggable]="!moduleData?.is_read_only" (dragstart)="onDragStart(category, $index)"
+                [draggable]="!budgetConfiguration?.is_read_only" (dragstart)="onDragStart(category, $index)"
                 (dragover)="onDragOver($event, $index)" (drop)="onDrop($event, $index)" (dragend)="onDragEnd()">
                 <div
-                    [class]="`hidden sm:flex items-center ${ moduleData?.is_read_only ? 'opacity-50 hover:cursor-not-allowed' : 'hover:cursor-pointer' }`">
+                    [class]="`hidden sm:flex items-center ${ budgetConfiguration?.is_read_only ? 'opacity-50 hover:cursor-not-allowed' : 'hover:cursor-pointer' }`">
                     <ng-icon name=" ionMenu" size="24" />
                 </div>
                 <div class="flex justify-between items-center w-full">
@@ -53,11 +53,12 @@
                     <div class="flex gap-2">
                         <button
                             class="text-blue-600 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            [disabled]="moduleData?.is_read_only" (click)="openSetCategoryModal(category)">
+                            [disabled]="budgetConfiguration?.is_read_only" (click)="openSetCategoryModal(category)">
                             <ng-icon name="ionPencil" size="24" />
                         </button>
                         <button class="text-red-600 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            [disabled]="moduleData?.is_read_only" (click)="confirmDeleteCategory(category.id!)">
+                            [disabled]="budgetConfiguration?.is_read_only"
+                            (click)="confirmDeleteCategory(category.id!)">
                             <ng-icon name="ionTrashBin" size="24" />
                         </button>
                     </div>

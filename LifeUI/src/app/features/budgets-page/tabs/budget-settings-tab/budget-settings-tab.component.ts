@@ -11,9 +11,8 @@ import { BudgetService } from '../../../../core/services/budget.service';
 import { SpinningIconComponent } from '../../../../shared/icons/spinning-icon/spinning-icon.component';
 import { ModalComponent } from '../../../../layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails } from '../../../../core/models/budget.model';
-import { BudgetContextService } from '../../../../core/contexts/BudgetContext.service';
 import { ModuleService } from '../../../../core/services/module.service';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
 
@@ -31,14 +30,16 @@ import { ToastService } from '../../../../shared/ui/toast/toast.service';
     styleUrl: './budget-settings-tab.component.css'
 })
 export class BudgetSettingsTabComponent {
+    private route = inject(ActivatedRoute);
     private router = inject(Router);
     private budgetService = inject(BudgetService);
     private moduleService = inject(ModuleService);
     private logger = inject(LoggerService);
-    private budgetContext = inject(BudgetContextService);
     private toastService = inject(ToastService);
 
-    moduleData: BudgetConfiguration | null = null;
+    budgetId = Number(this.route.parent?.snapshot.paramMap.get('id'));
+    budgetConfiguration: BudgetConfiguration | null = null;
+    sortedCategories: BudgetCategory[] | null = null;
     isLoading = true;
     isEditDetailsModalOpen = false;
     editDetailsForm = {
@@ -61,32 +62,40 @@ export class BudgetSettingsTabComponent {
     draggedCategory: BudgetCategory | null = null;
     dragStartIndex = -1;
     dragTargetIndex = -1;
-    private originalCategories: BudgetCategory[] = [];
 
     ngOnInit(): void {
-        this.budgetContext.moduleData$.subscribe(module => {
-            if (!module) return;
+        // Get budget details from API
+        this.budgetService.getBudgetConfiguration(this.budgetId).subscribe({
+            next: (res) => {
+                this.budgetConfiguration = res;
+                this.sortedCategories = [...this.budgetConfiguration.categories];
+                this.sortedCategories.sort((a, b) => a.order - b.order);
 
-            this.moduleData = module;
+                this.editDetailsForm = {
+                    name: this.budgetConfiguration.name,
+                    order: this.budgetConfiguration.order,
+                    is_enabled: this.budgetConfiguration.is_enabled,
+                    is_read_only: this.budgetConfiguration.is_read_only
+                };
 
-            this.editDetailsForm = {
-                name: this.moduleData.name,
-                order: this.moduleData.order,
-                is_enabled: this.moduleData.is_enabled,
-                is_read_only: this.moduleData.is_read_only
-            };
+                this.setCategoryForm.order = 1 + this.budgetConfiguration.categories.length;
+                this.isLoading = false;
+            },
+            error: (error) => {
+                this.isLoading = false;
+                this.logger.error('Error fetching budget details', error);
+                this.toastService.show('Error fetching budget details', 'error', 3000);
+                this.router.navigate(['/modules']);
+            }
+        })
 
-            this.setCategoryForm.order = 1 + this.moduleData.categories.length;
-
-            this.isLoading = false;
-        });
     }
 
 
     openEditDetailsModal(): void {
-        if (!this.moduleData) return;
+        if (!this.budgetConfiguration) return;
 
-        const { name, order, is_enabled, is_read_only, is_checkable } = this.moduleData;
+        const { name, order, is_enabled, is_read_only, is_checkable } = this.budgetConfiguration;
         this.editDetailsForm = { name, order, is_enabled, is_read_only };
         this.isEditDetailsModalOpen = true;
     }
@@ -98,13 +107,12 @@ export class BudgetSettingsTabComponent {
     saveEditedModule(): void {
         const updated: BudgetConfigurationDetails = {
             ...this.editDetailsForm,
-            id: this.moduleData!.id
+            id: this.budgetConfiguration!.id
         };
 
         this.budgetService.updateBudgetDetails(updated).subscribe({
             next: (res) => {
-                this.moduleData = res;
-                this.budgetContext.setModuleData(res);
+                this.budgetConfiguration = res;
             },
             error: (error) => {
                 this.logger.error('Error updating module details', error);
@@ -122,7 +130,7 @@ export class BudgetSettingsTabComponent {
     }
 
     deleteModule(): void {
-        this.moduleService.deleteModule(this.moduleData!.id).subscribe({
+        this.moduleService.deleteModule(this.budgetConfiguration!.id).subscribe({
             next: () => {
                 this.router.navigate(['/modules']);
             },
@@ -133,7 +141,7 @@ export class BudgetSettingsTabComponent {
     }
 
     openSetCategoryModal(category?: BudgetCategory): void {
-        if (!this.moduleData) return;
+        if (!this.budgetConfiguration) return;
 
         if (category) {
             this.setCategoryForm = structuredClone(category);
@@ -143,7 +151,7 @@ export class BudgetSettingsTabComponent {
                 name: '',
                 weekly_target: 0,
                 excluded_from_budget: false,
-                order: 1 + (this.moduleData?.categories.length ?? 1),
+                order: 1 + (this.budgetConfiguration?.categories.length ?? 1),
                 is_enabled: true,
             };
         }
@@ -155,10 +163,6 @@ export class BudgetSettingsTabComponent {
         this.isSetCategoryModalOpen = false;
     }
 
-    get sortedCategories() {
-        return this.moduleData!.categories.sort((a, b) => a.order - b.order);
-    }
-
     saveSetCategory(): void {
         // Validate the form
         // Validate name is filled
@@ -168,7 +172,7 @@ export class BudgetSettingsTabComponent {
         }
 
         // Validate the name is unique
-        if (this.moduleData!.categories.some(c => c.name.toLowerCase() === this.setCategoryForm.name.toLowerCase() && c.id !== this.setCategoryForm.id)) {
+        if (this.budgetConfiguration!.categories.some(c => c.name.toLowerCase() === this.setCategoryForm.name.toLowerCase() && c.id !== this.setCategoryForm.id)) {
             this.toastService.show('Name must be unique', 'error', 3000);
             return;
         }
@@ -181,10 +185,11 @@ export class BudgetSettingsTabComponent {
 
 
         if (this.setCategoryForm.id) {
-            this.budgetService.updateCategory(this.moduleData!.id, this.setCategoryForm.id!, this.setCategoryForm).subscribe({
+            this.budgetService.updateCategory(this.budgetConfiguration!.id, this.setCategoryForm.id!, this.setCategoryForm).subscribe({
                 next: (category: BudgetCategory) => {
                     this.closeSetCategoryModal();
-                    this.moduleData!.categories = this.moduleData!.categories.map(c => c.id === category.id ? category : c);
+                    this.budgetConfiguration!.categories = this.budgetConfiguration!.categories.map(c => c.id === category.id ? category : c);
+                    this.sortedCategories = this.sortedCategories!.map(c => c.id === category.id ? category : c);
                 },
                 error: (error) => {
                     this.logger.error('Error updating category', error);
@@ -192,10 +197,11 @@ export class BudgetSettingsTabComponent {
             });
         }
         else {
-            this.budgetService.addCategory(this.moduleData!.id, this.setCategoryForm).subscribe({
+            this.budgetService.addCategory(this.budgetConfiguration!.id, this.setCategoryForm).subscribe({
                 next: (category: BudgetCategory) => {
                     this.closeSetCategoryModal();
-                    this.moduleData!.categories.push(category);
+                    this.budgetConfiguration!.categories.push(category);
+                    this.sortedCategories?.push(category);
                 },
                 error: (error) => {
                     this.logger.error('Error adding category', error);
@@ -212,12 +218,13 @@ export class BudgetSettingsTabComponent {
     }
 
     deleteCategory(categoryId: number): void {
-        this.budgetService.deleteCategory(this.moduleData!.id, categoryId).subscribe({
+        this.budgetService.deleteCategory(this.budgetConfiguration!.id, categoryId).subscribe({
             next: () => {
-                this.moduleData = {
-                    ...this.moduleData!,
-                    categories: this.moduleData!.categories.filter(f => f.id !== categoryId)
+                this.budgetConfiguration = {
+                    ...this.budgetConfiguration!,
+                    categories: this.budgetConfiguration!.categories.filter(f => f.id !== categoryId)
                 };
+                this.sortedCategories = this.sortedCategories!.filter(f => f.id !== categoryId);
             },
             error: (error) => {
                 this.logger.error('Error deleting category', error);
@@ -228,7 +235,6 @@ export class BudgetSettingsTabComponent {
     onDragStart(category: BudgetCategory, index: number): void {
         this.draggedCategory = category;
         this.dragStartIndex = index;
-        this.originalCategories = structuredClone(this.moduleData!.categories);
     }
 
     onDragOver(event: DragEvent, index: number): void {
@@ -239,20 +245,12 @@ export class BudgetSettingsTabComponent {
     onDrop(event: DragEvent, index: number): void {
         event.preventDefault();
 
-        if (this.draggedCategory && this.moduleData) {
-            const categories = [...this.moduleData.categories];
-            const dragged = categories.splice(this.dragStartIndex, 1)[0];
-            categories.splice(index, 0, dragged);
-
-            // Reassign order
-            categories.forEach((c, i) => c.order = i + 1);
-            this.moduleData.categories = categories;
-
+        if (this.draggedCategory && this.budgetConfiguration) {
             // Save new order
-            this.budgetService.reorderCategories(this.moduleData.id, this.draggedCategory.id!, index + 1).subscribe({
+            this.budgetService.reorderCategories(this.budgetConfiguration.id, this.draggedCategory.id!, index + 1).subscribe({
                 next: (res) => {
-                    this.moduleData!.categories = res.categories;
-                    this.budgetContext.setModuleData(this.moduleData!);
+                    this.budgetConfiguration!.categories = res.categories;
+                    this.sortedCategories = [...res.categories].sort((a, b) => a.order - b.order);
                 },
                 error: (err) => {
                     this.logger.error('Failed to reorder categories', err);
@@ -275,12 +273,11 @@ export class BudgetSettingsTabComponent {
         this.draggedCategory = null;
         this.dragStartIndex = -1;
         this.dragTargetIndex = -1;
-        this.originalCategories = [];
     }
 
     revertDrag(): void {
-        if (this.moduleData) {
-            this.moduleData.categories = structuredClone(this.originalCategories);
+        if (this.budgetConfiguration) {
+            this.sortedCategories = [...this.budgetConfiguration!.categories];
         }
     }
 

@@ -2,10 +2,32 @@
     <!-- Title -->
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-800">{{ budgetConfiguration?.name }}</h1>
-        <button class="text-blue-800 hover:text-blue-900 hover:scale-125 hover:cursor-pointer"
-            (click)="openSetPurchaseModal()">
-            <ng-icon name="ionAdd" size="24" />
-        </button>
+        <div class="relative inline-block text-left">
+            <button
+                class="text-blue-800 hover:text-blue-900 hover:scale-125 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="budgetConfiguration?.is_read_only" (click)="showAddMenu = !showAddMenu">
+                <ng-icon name="ionAdd" size="24" />
+            </button>
+
+            @if (showAddMenu) {
+            <div class="absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                <div class="py-1">
+                    <button class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                        (click)="onAddOption('single')">
+                        Single
+                    </button>
+                    <button class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                        (click)="onAddOption('bulk')">
+                        Bulk
+                    </button>
+                    <button class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                        (click)="onAddOption('import')">
+                        Import
+                    </button>
+                </div>
+            </div>
+            }
+        </div>
     </div>
 
     <!-- Table -->
@@ -22,40 +44,51 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Cost
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-60">
                         Description
                     </th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
+                @if (isLoading) {
+                <tr>
+                    <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 h-20">
+                        <app-spinning-icon colour="text-blue-600" size="h-8 w-8" />
+                    </td>
+                </tr>
+                }
+                @else {
                 @for (item of purchases; track item.id) {
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {{ item.purchase_date }}
+                    <td class="px-6 py-1 whitespace-nowrap text-sm text-gray-700 align-text-top">
+                        {{ item.purchase_date | date:'shortDate' }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    <td class="px-6 py-1 whitespace-nowrap text-sm text-gray-700 align-text-top">
                         {{ item.category_name }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {{ item.amount | currency:'USD':'symbol':'1.2-2' }}
+                    <td class="px-6 py-1 whitespace-nowrap text-sm text-gray-700 align-text-top">
+                        {{ item.amount | currency:'AUD':'symbol':'1.2-2' }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    <td class="px-6 py-1 text-sm text-gray-700 align-top max-w-60 break-words whitespace-normal">
                         {{ item.description }}
                     </td>
 
                     <!-- Actions (Edit/Delete) -->
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="text-orange-400 hover:text-orange-500 m-1 hover:scale-125 hover:cursor-pointer"
-                            (click)="openSetPurchaseModal(item)">
+                    <td class="px-3 py-1 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                            class="text-orange-400 hover:text-orange-500 m-1 hover:scale-125 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            [disabled]="budgetConfiguration?.is_read_only" (click)="openSetPurchaseModal(item)">
                             <ng-icon name="ionPencil" size="16" />
                         </button>
-                        <button class="text-red-600 hover:text-red-900 m-1 hover:scale-125 hover:cursor-pointer"
-                            (click)="confirmDeletePurchase(item.id!)">
+                        <button
+                            class="text-red-600 hover:text-red-900 m-1 hover:scale-125 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            [disabled]="budgetConfiguration?.is_read_only" (click)="confirmDeletePurchase(item.id!)">
                             <ng-icon name="ionTrashBin" size="16" />
                         </button>
                     </td>
                 </tr>
-                }
+                }}
             </tbody>
         </table>
     </div>
@@ -113,6 +146,95 @@
             </button>
         </div>
 
+    </app-modal>
+
+    <!-- Bulk add purchases modal -->
+    <app-modal [show]="isBulkImportModalOpen" (closed)="isBulkImportModalOpen = false" title="Bulk Import Purchases">
+        <div modal-content class="flex flex-col gap-4">
+
+            <!-- Paste Input -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Paste Data</label>
+                <textarea [(ngModel)]="bulkRawInput"
+                    class="w-full border rounded px-3 py-2 min-h-32 font-mono"></textarea>
+                <button (click)="onParseBulkInput()"
+                    [class]="`mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 ${isParsing ? 'opacity-50 cursor-not-allowed' : ''}`">
+                    @if (isParsing) {
+                    <app-spinning-icon class="h-4 w-4 text-white" />
+                    }
+                    @else {
+                    Parse
+                    }
+                </button>
+            </div>
+
+            <!-- Invert Price -->
+            <div class="flex items-center gap-2">
+                <input type="checkbox" [(ngModel)]="bulkInvertPrice" id="invertPrice" />
+                <label for="invertPrice" class="text-sm text-gray-700">Invert price</label>
+            </div>
+
+            <!-- Parsed Table Preview -->
+            @if (bulkPreviewRows.length > 0) {
+            <div class="overflow-x-auto">
+                <table class="min-w-full border border-gray-300 text-sm">
+                    <thead>
+                        <tr>
+                            @for (colIndex of bulkParsedHeaders; track $index) {
+                            <th class="px-2 py-1 border border-gray-300">
+                                <select [(ngModel)]="bulkFieldMapping[$index]"
+                                    class="text-xs border rounded px-1 py-0.5 w-full">
+                                    <option value="">--</option>
+                                    <option value="purchase_date">Date</option>
+                                    <option value="amount">Amount</option>
+                                    <option value="description">Description</option>
+                                </select>
+                            </th>
+                            }
+                            <th class="px-2 py-1 border border-gray-300">Category</th>
+                            <th class="px-2 py-1 border border-gray-300"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (row of bulkPreviewRows; track $index) {
+                        <tr>
+                            @for (val of row.values; track $index) {
+                            <td class="border border-gray-200 px-2 py-1">
+                                <input [(ngModel)]="row.values[$index]"
+                                    class="w-full text-xs px-1 py-0.5 border rounded" />
+                            </td>
+                            }
+                            <td class="border border-gray-200 px-2 py-1">
+                                <select [(ngModel)]="row.category"
+                                    (ngModelChange)="row.category = $event === '' ? null : +$event"
+                                    class="text-xs border rounded px-1 py-0.5 w-full">
+                                    <option value="">-- Select --</option>
+                                    @for (category of budgetConfiguration?.categories; track category.id) {
+                                    <option [value]="category.id">{{ category.name }}</option>
+                                    }
+                                </select>
+                            </td>
+                            <td class="border border-gray-200 text-center">
+                                <button (click)="removeBulkRow($index)"
+                                    class="text-red-500 hover:text-red-700 text-xs"><ng-icon name="ionClose"
+                                        size="16" /></button>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            }
+        </div>
+
+        <div modal-actions class="flex justify-end gap-2">
+            <button (click)="isBulkImportModalOpen = false" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+                Cancel
+            </button>
+            <button (click)="saveBulkImport()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Save
+            </button>
+        </div>
     </app-modal>
 
 </div>

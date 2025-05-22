@@ -36,7 +36,7 @@ export class BudgetService {
         return this.http.post<BudgetConfiguration>(`${this.apiUrl}/budgets/${budgetId}/categories/${categoryId}/reorder/`, { new_order: newOrder });
     }
 
-    getBudgetPurchases(id: number, filters?: BudgetFilter): Observable<BudgetPurchase[]> {
+    getPurchases(id: number, filters?: BudgetFilter): Observable<BudgetPurchase[]> {
         const filterList: string[] = [];
         let searchFilters = '';
         if (filters) {
@@ -60,16 +60,20 @@ export class BudgetService {
         return this.http.get<BudgetPurchase[]>(`${this.apiUrl}/budgets/${id}/purchases/${searchFilters}`);
     }
 
-    deleteBudgetPurchase(budgetId: number, purchaseId: number): Observable<void> {
+    deletePurchase(budgetId: number, purchaseId: number): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/budgets/${budgetId}/purchases/${purchaseId}/`);
     }
 
-    addBudgetPurchase(budgetId: number, purchase: BudgetPurchase): Observable<BudgetPurchase> {
+    addPurchase(budgetId: number, purchase: BudgetPurchase): Observable<BudgetPurchase> {
         return this.http.post<BudgetPurchase>(`${this.apiUrl}/budgets/${budgetId}/purchases/`, purchase);
     }
 
-    updateBudgetPurchase(budgetId: number, purchaseId: number, purchase: BudgetPurchase): Observable<BudgetPurchase> {
+    updatePurchase(budgetId: number, purchaseId: number, purchase: BudgetPurchase): Observable<BudgetPurchase> {
         return this.http.patch<BudgetPurchase>(`${this.apiUrl}/budgets/${budgetId}/purchases/${purchaseId}/`, purchase);
+    }
+
+    addBulkPurchase(budgetId: number, purchases: BudgetPurchase[]): Observable<BudgetPurchase[]> {
+        return this.http.post<BudgetPurchase[]>(`${this.apiUrl}/budgets/${budgetId}/purchases/bulk/`, purchases);
     }
 
 }

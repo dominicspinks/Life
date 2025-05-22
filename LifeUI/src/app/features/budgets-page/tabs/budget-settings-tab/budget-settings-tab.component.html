@@ -27,16 +27,18 @@
     <div class="bg-white shadow rounded p-6">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-lg font-semibold">Categories</h2>
-            <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                (click)="openSetCategoryModal()">Add Category</button>
+            <button
+                class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="moduleData?.is_read_only" (click)="openSetCategoryModal()">Add Category</button>
         </div>
 
         <div class="space-y-4">
             @for (category of sortedCategories || []; track category.id) {
-            <div class="border p-4 rounded shadow-sm bg-gray-50 flex gap-2 flex-row" draggable="true"
-                (dragstart)="onDragStart(category, $index)" (dragover)="onDragOver($event, $index)"
-                (drop)="onDrop($event, $index)" (dragend)="onDragEnd()">
-                <div class="hidden sm:flex items-center hover: cursor-pointer">
+            <div class="border p-4 rounded shadow-sm bg-gray-50 flex gap-2 flex-row"
+                [draggable]="!moduleData?.is_read_only" (dragstart)="onDragStart(category, $index)"
+                (dragover)="onDragOver($event, $index)" (drop)="onDrop($event, $index)" (dragend)="onDragEnd()">
+                <div
+                    [class]="`hidden sm:flex items-center ${ moduleData?.is_read_only ? 'opacity-50 hover:cursor-not-allowed' : 'hover:cursor-pointer' }`">
                     <ng-icon name=" ionMenu" size="24" />
                 </div>
                 <div class="flex justify-between items-center w-full">
@@ -47,13 +49,15 @@
                             {{ category.excluded_from_budget ? 'No' : 'Yes' }}</p>
                         <p class="text-sm text-gray-600 capitalize">Enabled: {{ category.is_enabled ? 'Yes' : 'No' }}
                         </p>
-
                     </div>
                     <div class="flex gap-2">
-                        <button class="text-blue-600 hover:text-blue-300" (click)="openSetCategoryModal(category)">
+                        <button
+                            class="text-blue-600 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            [disabled]="moduleData?.is_read_only" (click)="openSetCategoryModal(category)">
                             <ng-icon name="ionPencil" size="24" />
                         </button>
-                        <button class="text-red-600 hover:text-red-300" (click)="confirmDeleteCategory(category.id!)">
+                        <button class="text-red-600 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            [disabled]="moduleData?.is_read_only" (click)="confirmDeleteCategory(category.id!)">
                             <ng-icon name="ionTrashBin" size="24" />
                         </button>
                     </div>

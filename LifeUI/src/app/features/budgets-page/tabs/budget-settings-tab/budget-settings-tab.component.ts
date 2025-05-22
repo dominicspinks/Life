@@ -174,7 +174,7 @@ export class BudgetSettingsTabComponent {
         }
 
         // Validate weekly target is filled
-        if (!this.setCategoryForm.weekly_target) {
+        if (!this.setCategoryForm.weekly_target && this.setCategoryForm.weekly_target !== 0) {
             this.toastService.show('Weekly target is required', 'error', 3000);
             return;
         }

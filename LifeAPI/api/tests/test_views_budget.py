@@ -202,3 +202,59 @@ class BudgetPurchaseViewSetTests(APITestCase):
         response = self.client.post(f'{self.base_url}bulk/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(response.data), 2)
+
+class BudgetPurchaseSummaryViewSetTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='user@example.com', password='password123')
+        self.budget_type = ModuleType.objects.get(name='budget')
+        self.budget = UserModule.objects.create(user=self.user, module=self.budget_type, name='Test Budget', order=0, is_enabled=True)
+        self.category = BudgetCategory.objects.create(user_module=self.budget, name='Food', weekly_target=100, order=0)
+
+        # Purchases in two different ISO weeks
+        BudgetPurchase.objects.create(
+            user_module=self.budget,
+            purchase_date='2025-01-02',
+            amount=20.00,
+            description='Groceries',
+            category=self.category
+        )
+        BudgetPurchase.objects.create(
+            user_module=self.budget,
+            purchase_date='2025-01-10',
+            amount=30.00,
+            description='More groceries',
+            category=self.category
+        )
+
+        self.base_url = f'/api/budgets/{self.budget.id}/summary/'
+
+    def test_unauthenticated(self):
+        response = self.client.get(self.base_url, {'start_date': '2025-01-01', 'end_date': '2025-02-01'})
+        self.assertEqual(response.status_code, 401)
+
+    def test_valid_summary_response(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.base_url, {'start_date': '2025-01-01', 'end_date': '2025-02-01'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        weeks = sorted([entry['week'] for entry in response.data])
+        self.assertEqual(weeks, [1, 2])
+
+    def test_missing_date_params(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.base_url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('detail', response.data)
+
+    def test_invalid_date_format(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.base_url, {'start_date': '2025-01-01', 'end_date': 'invalid-date'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('detail', response.data)
+
+    def test_no_results_in_range(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.base_url, {'start_date': '2024-01-01', 'end_date': '2024-12-31'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])

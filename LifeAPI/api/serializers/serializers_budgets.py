@@ -85,3 +85,8 @@ class BudgetSerializer(UserModuleSerializer):
     def get_categories(self, obj):
         categories = BudgetCategory.objects.filter(user_module=obj).order_by('order')
         return BudgetCategorySerializer(categories, many=True).data
+
+class BudgetPurchaseSummarySerializer(serializers.Serializer):
+    week = serializers.IntegerField()
+    category = serializers.IntegerField()
+    total = serializers.FloatField()

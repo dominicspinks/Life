@@ -14,7 +14,7 @@ from api.models import (
     BudgetPurchase
 )
 from api.serializers.serializers_auth import EmailTokenObtainSerializer, RegisterSerializer
-from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer
+from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer, BudgetPurchaseSummarySerializer
 from api.serializers.serializers_lists import ListConfigurationSerializer, ListDataSerializer, ListFieldSerializer, ListItemSerializer
 from api.serializers.serializers_modules import ModuleTypeSerializer, UserModuleSerializer
 from api.serializers.serializers_reference import FieldTypeDetailSerializer, FieldTypeSerializer
@@ -496,3 +496,48 @@ class BudgetSerializerTests(TestCase):
         names = [cat['name'] for cat in data['categories']]
         self.assertIn('Groceries', names)
         self.assertIn('Fun', names)
+
+
+class BudgetPurchaseSummarySerializerTests(TestCase):
+    def test_valid_serialization(self):
+        data = {
+            'week': 3,
+            'category': 5,
+            'total': 89.95
+        }
+        serializer = BudgetPurchaseSummarySerializer(data)
+        self.assertEqual(serializer.data['week'], 3)
+        self.assertEqual(serializer.data['category'], 5)
+        self.assertEqual(serializer.data['total'], 89.95)
+
+    def test_valid_input_deserialization(self):
+        input_data = {
+            'week': 12,
+            'category': 2,
+            'total': 42.00
+        }
+        serializer = BudgetPurchaseSummarySerializer(data=input_data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        validated = serializer.validated_data
+        self.assertEqual(validated['week'], 12)
+        self.assertEqual(validated['category'], 2)
+        self.assertEqual(validated['total'], 42.00)
+
+    def test_missing_fields(self):
+        serializer = BudgetPurchaseSummarySerializer(data={})
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('week', serializer.errors)
+        self.assertIn('category', serializer.errors)
+        self.assertIn('total', serializer.errors)
+
+    def test_invalid_field_types(self):
+        data = {
+            'week': 'not-a-number',
+            'category': 'abc',
+            'total': 'not-a-number'
+        }
+        serializer = BudgetPurchaseSummarySerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('week', serializer.errors)
+        self.assertIn('category', serializer.errors)
+        self.assertIn('total', serializer.errors)

@@ -1,14 +1,16 @@
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db import transaction
+from django.db import transaction, connection
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.filters import OrderingFilter
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.decorators import action
 
-from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer
+from datetime import datetime
+
+from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer, BudgetPurchaseSummarySerializer
 from api.models import BudgetCategory, BudgetPurchase, UserModule
 from api.pagination import Unpaginatable
 from api.filters import PurchaseFilterSet
@@ -192,3 +194,49 @@ class BudgetPurchaseBulkViewSet(viewsets.GenericViewSet, CreateModelMixin):
 
     def destroy(self, request, *args, **kwargs):
         return Response({"detail": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class BudgetPurchaseSummaryViewSet(viewsets.GenericViewSet):
+    """
+    API endpoint for retrieving summary data for a budget
+    """
+    queryset = UserModule.objects.none()
+    serializer_class = BudgetPurchaseSummarySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    def list(self, request, budget_id=None):
+        start = request.query_params.get('start_date')
+        end = request.query_params.get('end_date')
+
+        # Validate date inputs
+        try:
+            start_date = datetime.strptime(start, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return Response({'detail': 'start_date and end_date must be in YYYY-MM-DD format.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        query = """
+            SELECT
+                CAST(to_char(purchase_date,'IW') as int) AS week,
+                category_id,
+                SUM(amount) AS total
+            FROM api_budgetpurchase
+            WHERE user_module_id = %s
+              AND purchase_date >= %s
+              AND purchase_date < %s
+            GROUP BY week, category_id
+            ORDER BY week, category_id
+        """
+
+        with connection.cursor() as cursor:
+            cursor.execute(query, [budget_id, start_date, end_date])
+            results = cursor.fetchall()
+
+        data = [
+            {"week": row[0], "category": row[1], "total": float(row[2])}
+            for row in results
+        ]
+
+        serializer = self.get_serializer(data, many=True)
+        return Response(serializer.data)

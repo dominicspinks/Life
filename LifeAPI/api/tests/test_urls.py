@@ -10,6 +10,7 @@ from api.views import (
     BudgetCategoryViewSet,
     BudgetPurchaseViewSet,
     BudgetPurchaseBulkViewSet,
+    BudgetPurchaseSummaryViewSet,
     FieldTypeViewSet,
     ModuleTypeViewSet,
     UserModuleViewSet,
@@ -172,3 +173,15 @@ class BudgetURLTests(TestCase):
         url = reverse('budget-purchase-bulk-list', args=[1])
         self.assertEqual(url, '/api/budgets/1/purchases/bulk/')
         self.assertEqual(resolve(url).func.cls, BudgetPurchaseBulkViewSet)
+
+    def test_budget_summary_urls(self):
+        """Test nested budget summary viewset URLs."""
+        url = reverse('budget-summary-list', args=[1])
+        self.assertEqual(url, '/api/budgets/1/summary/')
+        self.assertEqual(resolve(url).func.cls, BudgetPurchaseSummaryViewSet)
+
+    def test_budget_summary_resolver_kwargs(self):
+        """Check nested kwargs in budget summary route."""
+        resolver = resolve('/api/budgets/1/summary/')
+        self.assertEqual(resolver.func.cls, BudgetPurchaseSummaryViewSet)
+        self.assertEqual(resolver.kwargs['budget_id'], '1')

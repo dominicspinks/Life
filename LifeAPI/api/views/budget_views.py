@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.filters import OrderingFilter
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.decorators import action
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from datetime import datetime
 
@@ -152,6 +153,18 @@ class BudgetPurchaseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user_module=self.get_serializer_context()['user_module'])
 
+@extend_schema_view(
+    create=extend_schema(
+        summary="Bulk create purchases",
+        description="Imports a list of purchases into the given budget.",
+        responses={201: BudgetPurchaseSerializer(many=True)},
+    ),
+    list=extend_schema(exclude=True),
+    retrieve=extend_schema(exclude=True),
+    update=extend_schema(exclude=True),
+    partial_update=extend_schema(exclude=True),
+    destroy=extend_schema(exclude=True),
+)
 class BudgetPurchaseBulkViewSet(viewsets.GenericViewSet, CreateModelMixin):
     """
     API endpoint for bulk importing purchases into a budget

@@ -176,7 +176,7 @@ export class BudgetSummaryTabComponent {
             target = category.weekly_target;
         }
 
-        if (value < target) return this.statusColours.ok;
+        if (value <= target) return this.statusColours.ok;
         if (value < 2 * target) return this.statusColours.warning;
         return this.statusColours.bad;
     }
@@ -198,7 +198,7 @@ export class BudgetSummaryTabComponent {
 
         const average = this.summaryRows.find(r => r.name === 'Average')?.values[categoryId] ?? 0;
 
-        if (average < category.weekly_target) return this.statusColours.ok;
+        if (average <= category.weekly_target) return this.statusColours.ok;
         if (average < 1.2 * category.weekly_target) return this.statusColours.warning;
         return this.statusColours.bad;
     }

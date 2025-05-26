@@ -189,7 +189,7 @@ export class BudgetPurchasesTabComponent {
     deletePurchase(purchaseId: number): void {
         this.budgetService.deletePurchase(this.budgetConfiguration!.id, purchaseId).subscribe({
             next: () => {
-                this.purchases.filter(f => f.id !== purchaseId);
+                this.purchases = this.purchases.filter(f => f.id !== purchaseId);
             },
             error: (error) => {
                 this.logger.error('Error deleting purchase', error);

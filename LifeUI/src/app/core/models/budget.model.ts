@@ -32,3 +32,9 @@ export interface BudgetFilter {
     ordering?: ('purchase_date' | 'amount' | 'category__name')[],
     category?: number[]
 }
+
+export interface BudgetPurchaseSummary {
+    week: number;
+    category: number;
+    total: number;
+}

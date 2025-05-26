@@ -1,1 +1,144 @@
-<p>budget-summary-tab works!</p>
+<div class="space-y-6">
+    <!-- Year selection dropdown -->
+    <div class="flex justify-end items-center mb-4 gap-2">
+        <label class="text-sm font-medium">Year:</label>
+        <select class="border px-2 py-1 text-sm rounded" [(ngModel)]="activeYear" (change)="onYearChange(+activeYear)">
+            @for (year of budgetYears; track year) {
+            <option [value]="year">{{ year }}</option>
+            }
+        </select>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="rounded-2xl bg-white shadow">
+        <h2 class="text-xl font-semibold mb-2 pt-6 px-4">Summary</h2>
+        @if (isLoading) {
+        <app-spinning-icon class="h-8 w-8 text-white" />
+        }
+        @else {
+        <div class="overflow-x-auto mt-4">
+            <div class="flex w-full text-sm">
+                <!-- Fixed row label column -->
+                <div class="bg-white border-r border-gray-300">
+                    <table class="table-fixed">
+                        <thead>
+                            <tr>
+                                <th class="h-8 bg-white px-2 py-1 text-xs">Summary</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of summaryRows; track row.name) {
+                            <tr>
+                                <td class="px-2 py-1 text-left border-t border-gray-300 h-8 whitespace-nowrap text-xs">
+                                    {{ row.name }}
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Scrollable summary values -->
+                <div class="overflow-x-auto w-full">
+                    <table class="table-fixed min-w-full border-collapse text-xs">
+                        <thead>
+                            <tr>
+                                <th class="border px-2 py-1 text-center bg-white h-8 whitespace-nowrap text-xs">Total
+                                </th>
+                                @for (cat of orderedCategories; track cat.id) {
+                                <th class="border px-2 py-1 text-center bg-white h-8 whitespace-nowrap text-xs">
+                                    {{ cat.name }}
+                                </th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of summaryRows; track row.name) {
+                            <tr>
+                                <td class="border px-2 py-1 text-right h-8 whitespace-nowrap text-xs"
+                                    [ngClass]="row.name === 'Average' ? getAverageCellColour(0) : row.name === 'Variance' ? getVarianceCellColour(0) : ''">
+                                    {{ row.values[0] | currency:'AUD':'symbol':'1.2-2' }}
+                                </td>
+                                @for (cat of orderedCategories; track cat.id) {
+                                <td class="border px-2 py-1 text-right h-8 whitespace-nowrap text-xs"
+                                    [ngClass]="row.name === 'Average' ? getAverageCellColour(cat.id!) : row.name === 'Variance' ? getVarianceCellColour(cat.id!) : ''">
+                                    {{ row.values[cat.id!] | currency:'AUD':'symbol':'1.2-2' }}
+                                </td>
+                                }
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+
+    <!-- Weekly Breakdown Section -->
+    <div class="rounded-2xl bg-white shadow">
+        <div class="flex justify-between items-center p-4">
+            <h2 class="text-xl font-semibold">Weekly Breakdown</h2>
+            <button (click)="showBreakdown = !showBreakdown" class="text-sm text-blue-600 hover:underline">
+                {{ showBreakdown ? 'Hide' : 'Show' }}
+            </button>
+        </div>
+        @if (showBreakdown) {
+        <div class="flex w-full text-sm">
+            <!-- Fixed week column -->
+            <div class="bg-white border-r border-gray-300">
+                <table class="table-fixed">
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-1 text-left bg-white h-8 text-xs">Week</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (week of weeks; track week) {
+                        <tr>
+                            <td class="px-2 py-1 text-center border-t border-gray-300 h-8 whitespace-nowrap text-xs"
+                                [class.bg-yellow-100]="isCurrentWeek(week)">
+                                {{ week }}
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Scrollable category data -->
+            <div class="overflow-x-auto w-full">
+                <table class="table-fixed min-w-full border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="border px-2 py-1 text-center bg-white h-8 whitespace-nowrap text-xs">Total</th>
+                            @for (cat of orderedCategories; track cat.id) {
+                            <th class="border px-2 py-1 text-center bg-white h-8 whitespace-nowrap text-xs">
+                                {{ cat.name }}
+                            </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (week of weeks; track week) {
+                        <tr>
+                            <td class="border px-2 py-1 text-right h-8 whitespace-nowrap text-xs"
+                                [ngClass]="getCellColour(week, 0)">
+                                {{ (getWeekTotal(week) | currency:'AUD':'symbol':'1.2-2') ?? '-' }}
+                            </td>
+                            @for (cat of orderedCategories; track cat.id) {
+                            <td class="border px-2 py-1 text-right h-8 whitespace-nowrap text-xs"
+                                [ngClass]="getCellColour(week, cat.id!)">
+                                {{ (getTotal(week, cat.id!) | currency:'AUD':'symbol':'1.2-2') ?? '-' }}
+                            </td>
+                            }
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        }
+    </div>
+</div>

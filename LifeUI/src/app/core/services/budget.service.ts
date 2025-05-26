@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
-import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetFilter, BudgetPurchase } from '../models/budget.model';
+import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '../models/budget.model';
 
 @Injectable({
     providedIn: 'root'
@@ -74,6 +74,14 @@ export class BudgetService {
 
     addBulkPurchase(budgetId: number, purchases: BudgetPurchase[]): Observable<BudgetPurchase[]> {
         return this.http.post<BudgetPurchase[]>(`${this.apiUrl}/budgets/${budgetId}/purchases/bulk/`, purchases);
+    }
+
+    getPurchaseSummary(budgetId: number, start_date: string, end_date: string): Observable<BudgetPurchaseSummary[]> {
+        return this.http.get<BudgetPurchaseSummary[]>(`${this.apiUrl}/budgets/${budgetId}/summary/?start_date=${start_date}&end_date=${end_date}`);
+    }
+
+    getBudgetYears(budgetId: number): Observable<number[]> {
+        return this.http.get<number[]>(`${this.apiUrl}/budgets/${budgetId}/summary/years/`);
     }
 
 }

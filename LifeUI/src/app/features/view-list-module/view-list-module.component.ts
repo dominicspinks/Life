@@ -139,7 +139,6 @@ export class ViewListModuleComponent {
     toggleCompleted(item: ListItem): void {
         this.listService.updateListItemCompletion(this.moduleId, item.id!, !item.is_completed).subscribe({
             next: () => {
-                this.logger.info('Item updated');
                 item.is_completed = !item.is_completed;
             },
             error: (error) => {

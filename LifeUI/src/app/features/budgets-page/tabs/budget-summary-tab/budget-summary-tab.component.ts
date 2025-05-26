@@ -105,7 +105,6 @@ export class BudgetSummaryTabComponent {
             next: (res) => {
                 this.weeklySummary = res;
                 this.isLoading = false;
-                this.logger.info('Weekly summary fetched', res);
             },
             error: (error) => {
                 this.logger.error('Error fetching summary data', error);
@@ -215,7 +214,6 @@ export class BudgetSummaryTabComponent {
         const sw = ys.getDay();
         const so = (sw === 0) ? 6 : sw - 1;
         const wn = Math.floor((dp + so) / 7);
-        this.logger.info('Week number', [dt, ys, dp, sw, so, wn]);
 
         return wn;
     }

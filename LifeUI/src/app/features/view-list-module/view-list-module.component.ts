@@ -6,14 +6,14 @@ import {
     ionTrashBin,
     ionAdd,
 } from '@ng-icons/ionicons';
-import { ListConfiguration, ListItem } from '../../core/models/list.model';
-import { ListService } from '../../core/services/list.service';
-import { ReferenceService } from '../../core/services/reference.service';
-import { FieldType } from '../../core/models/fieldType.model';
-import { PaginatedResponse } from '../../core/models/pagination.model';
-import { ModalComponent } from '../../layout/modal/modal.component';
+import { ListConfiguration, ListItem } from '@core/models/list.model';
+import { ListService } from '@core/services/list.service';
+import { ReferenceService } from '@core/services/reference.service';
+import { FieldType } from '@core/models/fieldType.model';
+import { PaginatedResponse } from '@core/models/pagination.model';
 import { FormsModule } from '@angular/forms';
-import { LoggerService } from '../../core/services/logger.service';
+import { LoggerService } from '@core/services/logger.service';
+import { ModalComponent } from '@layout/modal/modal.component';
 
 @Component({
     selector: 'app-view-list-module',

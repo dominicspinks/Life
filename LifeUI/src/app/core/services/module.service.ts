@@ -1,11 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
-import { Observable, switchMap } from 'rxjs';
-import { CreateUserModule, UserModule, UserModuleMenu } from '../models/userModule.model';
-import { ModuleType } from '../models/moduleType.model';
-import { PaginatedResponse } from '../models/pagination.model';
-import { normalisePaginatedResponse } from '../utilities/http-utils';
+import { Observable } from 'rxjs';
+import { environment } from '@environments/environment';
+import { CreateUserModule, UserModule } from '@core/models/userModule.model';
+import { ModuleType } from '@core/models/moduleType.model';
+import { PaginatedResponse } from '@core/models/pagination.model';
+import { normalisePaginatedResponse } from '@core/utilities/http-utils';
 
 @Injectable({
     providedIn: 'root'

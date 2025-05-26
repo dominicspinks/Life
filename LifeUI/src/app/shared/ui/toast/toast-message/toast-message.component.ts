@@ -2,7 +2,7 @@ import { Component, input, inject, OnInit } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { ionClose } from '@ng-icons/ionicons';
 import { ToastService } from '../toast.service';
-import { DurationCircleIconComponent } from '../../../icons/duration-circle-icon/duration-circle-icon.component';
+import { DurationCircleIconComponent } from '@shared/icons/duration-circle-icon/duration-circle-icon.component';
 
 @Component({
     selector: 'app-toast-message',

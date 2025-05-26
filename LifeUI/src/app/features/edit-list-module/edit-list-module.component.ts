@@ -1,21 +1,21 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ListService } from '../../core/services/list.service';
-import { SpinningIconComponent } from '../../shared/icons/spinning-icon/spinning-icon.component';
-import { ListConfiguration, ListConfigurationDetails, ListField, ListFieldOption } from '../../core/models/list.model';
-import { ModalComponent } from '../../layout/modal/modal.component';
+import { ListService } from '@core/services/list.service';
+import { SpinningIconComponent } from '@shared/icons/spinning-icon/spinning-icon.component';
+import { ListConfiguration, ListConfigurationDetails, ListField, ListFieldOption } from '@core/models/list.model';
+import { ModalComponent } from '@layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';
-import { ModuleService } from '../../core/services/module.service';
-import { FieldType } from '../../core/models/fieldType.model';
-import { ReferenceService } from '../../core/services/reference.service';
+import { ModuleService } from '@core/services/module.service';
+import { FieldType } from '@core/models/fieldType.model';
+import { ReferenceService } from '@core/services/reference.service';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
     ionAdd,
     ionTrashBin,
     ionPencil
 } from '@ng-icons/ionicons';
-import { LoggerService } from '../../core/services/logger.service';
+import { LoggerService } from '@core/services/logger.service';
 
 @Component({
     standalone: true,

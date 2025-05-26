@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
-import { BudgetConfiguration, BudgetPurchase } from '../../../../core/models/budget.model';
-import { BudgetService } from '../../../../core/services/budget.service';
-import { LoggerService } from '../../../../core/services/logger.service';
+import { BudgetConfiguration, BudgetPurchase } from '@core/models/budget.model';
+import { BudgetService } from '@core/services/budget.service';
+import { LoggerService } from '@core/services/logger.service';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
     ionAdd,
@@ -10,10 +10,10 @@ import {
     ionTrashBin
 } from '@ng-icons/ionicons';
 import { CommonModule } from '@angular/common';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
-import { ModalComponent } from '../../../../layout/modal/modal.component';
+import { ToastService } from '@shared/ui/toast/toast.service';
+import { ModalComponent } from '@layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';
-import { SpinningIconComponent } from "../../../../shared/icons/spinning-icon/spinning-icon.component";
+import { SpinningIconComponent } from "@shared/icons/spinning-icon/spinning-icon.component";
 import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({

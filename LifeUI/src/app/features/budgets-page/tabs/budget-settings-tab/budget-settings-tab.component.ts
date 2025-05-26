@@ -6,15 +6,15 @@ import {
     ionPencil,
     ionMenu
 } from '@ng-icons/ionicons';
-import { LoggerService } from '../../../../core/services/logger.service';
-import { BudgetService } from '../../../../core/services/budget.service';
-import { SpinningIconComponent } from '../../../../shared/icons/spinning-icon/spinning-icon.component';
-import { ModalComponent } from '../../../../layout/modal/modal.component';
+import { LoggerService } from '@core/services/logger.service';
+import { BudgetService } from '@core/services/budget.service';
+import { SpinningIconComponent } from '@shared/icons/spinning-icon/spinning-icon.component';
+import { ModalComponent } from '@layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails } from '../../../../core/models/budget.model';
-import { ModuleService } from '../../../../core/services/module.service';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
+import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails } from '@core/models/budget.model';
+import { ModuleService } from '@core/services/module.service';
+import { ToastService } from '@shared/ui/toast/toast.service';
 
 @Component({
     selector: 'app-budget-settings-tab',

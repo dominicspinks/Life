@@ -1,12 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BudgetService } from '../../../../core/services/budget.service';
-import { LoggerService } from '../../../../core/services/logger.service';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
-import { BudgetConfiguration, BudgetPurchaseSummary } from '../../../../core/models/budget.model';
+import { BudgetService } from '@core/services/budget.service';
+import { LoggerService } from '@core/services/logger.service';
+import { ToastService } from '@shared/ui/toast/toast.service';
+import { BudgetConfiguration, BudgetPurchaseSummary } from '@core/models/budget.model';
 import { CurrencyPipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SpinningIconComponent } from '../../../../shared/icons/spinning-icon/spinning-icon.component';
+import { SpinningIconComponent } from '@shared/icons/spinning-icon/spinning-icon.component';
 
 @Component({
     selector: 'app-budget-summary-tab',

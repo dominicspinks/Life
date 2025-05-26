@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
-import { LoggerService } from '../../core/services/logger.service';
+import { LoggerService } from '@core/services/logger.service';
 import { filter } from 'rxjs';
-import { BudgetConfiguration } from '../../core/models/budget.model';
+import { BudgetConfiguration } from '@core/models/budget.model';
 
 interface Tab {
     name: string;

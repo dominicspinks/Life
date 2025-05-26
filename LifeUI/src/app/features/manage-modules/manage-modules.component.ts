@@ -1,16 +1,16 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { ModuleService } from '../../core/services/module.service';
-import { ModuleType } from '../../core/models/moduleType.model';
-import { CreateUserModule, UserModule } from '../../core/models/userModule.model';
-import { ModalComponent } from "../../layout/modal/modal.component";
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
     ionEye,
     ionPencil,
 } from '@ng-icons/ionicons';
-import { LoggerService } from '../../core/services/logger.service';
+import { LoggerService } from '@core/services/logger.service';
+import { ModuleService } from '@core/services/module.service';
+import { ModuleType } from '@core/models/moduleType.model';
+import { CreateUserModule, UserModule } from '@core/models/userModule.model';
+import { ModalComponent } from "@layout/modal/modal.component";
 
 @Component({
     selector: 'app-manage-modules',

@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { ListConfiguration, ListConfigurationDetails, ListField, ListItem } from '../models/list.model';
 import { Observable } from 'rxjs';
-import { PaginatedResponse } from '../models/pagination.model';
+import { environment } from '@environments/environment';
+import { ListConfiguration, ListConfigurationDetails, ListField, ListItem } from '@core/models/list.model';
+import { PaginatedResponse } from '@core/models/pagination.model';
 
 @Injectable({
     providedIn: 'root'

@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
-import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '../models/budget.model';
+import { environment } from '@environments/environment';
+import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '@core/models/budget.model';
 
 @Injectable({
     providedIn: 'root'

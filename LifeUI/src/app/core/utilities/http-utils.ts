@@ -1,5 +1,5 @@
 import { map, OperatorFunction } from 'rxjs';
-import { PaginatedResponse } from '../models/pagination.model';
+import { PaginatedResponse } from '@core/models/pagination.model';
 
 export function normalisePaginatedResponse<T>(): OperatorFunction<T[] | PaginatedResponse<T>, PaginatedResponse<T>> {
     return map((response): PaginatedResponse<T> => {

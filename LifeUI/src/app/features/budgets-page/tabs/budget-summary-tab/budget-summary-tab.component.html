@@ -1,15 +1,17 @@
-<div class="space-y-6">
-    <!-- Year selection dropdown -->
-    <div class="flex justify-end items-center mb-4 gap-2">
-        <label class="text-sm font-medium">Year:</label>
-        <select class="border px-2 py-1 text-sm rounded" [(ngModel)]="activeYear" (change)="onYearChange(+activeYear)">
-            @for (year of budgetYears; track year) {
-            <option [value]="year">{{ year }}</option>
-            }
-        </select>
+<div class="max-w-7xl mx-auto px-2 py-2 sm:py-0 space-y-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">{{ budgetConfiguration?.name }}</h1>
+        <div class="flex justify-end items-center gap-2">
+            <label class="text-sm font-medium">Year:</label>
+            <select class="border px-2 py-1 text-sm rounded" [(ngModel)]="activeYear"
+                (change)="onYearChange(+activeYear)">
+                @for (year of budgetYears; track year) {
+                <option [value]="year">{{ year }}</option>
+                }
+            </select>
+        </div>
     </div>
 
-    <!-- Summary Section -->
     <div class="rounded-2xl bg-white shadow">
         <h2 class="text-xl font-semibold mb-2 pt-6 px-4">Summary</h2>
         @if (isLoading) {
@@ -18,7 +20,6 @@
         @else {
         <div class="overflow-x-auto mt-4">
             <div class="flex w-full text-sm">
-                <!-- Fixed row label column -->
                 <div class="bg-white border-r border-gray-300">
                     <table class="table-fixed">
                         <thead>
@@ -38,7 +39,6 @@
                     </table>
                 </div>
 
-                <!-- Scrollable summary values -->
                 <div class="overflow-x-auto w-full">
                     <table class="table-fixed min-w-full border-collapse text-xs">
                         <thead>
@@ -75,7 +75,6 @@
         }
     </div>
 
-    <!-- Weekly Breakdown Section -->
     <div class="rounded-2xl bg-white shadow">
         <div class="flex justify-between items-center p-4">
             <h2 class="text-xl font-semibold">Weekly Breakdown</h2>
@@ -85,7 +84,6 @@
         </div>
         @if (showBreakdown) {
         <div class="flex w-full text-sm">
-            <!-- Fixed week column -->
             <div class="bg-white border-r border-gray-300">
                 <table class="table-fixed">
                     <thead>
@@ -106,7 +104,6 @@
                 </table>
             </div>
 
-            <!-- Scrollable category data -->
             <div class="overflow-x-auto w-full">
                 <table class="table-fixed min-w-full border-collapse">
                     <thead>

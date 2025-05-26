@@ -185,3 +185,15 @@ class BudgetURLTests(TestCase):
         resolver = resolve('/api/budgets/1/summary/')
         self.assertEqual(resolver.func.cls, BudgetPurchaseSummaryViewSet)
         self.assertEqual(resolver.kwargs['budget_id'], '1')
+
+    def test_budget_summary_years_urls(self):
+        """Test nested budget summary years endpoint URL."""
+        url = reverse('budget-summary-list-years', args=[1])
+        self.assertEqual(url, '/api/budgets/1/summary/years/')
+        self.assertEqual(resolve(url).func.cls, BudgetPurchaseSummaryViewSet)
+
+    def test_budget_summary_years_resolver_kwargs(self):
+        """Check nested kwargs in budget summary years route."""
+        resolver = resolve('/api/budgets/1/summary/years/')
+        self.assertEqual(resolver.func.cls, BudgetPurchaseSummaryViewSet)
+        self.assertEqual(resolver.kwargs['budget_id'], '1')

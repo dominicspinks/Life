@@ -1,6 +1,8 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from django.urls import reverse
+from django.utils.timezone import now
 
 from api.models import (
     ModuleType, UserModule,
@@ -258,3 +260,50 @@ class BudgetPurchaseSummaryViewSetTests(APITestCase):
         response = self.client.get(self.base_url, {'start_date': '2024-01-01', 'end_date': '2024-12-31'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
+
+class BudgetPurchaseSummaryYearsTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='user@example.com', password='password123')
+        self.other_user = User.objects.create_user(email='other@example.com', password='password456')
+        self.budget_type = ModuleType.objects.get(name='budget')
+
+        self.budget = UserModule.objects.create(user=self.user, module=self.budget_type, name='My Budget', order=0, is_enabled=True)
+        self.other_budget = UserModule.objects.create(user=self.other_user, module=self.budget_type, name='Other Budget', order=1, is_enabled=True)
+
+        self.category = BudgetCategory.objects.create(user_module=self.budget, name='Groceries', weekly_target=100, order=0)
+
+        BudgetPurchase.objects.create(
+            user_module=self.budget,
+            purchase_date='2022-01-15',
+            amount=50,
+            description='Old Year',
+            category=self.category
+        )
+        BudgetPurchase.objects.create(
+            user_module=self.budget,
+            purchase_date=f'{now().year}-04-10',
+            amount=75,
+            description='This Year',
+            category=self.category
+        )
+
+        self.url = reverse('budget-summary-list-years', args=[self.budget.id])
+        self.other_url = reverse('budget-summary-list-years', args=[self.other_budget.id])
+
+    def test_unauthenticated_user_cannot_access(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_user_can_see_years_for_own_budget(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        current_year = now().year
+        self.assertIn(2022, response.data)
+        self.assertIn(current_year, response.data)
+
+    def test_cannot_access_other_users_budget(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.other_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

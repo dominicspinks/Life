@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction, connection
+from django.utils.timezone import now
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.filters import OrderingFilter
@@ -206,6 +207,11 @@ class BudgetPurchaseSummaryViewSet(viewsets.GenericViewSet):
     pagination_class = None
 
     def list(self, request, budget_id=None):
+        try:
+            user_module = UserModule.objects.get(id=budget_id, user=request.user)
+        except UserModule.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
         start = request.query_params.get('start_date')
         end = request.query_params.get('end_date')
 
@@ -240,3 +246,24 @@ class BudgetPurchaseSummaryViewSet(viewsets.GenericViewSet):
 
         serializer = self.get_serializer(data, many=True)
         return Response(serializer.data)
+
+
+    @action(detail=False, methods=['get'], url_path='years')
+    def list_years(self, request, budget_id=None):
+        try:
+            user_module = UserModule.objects.get(id=budget_id, user=request.user)
+        except UserModule.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        query = """
+            SELECT DISTINCT EXTRACT(YEAR FROM purchase_date)::int AS year
+            FROM api_budgetpurchase
+            WHERE user_module_id = %s
+            ORDER BY year
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(query, [user_module.id])
+            rows = cursor.fetchall()
+
+        years = sorted({int(row[0]) for row in rows})
+        return Response(years)

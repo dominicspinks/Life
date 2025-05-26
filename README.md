@@ -1,7 +1,6 @@
 # Life App
 
 > A modular personal management app built with Angular and TailwindCSS.
-> Currently under active development — this release focuses on list-based modules.
 
 ![Dashboard Screenshot](screenshots/dashboard.png)
 
@@ -10,10 +9,14 @@
 **Life App** is a personal dashboard for managing modular tools that help organise your digital life.
 Version 1.0 introduces foundational support for list-based modules — think of it like simple, flexible todo or checklist modules, with more features planned in future updates.
 
-## 🔧 Features in v1.0
+## 🔧 Features
 
 - Modular architecture with support for dynamic modules
-- Customisable list modules (e.g., shopping lists, task checklists)
+- Customisable **List Modules** (e.g., shopping lists, checklists)
+- Powerful **Budget Module**:
+  - Weekly budgets with category breakdowns
+  - Quick-add and bulk import purchases
+  - Category tracking and weekly summaries
 - User authentication with token-based access
 - Responsive layout and mobile-friendly design
 - Simple, clean interface built with TailwindCSS
@@ -95,6 +98,8 @@ Ensure the frontend is pointing to your backend API in `src/environments/environ
 ![List module Configuration Screenshot](screenshots/list-module-configuration.png)
 
 ![List module Data Screenshot](screenshots/list-module-data.png)
+
+![Budget module Summary Screenshot](screenshots/budget-module-summary.png)
 
 
 ## 📄 License

@@ -1,7 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { AuthService } from '../../core/auth/auth.service';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { UserModule, UserModuleMenu } from '../../core/models/userModule.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
     ionChevronDown,
@@ -9,8 +7,10 @@ import {
     ionClose,
     ionMenu,
 } from '@ng-icons/ionicons';
-import { ModuleService } from '../../core/services/module.service';
-import { LoggerService } from '../../core/services/logger.service';
+import { UserModule, UserModuleMenu } from '@core/models/userModule.model';
+import { AuthService } from '@core/auth/auth.service';
+import { ModuleService } from '@core/services/module.service';
+import { LoggerService } from '@core/services/logger.service';
 
 @Component({
     selector: 'app-nav',
@@ -41,6 +41,8 @@ export class NavComponent {
     isMobileSettingsOpen = false;
     isListsMenuOpen = false;
     isBudgetsMenuOpen = false;
+    isMobileListMenuOpen = false;
+    isMobileBudgetMenuOpen = false;
 
     activeLists: UserModuleMenu[] = [];
     activeBudgets: UserModuleMenu[] = [];

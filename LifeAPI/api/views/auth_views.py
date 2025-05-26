@@ -1,11 +1,12 @@
+from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.contrib.auth import get_user_model
-from ..serializers import LogoutSerializer, RegisterSerializer, EmailTokenObtainSerializer
+from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
-from drf_spectacular.utils import extend_schema
+
+from api.serializers.serializers_auth import EmailTokenObtainSerializer, RegisterSerializer, LogoutSerializer
 
 User = get_user_model()
 

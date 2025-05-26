@@ -1,10 +1,10 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, tap } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '@environments/environment';
 import { jwtDecode } from 'jwt-decode';
-import { LoggerService } from '../services/logger.service';
+import { LoggerService } from '@core/services/logger.service';
 
 @Injectable({
     providedIn: 'root'

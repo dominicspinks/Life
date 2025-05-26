@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
     selector: 'app-spinning-icon',
@@ -8,5 +8,6 @@ import { Component } from '@angular/core';
     styleUrl: './spinning-icon.component.css'
 })
 export class SpinningIconComponent {
-
+    colour = input<string>('');
+    size = input<string>('');
 }

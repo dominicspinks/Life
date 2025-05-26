@@ -69,17 +69,17 @@
 
                         <!-- Active Budget Modules -->
                         @if (activeBudgets.length <= 3) { @for (module of activeBudgets; track module.id) { <a
-                            [routerLink]="`/modules/list/${module.id}`" routerLinkActive="bg-gray-100 text-gray-900"
+                            [routerLink]="`/modules/budget/${module.id}`" routerLinkActive="bg-gray-100 text-gray-900"
                             class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
                             {{ module.name }}</a>
                             }
                             }
                             @else {
-                            <div class="ml-2 relative flex items-center" (mouseleave)="toggleBudgetsMenu(false)">
+                            <div class="ml-2 relative flex items-center h-full" (mouseleave)="toggleBudgetsMenu(false)">
                                 <button type="button" (mouseenter)="toggleBudgetsMenu(true)"
                                     (click)="toggleBudgetsMenu()"
                                     class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
-                                    Lists
+                                    Budgets
                                     <ng-icon [name]="isBudgetsMenuOpen ? 'ionChevronUp' : 'ionChevronDown'" />
                                 </button>
 
@@ -87,7 +87,7 @@
                                 <div class="absolute right-0 top-full mt-0 w-48 p-1 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50"
                                     (mouseenter)="toggleBudgetsMenu(true)">
                                     @for (module of activeBudgets; track module.id) {
-                                    <a [routerLink]="`/modules/list/${module.id}`"
+                                    <a [routerLink]="`/modules/budget/${module.id}`"
                                         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         {{ module.name }}
                                     </a>
@@ -153,24 +153,70 @@
                 </a>
 
                 <!-- Modules -->
-                @for (module of activeLists; track module.id) {
-                <a [routerLink]="`/modules/list/${module.id}`" routerLinkActive="bg-blue-50 text-blue-700"
+                <!-- LIST MODULES -->
+                @if (activeLists.length <= 3) { @for (module of activeLists; track module.id) { <a
+                    [routerLink]="`/modules/list/${module.id}`" routerLinkActive="bg-blue-50 text-blue-700"
                     (click)="isMobileMenuOpen = false"
                     class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
                     {{ module.name }}
-                </a>
-                }
+                    </a>
+                    }
+                    } @else {
+                    <button (click)="isMobileListMenuOpen = !isMobileListMenuOpen"
+                        class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 flex items-center justify-between">
+                        Lists
+                        <ng-icon [name]="isMobileListMenuOpen ? 'ionChevronUp' : 'ionChevronDown'" />
+                    </button>
+                    @if (isMobileListMenuOpen) {
+                    <div class="pl-4">
+                        @for (module of activeLists; track module.id) {
+                        <a [routerLink]="`/modules/list/${module.id}`"
+                            (click)="isMobileMenuOpen = false; isMobileListMenuOpen = false"
+                            class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                            {{ module.name }}
+                        </a>
+                        }
+                    </div>
+                    }
+                    }
+
+                    <!-- BUDGET MODULES -->
+                    @if (activeBudgets.length <= 3) { @for (module of activeBudgets; track module.id) { <a
+                        [routerLink]="`/modules/budget/${module.id}`" routerLinkActive="bg-blue-50 text-blue-700"
+                        (click)="isMobileMenuOpen = false"
+                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                        {{ module.name }}
+                        </a>
+                        }
+                        } @else {
+                        <button (click)="isMobileBudgetMenuOpen = !isMobileBudgetMenuOpen"
+                            class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 flex items-center justify-between">
+                            Budgets
+                            <ng-icon [name]="isMobileBudgetMenuOpen ? 'ionChevronUp' : 'ionChevronDown'" />
+                        </button>
+                        @if (isMobileBudgetMenuOpen) {
+                        <div class="pl-4">
+                            @for (module of activeBudgets; track module.id) {
+                            <a [routerLink]="`/modules/budget/${module.id}`"
+                                (click)="isMobileMenuOpen = false; isMobileBudgetMenuOpen = false"
+                                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                                {{ module.name }}
+                            </a>
+                            }
+                        </div>
+                        }
+                        }
 
 
-                <!-- Settings toggle -->
-                <!-- Keeping for when settings are added -->
-                <!-- <button (click)="isMobileSettingsOpen = !isMobileSettingsOpen"
+                        <!-- Settings toggle -->
+                        <!-- Keeping for when settings are added -->
+                        <!-- <button (click)="isMobileSettingsOpen = !isMobileSettingsOpen"
                     class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
                     Settings <ng-icon [name]="isMobileSettingsOpen ? 'ionChevronUp' : 'ionChevronDown'" />
                 </button> -->
 
-                <!-- Settings submenu -->
-                <!-- <div [class.max-h-0]="!isMobileSettingsOpen" [class.max-h-40]="isMobileSettingsOpen"
+                        <!-- Settings submenu -->
+                        <!-- <div [class.max-h-0]="!isMobileSettingsOpen" [class.max-h-40]="isMobileSettingsOpen"
                 [class.opacity-0]="!isMobileSettingsOpen" [class.opacity-100]="isMobileSettingsOpen"
                 class="overflow-hidden transition-all duration-500 ease-in-out pl-6">
                 <a routerLink="/url"
@@ -179,11 +225,11 @@
                 </a>
             </div> -->
 
-                <!-- Sign out -->
-                <button (click)="logout()"
-                    class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
-                    Sign out
-                </button>
+                        <!-- Sign out -->
+                        <button (click)="logout()"
+                            class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+                            Sign out
+                        </button>
             </div>
         </div>
     </div>

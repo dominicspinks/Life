@@ -1,7 +1,8 @@
 from rest_framework import viewsets, permissions
-from ..models import ModuleType, UserModule
-from ..serializers import ModuleTypeSerializer, UserModuleSerializer
-from ..pagination import Unpaginatable
+
+from api.serializers.serializers_modules import ModuleTypeSerializer, UserModuleSerializer
+from api.models import ModuleType, UserModule
+from api.pagination import Unpaginatable
 
 class ModuleTypeViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -19,6 +20,7 @@ class UserModuleViewSet(viewsets.ModelViewSet):
     API endpoint for CRUD operations on user modules.
     Allows users to view, create, update and delete their modules.
     """
+    queryset = UserModule.objects.none()
     serializer_class = UserModuleSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = Unpaginatable

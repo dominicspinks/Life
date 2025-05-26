@@ -1,10 +1,17 @@
-from rest_framework.test import APITestCase
 from django.urls import reverse
-from rest_framework import status
 from django.contrib.auth import get_user_model
+from rest_framework.test import APITestCase
+from rest_framework import status
+
 from api.models import (
-    ModuleType, UserModule, FieldType,
-    ListField, ListFieldRule, ListFieldOption, ListItem, FieldTypeRule
+    ModuleType,
+    UserModule,
+    FieldType,
+    ListField,
+    ListFieldRule,
+    ListFieldOption,
+    ListItem,
+    FieldTypeRule
 )
 
 User = get_user_model()
@@ -399,6 +406,7 @@ class ListConfigurationFieldViewSetTests(APITestCase):
         self.client.force_authenticate(user=self.user1)
 
         update_data = {
+            'user_module': self.user1_module.id,
             'field_name': 'Total Cost',
             'field_type': self.number_field_type.id,
             'is_mandatory': False,

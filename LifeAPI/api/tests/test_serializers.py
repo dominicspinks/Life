@@ -2,17 +2,22 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
 from api.models import (
-    ModuleType, UserModule, FieldType, FieldTypeRule,
-    ListField, ListFieldRule, ListFieldOption, ListItem
+    ModuleType,
+    UserModule,
+    FieldType,
+    FieldTypeRule,
+    ListField,
+    ListFieldRule,
+    ListFieldOption,
+    ListItem,
+    BudgetCategory,
+    BudgetPurchase
 )
-from api.serializers import (
-    RegisterSerializer, EmailTokenObtainSerializer,
-    ModuleTypeSerializer, UserModuleSerializer,
-    FieldTypeSerializer, FieldTypeDetailSerializer, FieldTypeRuleSerializer,
-    ListConfigurationSerializer, ListDataSerializer,
-    ListFieldSerializer, ListFieldRuleSerializer, ListFieldOptionSerializer,
-    ListItemSerializer
-)
+from api.serializers.serializers_auth import EmailTokenObtainSerializer, RegisterSerializer
+from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer, BudgetPurchaseSummarySerializer
+from api.serializers.serializers_lists import ListConfigurationSerializer, ListDataSerializer, ListFieldSerializer, ListItemSerializer
+from api.serializers.serializers_modules import ModuleTypeSerializer, UserModuleSerializer
+from api.serializers.serializers_reference import FieldTypeDetailSerializer, FieldTypeSerializer
 
 User = get_user_model()
 
@@ -76,9 +81,9 @@ class EmailTokenObtainSerializerTests(TestCase):
 
 class FieldTypeSerializerTests(TestCase):
     def setUp(self):
-        self.field_type = FieldType.objects.create(name='text')
-        self.rule1 = FieldTypeRule.objects.create(field_type=self.field_type, rule='min_length')
-        self.rule2 = FieldTypeRule.objects.create(field_type=self.field_type, rule='max_length')
+        self.field_type = FieldType.objects.get(name='text')
+        self.rule1 = FieldTypeRule.objects.get(field_type=self.field_type, rule='email')
+        self.rule2 = FieldTypeRule.objects.get(field_type=self.field_type, rule='mobile')
 
     def test_field_type_serialization(self):
         serializer = FieldTypeSerializer(self.field_type)
@@ -93,12 +98,12 @@ class FieldTypeSerializerTests(TestCase):
         self.assertEqual(data['name'], 'text')
         self.assertEqual(len(data['rules']), 2)
         rules = {rule['rule'] for rule in data['rules']}
-        self.assertIn('min_length', rules)
-        self.assertIn('max_length', rules)
+        self.assertIn('email', rules)
+        self.assertIn('mobile', rules)
 
 class ModuleTypeSerializerTests(TestCase):
     def setUp(self):
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
 
     def test_module_type_serialization(self):
         serializer = ModuleTypeSerializer(self.module_type)
@@ -112,7 +117,7 @@ class UserModuleSerializerTests(TestCase):
             email='test@example.com',
             password='password123'
         )
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
         self.user_module = UserModule.objects.create(
             user=self.user,
             module=self.module_type,
@@ -159,7 +164,7 @@ class ListFieldSerializerTests(TestCase):
             email='test@example.com',
             password='password123'
         )
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
         self.user_module = UserModule.objects.create(
             user=self.user,
             module=self.module_type,
@@ -167,18 +172,19 @@ class ListFieldSerializerTests(TestCase):
             order=1,
             is_enabled=True
         )
-        self.field_type = FieldType.objects.create(name='text')
-        self.rule = FieldTypeRule.objects.create(field_type=self.field_type, rule='max_length')
+        self.text_field_type = FieldType.objects.get(name='text')
+        self.dropdown_field_type = FieldType.objects.get(name='dropdown')
+        self.text_rule = FieldTypeRule.objects.get(field_type=self.text_field_type, rule='email')
         self.list_field = ListField.objects.create(
             user_module=self.user_module,
-            field_type=self.field_type,
+            field_type=self.text_field_type,
             field_name='Task Name',
             is_mandatory=True,
             order=0
         )
         self.field_rule = ListFieldRule.objects.create(
             list_field=self.list_field,
-            field_type_rule=self.rule
+            field_type_rule=self.text_rule
         )
 
     def test_list_field_serialization(self):
@@ -186,16 +192,16 @@ class ListFieldSerializerTests(TestCase):
         data = serializer.data
         self.assertEqual(data['id'], self.list_field.id)
         self.assertEqual(data['field_name'], 'Task Name')
-        self.assertEqual(data['field_type'], 'text')
+        self.assertEqual(data['field_type'], self.text_field_type.id)
         self.assertTrue(data['is_mandatory'])
         self.assertEqual(data['order'], 0)
         self.assertEqual(len(data['rules']), 1)
-        self.assertEqual(data['rules'][0]['field_type_rule']['rule'], 'max_length')
+        self.assertEqual(data['rules'][0]['field_type_rule']['rule'], 'email')
         self.assertEqual(len(data['options']), 0)  # No options for text field
 
     def test_dropdown_field_serialization(self):
         # Create a dropdown field with options
-        dropdown_type = FieldType.objects.create(name='dropdown')
+        dropdown_type = FieldType.objects.get(name='dropdown')
         dropdown_field = ListField.objects.create(
             user_module=self.user_module,
             field_type=dropdown_type,
@@ -209,7 +215,7 @@ class ListFieldSerializerTests(TestCase):
 
         serializer = ListFieldSerializer(dropdown_field)
         data = serializer.data
-        self.assertEqual(data['field_type'], 'dropdown')
+        self.assertEqual(data['field_type'], self.dropdown_field_type.id)
         self.assertEqual(len(data['options']), 3)
         option_names = {option['option_name'] for option in data['options']}
         self.assertIn('High', option_names)
@@ -222,7 +228,7 @@ class ListConfigurationSerializerTests(TestCase):
             email='test@example.com',
             password='password123'
         )
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
         self.user_module = UserModule.objects.create(
             user=self.user,
             module=self.module_type,
@@ -230,7 +236,7 @@ class ListConfigurationSerializerTests(TestCase):
             order=1,
             is_enabled=True
         )
-        self.field_type = FieldType.objects.create(name='text')
+        self.field_type = FieldType.objects.get(name='text')
         self.list_field = ListField.objects.create(
             user_module=self.user_module,
             field_type=self.field_type,
@@ -254,7 +260,7 @@ class ListDataSerializerTests(TestCase):
             email='test@example.com',
             password='password123'
         )
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
         self.user_module = UserModule.objects.create(
             user=self.user,
             module=self.module_type,
@@ -262,7 +268,7 @@ class ListDataSerializerTests(TestCase):
             order=1,
             is_enabled=True
         )
-        self.field_type = FieldType.objects.create(name='text')
+        self.field_type = FieldType.objects.get(name='text')
         self.list_field = ListField.objects.create(
             user_module=self.user_module,
             field_type=self.field_type,
@@ -296,7 +302,7 @@ class ListItemSerializerTests(TestCase):
             email='test@example.com',
             password='password123'
         )
-        self.module_type = ModuleType.objects.create(name='list')
+        self.module_type = ModuleType.objects.get(name='list')
         self.user_module = UserModule.objects.create(
             user=self.user,
             module=self.module_type,
@@ -304,7 +310,7 @@ class ListItemSerializerTests(TestCase):
             order=1,
             is_enabled=True
         )
-        self.field_type = FieldType.objects.create(name='text')
+        self.field_type = FieldType.objects.get(name='text')
         self.list_field = ListField.objects.create(
             user_module=self.user_module,
             field_type=self.field_type,
@@ -372,3 +378,166 @@ class ListItemSerializerTests(TestCase):
         serializer = ListItemSerializer(data=data)
         self.assertFalse(serializer.is_valid())
         self.assertIn('field_values', serializer.errors)
+
+class BudgetCategorySerializerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='testpass123')
+        self.module_type = ModuleType.objects.get(name='budget')
+        self.user_module = UserModule.objects.create(user=self.user, module=self.module_type, name='My Budget', order=0, is_enabled=True)
+
+    def test_valid_serialization(self):
+        category = BudgetCategory.objects.create(user_module=self.user_module, name='Groceries', weekly_target=100, order=0)
+        serializer = BudgetCategorySerializer(category)
+        self.assertEqual(serializer.data['name'], 'Groceries')
+        self.assertEqual(serializer.data['weekly_target'], 100)
+        self.assertIn('created_at', serializer.data)
+
+    def test_valid_creation(self):
+        data = {
+            'name': 'Entertainment',
+            'weekly_target': 50,
+            'excluded_from_budget': False,
+            'order': 1,
+            'is_enabled': True
+        }
+        serializer = BudgetCategorySerializer(data=data, context={'user_module': self.user_module})
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instance = serializer.save(user_module=self.user_module)
+        self.assertEqual(instance.name, 'Entertainment')
+
+    def test_duplicate_name_validation(self):
+        BudgetCategory.objects.create(user_module=self.user_module, name='Groceries', weekly_target=100, order=0)
+        data = {'name': 'Groceries', 'weekly_target': 100, 'excluded_from_budget': False, 'order': 1}
+        serializer = BudgetCategorySerializer(data=data, context={'user_module': self.user_module})
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('name', serializer.errors)
+
+class BudgetPurchaseSerializerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='testpass123')
+        self.module_type = ModuleType.objects.get(name='budget')
+        self.user_module = UserModule.objects.create(user=self.user, module=self.module_type, name='My Budget', order=0, is_enabled=True)
+        self.category = BudgetCategory.objects.create(user_module=self.user_module, name='Groceries', weekly_target=100, order=0)
+
+    def test_valid_serialization(self):
+        purchase = BudgetPurchase.objects.create(
+            user_module=self.user_module,
+            purchase_date='2024-01-01',
+            amount=99.99,
+            description='Woolworths',
+            category=self.category
+        )
+        serializer = BudgetPurchaseSerializer(purchase)
+        self.assertEqual(serializer.data['amount'], '99.99')
+        self.assertEqual(serializer.data['category_name'], 'Groceries')
+
+    def test_valid_creation(self):
+        data = {
+            'purchase_date': '2024-01-02',
+            'amount': 20.50,
+            'description': 'Snacks',
+            'category': self.category.id
+        }
+        serializer = BudgetPurchaseSerializer(data=data, context={'user_module': self.user_module})
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instance = serializer.save(user_module=self.user_module)
+        self.assertEqual(instance.description, 'Snacks')
+        self.assertEqual(instance.category, self.category)
+
+    def test_invalid_category(self):
+        other_user_module = UserModule.objects.create(user=self.user, module=self.module_type, name='Other Budget', order=1, is_enabled=True)
+        other_category = BudgetCategory.objects.create(user_module=other_user_module, name='Other', weekly_target=20, order=0)
+        data = {
+            'purchase_date': '2024-01-02',
+            'amount': 5.00,
+            'description': 'Invalid category test',
+            'category': other_category.id
+        }
+        serializer = BudgetPurchaseSerializer(data=data, context={'user_module': self.user_module})
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('category', serializer.errors)
+
+    def test_bulk_creation(self):
+        data = [
+            {
+                'purchase_date': '2024-01-03',
+                'amount': 15.00,
+                'description': 'Lunch',
+                'category': self.category.id
+            },
+            {
+                'purchase_date': '2024-01-04',
+                'amount': 40.00,
+                'description': 'Groceries',
+                'category': self.category.id
+            }
+        ]
+        serializer = BudgetPurchaseSerializer(data=data, context={'user_module': self.user_module}, many=True)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instances = serializer.save()
+        self.assertEqual(len(instances), 2)
+        self.assertEqual(instances[0].description, 'Lunch')
+        self.assertEqual(instances[1].amount, 40.00)
+
+class BudgetSerializerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='testpass123')
+        self.module_type = ModuleType.objects.get(name='budget')
+        self.user_module = UserModule.objects.create(user=self.user, module=self.module_type, name='My Budget', order=0, is_enabled=True)
+        BudgetCategory.objects.create(user_module=self.user_module, name='Groceries', weekly_target=50, order=0)
+        BudgetCategory.objects.create(user_module=self.user_module, name='Fun', weekly_target=20, order=1)
+
+    def test_budget_serialization_with_categories(self):
+        serializer = BudgetSerializer(self.user_module)
+        data = serializer.data
+        self.assertEqual(data['id'], self.user_module.id)
+        self.assertEqual(data['name'], 'My Budget')
+        self.assertEqual(len(data['categories']), 2)
+        names = [cat['name'] for cat in data['categories']]
+        self.assertIn('Groceries', names)
+        self.assertIn('Fun', names)
+
+
+class BudgetPurchaseSummarySerializerTests(TestCase):
+    def test_valid_serialization(self):
+        data = {
+            'week': 3,
+            'category': 5,
+            'total': 89.95
+        }
+        serializer = BudgetPurchaseSummarySerializer(data)
+        self.assertEqual(serializer.data['week'], 3)
+        self.assertEqual(serializer.data['category'], 5)
+        self.assertEqual(serializer.data['total'], 89.95)
+
+    def test_valid_input_deserialization(self):
+        input_data = {
+            'week': 12,
+            'category': 2,
+            'total': 42.00
+        }
+        serializer = BudgetPurchaseSummarySerializer(data=input_data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        validated = serializer.validated_data
+        self.assertEqual(validated['week'], 12)
+        self.assertEqual(validated['category'], 2)
+        self.assertEqual(validated['total'], 42.00)
+
+    def test_missing_fields(self):
+        serializer = BudgetPurchaseSummarySerializer(data={})
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('week', serializer.errors)
+        self.assertIn('category', serializer.errors)
+        self.assertIn('total', serializer.errors)
+
+    def test_invalid_field_types(self):
+        data = {
+            'week': 'not-a-number',
+            'category': 'abc',
+            'total': 'not-a-number'
+        }
+        serializer = BudgetPurchaseSummarySerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('week', serializer.errors)
+        self.assertIn('category', serializer.errors)
+        self.assertIn('total', serializer.errors)

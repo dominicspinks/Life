@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'api',
     'drf_spectacular',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -140,6 +141,9 @@ REST_FRAMEWORK = {
         'user': '1000/day'
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
 }
 
 SIMPLE_JWT = {
@@ -205,6 +209,6 @@ APPEND_SLASH = True
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Life API',
     'DESCRIPTION': 'API for my Life Management application',
-    'VERSION': '1.0.0',
+    'VERSION': '1.1.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }

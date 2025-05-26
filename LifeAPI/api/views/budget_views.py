@@ -157,8 +157,12 @@ class BudgetPurchaseBulkViewSet(viewsets.GenericViewSet, CreateModelMixin):
     API endpoint for bulk importing purchases into a budget
     Only supports POST
     """
+    queryset = BudgetPurchase.objects.none()
     serializer_class = BudgetPurchaseSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    lookup_field = 'id'
+    lookup_value_regex = r'\d+'
 
     def get_serializer_context(self):
         budget_id = self.kwargs.get('budget_id')

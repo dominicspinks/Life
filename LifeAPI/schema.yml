@@ -358,6 +358,48 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/budgets/{budget_id}/categories/{id}/reorder/:
+    post:
+      operationId: budgets_categories_reorder_create
+      description: |-
+        Reorders a category by moving it to a new position within the list.
+        Expects 'new_order' in the request body.
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetCategory'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BudgetCategory'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BudgetCategory'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetCategory'
+          description: ''
   /api/budgets/{budget_id}/purchases/:
     get:
       operationId: budgets_purchases_list
@@ -581,6 +623,253 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/budgets/{budget_id}/purchases/bulk/:
+    get:
+      operationId: budgets_purchases_bulk_list
+      description: |-
+        API endpoint for bulk importing purchases into a budget
+        Only supports POST
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBudgetPurchaseList'
+          description: ''
+    post:
+      operationId: budgets_purchases_bulk_create
+      description: |-
+        API endpoint for bulk importing purchases into a budget
+        Only supports POST
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPurchase'
+          description: ''
+  /api/budgets/{budget_id}/purchases/bulk/{id}/:
+    get:
+      operationId: budgets_purchases_bulk_retrieve
+      description: |-
+        API endpoint for bulk importing purchases into a budget
+        Only supports POST
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPurchase'
+          description: ''
+    put:
+      operationId: budgets_purchases_bulk_update
+      description: |-
+        API endpoint for bulk importing purchases into a budget
+        Only supports POST
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BudgetPurchase'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPurchase'
+          description: ''
+    patch:
+      operationId: budgets_purchases_bulk_partial_update
+      description: |-
+        API endpoint for bulk importing purchases into a budget
+        Only supports POST
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetPurchase'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetPurchase'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetPurchase'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPurchase'
+          description: ''
+    delete:
+      operationId: budgets_purchases_bulk_destroy
+      description: |-
+        API endpoint for bulk importing purchases into a budget
+        Only supports POST
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/budgets/{budget_id}/summary/:
+    get:
+      operationId: budgets_summary_list
+      description: API endpoint for retrieving summary data for a budget
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BudgetPurchaseSummary'
+          description: ''
+  /api/budgets/{budget_id}/summary/years/:
+    get:
+      operationId: budgets_summary_years_retrieve
+      description: API endpoint for retrieving summary data for a budget
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPurchaseSummary'
+          description: ''
   /api/budgets/{id}/:
     get:
       operationId: budgets_retrieve
@@ -1645,6 +1934,20 @@ components:
       - id
       - modified_at
       - purchase_date
+    BudgetPurchaseSummary:
+      type: object
+      properties:
+        week:
+          type: integer
+        category:
+          type: integer
+        total:
+          type: number
+          format: double
+      required:
+      - category
+      - total
+      - week
     FieldType:
       type: object
       properties:

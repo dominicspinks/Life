@@ -101,7 +101,7 @@
     <app-modal [show]="isSetItemModalOpen" (closed)="closeSetItemModal()"
         [title]="`${ setItemForm.id ? 'Edit' : 'Add'} Item`">
 
-        <div modal-content>
+        <form (submit)="saveSetItem()" modal-content>
             @if (listConfiguration) {
             @for (field of listConfiguration.list_fields; track field.id) {
             <div class="mb-4">
@@ -109,16 +109,17 @@
 
                 @switch (field.field_type_name) {
                 @case ('text') {
-                <input [ngModel]="getFormFieldValue(field.id!)" (ngModelChange)="setFormFieldValue(field.id!, $event)"
+                <input #inputField [ngModel]="getFormFieldValue(field.id!)"
+                    (ngModelChange)="setFormFieldValue(field.id!, $event)" [ngModelOptions]="{standalone: true}"
                     type="text" class="w-full border rounded px-3 py-2" />
                 }
                 @case ('date') {
                 <input [ngModel]="getFormFieldValue(field.id!)" (ngModelChange)="setFormFieldValue(field.id!, $event)"
-                    type="date" class="w-full border rounded px-3 py-2" />
+                    [ngModelOptions]="{standalone: true}" type="date" class="w-full border rounded px-3 py-2" />
                 }
                 @case ('dropdown') {
                 <select [ngModel]="getFormFieldValue(field.id!)" (ngModelChange)="setFormFieldValue(field.id!, $event)"
-                    class="w-full border rounded px-3 py-2">
+                    [ngModelOptions]="{standalone: true}" class="w-full border rounded px-3 py-2">
                     @for (option of field.options; track option.id) {
                     <option [value]="option.option_name">
                         {{ option.option_name }}
@@ -127,14 +128,16 @@
                 </select>
                 }
                 @default {
-                <input [ngModel]="getFormFieldValue(field.id!)" (ngModelChange)="setFormFieldValue(field.id!, $event)"
+                <input #inputField [ngModel]="getFormFieldValue(field.id!)"
+                    (ngModelChange)="setFormFieldValue(field.id!, $event)" [ngModelOptions]="{standalone: true}"
                     type="text" class="w-full border rounded px-3 py-2" />
                 }
                 }
             </div>
             }
             }
-        </div>
+            <button type="submit" hidden></button>
+        </form>
 
         <div modal-actions class="flex justify-end gap-2">
             <button (click)="closeSetItemModal()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
     ionAdd,
@@ -63,6 +63,9 @@ export class BudgetSettingsTabComponent {
     dragStartIndex = -1;
     dragTargetIndex = -1;
 
+    @ViewChild('categoryNameInput') categoryNameInput!: ElementRef<HTMLInputElement>;
+    @ViewChild('detailsNameInput') detailsNameInput!: ElementRef<HTMLInputElement>;
+
     ngOnInit(): void {
         // Get budget details from API
         this.budgetService.getBudgetConfiguration(this.budgetId).subscribe({
@@ -98,6 +101,10 @@ export class BudgetSettingsTabComponent {
         const { name, order, is_enabled, is_read_only, is_checkable } = this.budgetConfiguration;
         this.editDetailsForm = { name, order, is_enabled, is_read_only };
         this.isEditDetailsModalOpen = true;
+
+        setTimeout(() => {
+            this.detailsNameInput.nativeElement.focus();
+        }, 0);
     }
 
     closeEditModal(): void {
@@ -157,6 +164,10 @@ export class BudgetSettingsTabComponent {
         }
 
         this.isSetCategoryModalOpen = true;
+
+        setTimeout(() => {
+            this.categoryNameInput.nativeElement.focus();
+        }, 0);
     }
 
     closeSetCategoryModal(): void {

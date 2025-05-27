@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, inject, QueryList, ViewChildren } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
@@ -46,6 +46,8 @@ export class ViewListModuleComponent {
         is_completed: false,
         field_values: []
     };
+
+    @ViewChildren('inputField') inputFields!: QueryList<ElementRef>;
 
     ngOnInit() {
         this.route.paramMap.subscribe(params => {
@@ -212,6 +214,13 @@ export class ViewListModuleComponent {
         if (item) {
             this.setItemForm = structuredClone(item);
         }
+
+        setTimeout(() => {
+            const firstInput = this.inputFields?.first;
+            if (firstInput) {
+                firstInput.nativeElement.focus();
+            }
+        });
     }
 
     closeSetItemModal() {

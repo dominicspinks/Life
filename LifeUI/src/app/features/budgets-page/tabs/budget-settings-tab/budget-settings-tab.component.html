@@ -71,28 +71,33 @@
     <!-- Modals -->
     <!-- Edit Details Modal -->
     <app-modal [show]="isEditDetailsModalOpen" (closed)="closeEditModal()" title="Edit Module">
-        <div modal-content>
+        <form (submit)="saveEditedModule()" modal-content>
             <!-- Module Name -->
             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input [(ngModel)]="editDetailsForm.name" type="text" class="w-full mb-4 border rounded px-3 py-2" />
+            <input #detailsNameInput [(ngModel)]="editDetailsForm.name" [ngModelOptions]="{standalone: true}"
+                type="text" class="w-full mb-4 border rounded px-3 py-2" />
 
             <!-- Order -->
             <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
-            <input [(ngModel)]="editDetailsForm.order" type="number" min="0"
+            <input [(ngModel)]="editDetailsForm.order" [ngModelOptions]="{standalone: true}" type="number" min="0"
                 class="w-full mb-4 border rounded px-3 py-2" />
 
             <!-- Enabled -->
             <label class="inline-flex items-center space-x-2 mb-2">
-                <input type="checkbox" [(ngModel)]="editDetailsForm.is_enabled" class="form-checkbox" />
+                <input type="checkbox" [(ngModel)]="editDetailsForm.is_enabled" [ngModelOptions]="{standalone: true}"
+                    class="form-checkbox" />
                 <span class="text-sm text-gray-700">Enabled</span>
             </label><br />
 
             <!-- Read Only -->
             <label class="inline-flex items-center space-x-2 mb-2">
-                <input type="checkbox" [(ngModel)]="editDetailsForm.is_read_only" class="form-checkbox" />
+                <input type="checkbox" [(ngModel)]="editDetailsForm.is_read_only" [ngModelOptions]="{standalone: true}"
+                    class="form-checkbox" />
                 <span class="text-sm text-gray-700">Read Only</span>
             </label><br />
-        </div>
+
+            <button type="submit" hidden></button>
+        </form>
 
         <div modal-actions class="flex justify-end gap-2">
             <button (click)="closeEditModal()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
@@ -105,32 +110,37 @@
     <!-- Add/Edit Category Modal -->
     <app-modal [show]="isSetCategoryModalOpen" (closed)="closeSetCategoryModal()"
         [title]="`${ setCategoryForm.id ? 'Edit' : 'Add'} Category`">
-        <div modal-content>
+        <form (submit)="saveSetCategory()" modal-content>
             <!-- Category Name -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input [(ngModel)]="setCategoryForm.name" type="text" class="w-full mb-4 border rounded px-3 py-2" />
+                <input #categoryNameInput [(ngModel)]="setCategoryForm.name" [ngModelOptions]="{standalone: true}"
+                    type="text" class="w-full mb-4 border rounded px-3 py-2" />
             </div>
 
             <!-- Weekly Target -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Weekly Target</label>
-                <input [(ngModel)]="setCategoryForm.weekly_target" type="number"
+                <input [(ngModel)]="setCategoryForm.weekly_target" [ngModelOptions]="{standalone: true}" type="number"
                     class="w-50 mb-4 border rounded px-3 py-2" (keydown)="preventDecimal($event)" />
             </div>
 
             <!-- Enabled -->
             <label class="inline-flex items-center space-x-2 mb-2">
-                <input type="checkbox" [(ngModel)]="setCategoryForm.is_enabled" class="form-checkbox" />
+                <input type="checkbox" [(ngModel)]="setCategoryForm.is_enabled" [ngModelOptions]="{standalone: true}"
+                    class="form-checkbox" />
                 <span class="text-sm text-gray-700">Enabled</span>
             </label><br />
 
             <!-- Excluded -->
             <label class="inline-flex items-center space-x-2 mb-2">
-                <input type="checkbox" [(ngModel)]="setCategoryForm.excluded_from_budget" class="form-checkbox" />
+                <input type="checkbox" [(ngModel)]="setCategoryForm.excluded_from_budget"
+                    [ngModelOptions]="{standalone: true}" class="form-checkbox" />
                 <span class="text-sm text-gray-700">Excluded from Budget</span>
             </label><br />
-        </div>
+
+            <button type="submit" hidden></button>
+        </form>
 
         <div modal-actions class="flex justify-end gap-2">
             <button (click)="closeSetCategoryModal()"

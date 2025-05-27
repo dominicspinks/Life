@@ -20,7 +20,7 @@ export type BudgetConfigurationDetails = Pick<
 
 export interface BudgetPurchase {
     id?: number;
-    purchase_date: string;
+    purchase_date: Date;
     amount: number;
     description: string;
     category: number | null;

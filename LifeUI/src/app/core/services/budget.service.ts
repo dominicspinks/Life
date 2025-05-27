@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '@environments/environment';
 import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '@core/models/budget.model';
 
@@ -57,7 +57,8 @@ export class BudgetService {
                 searchFilters += filterList.join('&');
             }
         }
-        return this.http.get<BudgetPurchase[]>(`${this.apiUrl}/budgets/${id}/purchases/${searchFilters}`);
+        return this.http.get<BudgetPurchase[]>(`${this.apiUrl}/budgets/${id}/purchases/${searchFilters}`).pipe(
+            map(purchases => purchases.map(this.parsePurchaseResponse)));
     }
 
     deletePurchase(budgetId: number, purchaseId: number): Observable<void> {
@@ -65,15 +66,20 @@ export class BudgetService {
     }
 
     addPurchase(budgetId: number, purchase: BudgetPurchase): Observable<BudgetPurchase> {
-        return this.http.post<BudgetPurchase>(`${this.apiUrl}/budgets/${budgetId}/purchases/`, purchase);
+        return this.http.post<BudgetPurchase>(`${this.apiUrl}/budgets/${budgetId}/purchases/`, this.formatPurchaseForRequest(purchase)).pipe(
+            map(this.parsePurchaseResponse));
     }
 
     updatePurchase(budgetId: number, purchaseId: number, purchase: BudgetPurchase): Observable<BudgetPurchase> {
-        return this.http.patch<BudgetPurchase>(`${this.apiUrl}/budgets/${budgetId}/purchases/${purchaseId}/`, purchase);
+        return this.http.patch<BudgetPurchase>(
+            `${this.apiUrl}/budgets/${budgetId}/purchases/${purchaseId}/`,
+            this.formatPurchaseForRequest(purchase)).pipe(
+                map(this.parsePurchaseResponse));
     }
 
     addBulkPurchase(budgetId: number, purchases: BudgetPurchase[]): Observable<BudgetPurchase[]> {
-        return this.http.post<BudgetPurchase[]>(`${this.apiUrl}/budgets/${budgetId}/purchases/bulk/`, purchases);
+        return this.http.post<BudgetPurchase[]>(`${this.apiUrl}/budgets/${budgetId}/purchases/bulk/`, purchases.map(purchase => this.formatPurchaseForRequest(purchase))).pipe(
+            map(purchases => purchases.map(this.parsePurchaseResponse)));
     }
 
     getPurchaseSummary(budgetId: number, start_date: string, end_date: string): Observable<BudgetPurchaseSummary[]> {
@@ -82,6 +88,20 @@ export class BudgetService {
 
     getBudgetYears(budgetId: number): Observable<number[]> {
         return this.http.get<number[]>(`${this.apiUrl}/budgets/${budgetId}/summary/years/`);
+    }
+
+    private formatPurchaseForRequest(p: BudgetPurchase): any {
+        return {
+            ...p,
+            purchase_date: p.purchase_date.toISOString().split('T')[0]
+        };
+    }
+
+    private parsePurchaseResponse(p: any): BudgetPurchase {
+        return {
+            ...p,
+            purchase_date: new Date(p.purchase_date)
+        };
     }
 
 }

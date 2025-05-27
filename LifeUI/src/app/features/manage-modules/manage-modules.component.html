@@ -54,11 +54,11 @@
 
     <!-- Module Type Modal -->
     <app-modal [show]="isAddModalOpen" (closed)="closeAddModal()" title="Add New Module">
-        <div modal-content>
+        <form (submit)="saveModule()" modal-content>
             <!-- Module Type -->
             <label class="block text-sm font-medium text-gray-700 mb-1">Module Type</label>
             <select [(ngModel)]="selectedType" (ngModelChange)="selectedType = +$event"
-                class="w-full mb-4 border rounded px-3 py-2 capitalize">
+                [ngModelOptions]="{standalone: true}" class="w-full mb-4 border rounded px-3 py-2 capitalize">
                 @for (moduleType of moduleTypes; track moduleType.id) {
                 <option [value]="moduleType.id" class="capitalize">{{ moduleType.name }}</option>
                 }
@@ -66,17 +66,19 @@
 
             <!-- Module Name -->
             <label class="block text-sm font-medium text-gray-700 mb-1">Module Name</label>
-            <input [(ngModel)]="newModuleName" type="text" placeholder="Enter name"
-                class="w-full mb-4 border rounded px-3 py-2" />
+            <input [ngModelOptions]="{standalone: true}" [(ngModel)]="newModuleName" type="text"
+                placeholder="Enter name" class="w-full mb-4 border rounded px-3 py-2" />
 
             <!-- Checkable option -->
             @if (listTypeId === selectedType) {
             <label class="inline-flex items-center space-x-2 mb-4">
-                <input type="checkbox" [(ngModel)]="isCheckable" class="form-checkbox">
+                <input type="checkbox" [(ngModel)]="isCheckable" class="form-checkbox"
+                    [ngModelOptions]="{standalone: true}">
                 <span class="text-sm text-gray-700">Is Checkable?</span>
             </label>
             }
-        </div>
+            <button type="submit" hidden></button>
+        </form>
 
         <div modal-actions class="flex justify-end gap-2">
             <button (click)="closeAddModal()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>

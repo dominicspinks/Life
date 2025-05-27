@@ -82,34 +82,40 @@
     <!-- Modals -->
     <!-- Edit Details Modal -->
     <app-modal [show]="isEditDetailsModalOpen" (closed)="closeEditModal()" title="Edit Module">
-        <div modal-content>
+        <form (submit)="saveEditedModule()" modal-content>
             <!-- Module Name -->
             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input [(ngModel)]="editDetailsForm.name" type="text" class="w-full mb-4 border rounded px-3 py-2" />
+            <input #moduleNameInput [(ngModel)]="editDetailsForm.name" [ngModelOptions]="{standalone: true}" type="text"
+                class="w-full mb-4 border rounded px-3 py-2" />
 
             <!-- Order -->
             <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
-            <input [(ngModel)]="editDetailsForm.order" type="number" min="0"
+            <input [(ngModel)]="editDetailsForm.order" [ngModelOptions]="{standalone: true}" type="number" min="0"
                 class="w-full mb-4 border rounded px-3 py-2" />
 
             <!-- Enabled -->
             <label class="inline-flex items-center space-x-2 mb-2">
-                <input type="checkbox" [(ngModel)]="editDetailsForm.is_enabled" class="form-checkbox" />
+                <input type="checkbox" [(ngModel)]="editDetailsForm.is_enabled" [ngModelOptions]="{standalone: true}"
+                    class="form-checkbox" />
                 <span class="text-sm text-gray-700">Enabled</span>
             </label><br />
 
             <!-- Read Only -->
             <label class="inline-flex items-center space-x-2 mb-2">
-                <input type="checkbox" [(ngModel)]="editDetailsForm.is_read_only" class="form-checkbox" />
+                <input type="checkbox" [(ngModel)]="editDetailsForm.is_read_only" [ngModelOptions]="{standalone: true}"
+                    class="form-checkbox" />
                 <span class="text-sm text-gray-700">Read Only</span>
             </label><br />
 
             <!-- Checklist -->
             <label class="inline-flex items-center space-x-2 mb-2">
-                <input type="checkbox" [(ngModel)]="editDetailsForm.is_checkable" class="form-checkbox" />
+                <input type="checkbox" [(ngModel)]="editDetailsForm.is_checkable" [ngModelOptions]="{standalone: true}"
+                    class="form-checkbox" />
                 <span class="text-sm text-gray-700">Is Checklist?</span>
             </label>
-        </div>
+
+            <button type="submit" hidden></button>
+        </form>
 
         <div modal-actions class="flex justify-end gap-2">
             <button (click)="closeEditModal()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
@@ -122,15 +128,16 @@
     <!-- Add/Edit Field Modal -->
     <app-modal [show]="isSetFieldModalOpen" (closed)="closeSetFieldModal()"
         [title]="`${ setFieldForm.id ? 'Edit' : 'Add'} Field`">
-        <div modal-content>
+        <form (submit)="saveSetField()" modal-content>
             <!-- Module Name -->
             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input [(ngModel)]="setFieldForm.field_name" type="text" class="w-full mb-4 border rounded px-3 py-2" />
+            <input #fieldNameInput [(ngModel)]="setFieldForm.field_name" [ngModelOptions]="{standalone: true}"
+                type="text" class="w-full mb-4 border rounded px-3 py-2" />
 
             <!-- Field Type -->
             <label class="block text-sm font-medium text-gray-700 mb-1">Field Type</label>
             <select [(ngModel)]="setFieldForm.field_type" (ngModelChange)="onFieldTypeChange($event)"
-                [disabled]="!!setFieldForm.id"
+                [disabled]="!!setFieldForm.id" [ngModelOptions]="{standalone: true}"
                 class="w-full mb-4 border rounded px-3 py-2 capitalize disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed">
                 @for (fieldType of fieldTypes; track fieldType.id) {
                 <option [value]="fieldType.id" class="capitalize">{{ fieldType.name }}</option>
@@ -148,9 +155,11 @@
             @for (option of setFieldForm.options; track $index) {
             <div class="flex flex-row items-center mb-2">
                 <label class="block w-5 text-sm font-medium text-gray-700">{{ $index + 1 }}</label>
-                <input [(ngModel)]="option.option_name" type="text" class="w-full border rounded px-3 py-2" />
-                <input [(ngModel)]="option.id" type="hidden" />
-                <button (click)="removeOption(option, $index)" class="px-4 text-red-800 hover:text-red-300">
+                <input [(ngModel)]="option.option_name" type="text" class="w-full border rounded px-3 py-2"
+                    [ngModelOptions]="{standalone: true}" />
+                <input [(ngModel)]="option.id" [ngModelOptions]="{standalone: true}" type="hidden" />
+                <button (click)="removeOption(option, $index)" class="px-4 text-red-800 hover:text-red-300"
+                    [tabIndex]="-1">
                     <ng-icon name="ionTrashBin" size="24" />
                 </button>
             </div>
@@ -173,15 +182,18 @@
 
             <!-- Order -->
             <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
-            <input [(ngModel)]="setFieldForm.order" type="number" min="0"
-                class="w-full mb-4 border rounded px-3 py-2" />
+            <input [(ngModel)]="setFieldForm.order" type="number" min="0" class="w-full mb-4 border rounded px-3 py-2"
+                [ngModelOptions]="{standalone: true}" />
 
             <!-- Mandatory -->
             <label class="inline-flex items-center space-x-2 mb-2">
-                <input type="checkbox" [(ngModel)]="setFieldForm.is_mandatory" class="form-checkbox" />
+                <input type="checkbox" [(ngModel)]="setFieldForm.is_mandatory" class="form-checkbox"
+                    [ngModelOptions]="{standalone: true}" />
                 <span class="text-sm text-gray-700">Mandatory</span>
             </label><br />
-        </div>
+
+            <button type="submit" hidden></button>
+        </form>
 
         <div modal-actions class="flex justify-end gap-2">
             <button (click)="closeSetFieldModal()"

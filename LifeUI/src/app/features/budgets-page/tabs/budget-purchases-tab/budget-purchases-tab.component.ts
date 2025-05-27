@@ -48,7 +48,7 @@ export class BudgetPurchasesTabComponent {
     isSetPurchaseModalOpen = false;
     setPurchaseForm: BudgetPurchase = {
         id: undefined,
-        purchase_date: new Date().toISOString().split('T')[0],
+        purchase_date: new Date(),
         amount: 0,
         description: '',
         category: null
@@ -125,7 +125,7 @@ export class BudgetPurchasesTabComponent {
         } else {
             this.setPurchaseForm = {
                 id: undefined,
-                purchase_date: new Date().toISOString().split('T')[0],
+                purchase_date: new Date(),
                 amount: 0,
                 description: '',
                 category: null
@@ -158,6 +158,7 @@ export class BudgetPurchasesTabComponent {
             this.budgetService.updatePurchase(this.budgetConfiguration!.id, this.setPurchaseForm.id, this.setPurchaseForm).subscribe({
                 next: (res) => {
                     this.purchases = this.purchases.map(p => p.id === res.id ? res : p);
+                    this.purchases.sort((a, b) => b.purchase_date.getTime() - a.purchase_date.getTime());
                     this.closeSetPurchaseModal();
                 },
                 error: (error) => {
@@ -169,6 +170,7 @@ export class BudgetPurchasesTabComponent {
             this.budgetService.addPurchase(this.budgetConfiguration!.id, this.setPurchaseForm).subscribe({
                 next: (res) => {
                     this.purchases.push(res);
+                    this.purchases.sort((a, b) => b.purchase_date.getTime() - a.purchase_date.getTime());
                     this.closeSetPurchaseModal();
                 },
                 error: (error) => {
@@ -238,7 +240,7 @@ export class BudgetPurchasesTabComponent {
         this.bulkPreviewRows.splice(index, 1);
     }
 
-    parseFlexibleDate(input: string): string | null {
+    parseFlexibleDate(input: string): Date | null {
         const formats = [
             { regex: /^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/, order: ['year', 'month', 'day'] }, // yyyy-mm-dd or yyyy/mm/dd
             { regex: /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/, order: ['day', 'month', 'year'] }, // dd/mm/yyyy or dd-mm-yyyy
@@ -259,10 +261,7 @@ export class BudgetPurchasesTabComponent {
             // JS months are 0-indexed
             const date = new Date(parts['year'], parts['month'] - 1, parts['day']);
             if (!isNaN(date.getTime())) {
-                const yyyy = date.getFullYear();
-                const mm = String(date.getMonth() + 1).padStart(2, '0');
-                const dd = String(date.getDate()).padStart(2, '0');
-                return `${yyyy}-${mm}-${dd}`; // ISO yyyy-mm-dd
+                return date;
             }
         }
 
@@ -334,5 +333,19 @@ export class BudgetPurchasesTabComponent {
                 this.logger.error('Error importing purchases', error);
             }
         })
+    }
+
+    parseDate(date: string | null): Date {
+        if (!date) {
+            this.toastService.show('Date is required', 'error', 3000);
+            throw new Error('Date is required');
+        }
+
+        const parsedDate = new Date(date);
+        if (isNaN(parsedDate.getTime())) {
+            this.toastService.show('Invalid date format', 'error', 3000);
+            throw new Error('Invalid date format');
+        }
+        return parsedDate;
     }
 }

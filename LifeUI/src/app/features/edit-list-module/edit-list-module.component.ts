@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ListService } from '@core/services/list.service';
@@ -60,6 +60,9 @@ export class EditListModuleComponent {
         options: []
     };
 
+    @ViewChild('fieldNameInput') fieldNameInput!: ElementRef<HTMLInputElement>;
+    @ViewChild('moduleNameInput') moduleNameInput!: ElementRef<HTMLInputElement>;
+
     ngOnInit(): void {
         this.listService.getModule(this.moduleId).subscribe({
             next: (res) => {
@@ -89,6 +92,10 @@ export class EditListModuleComponent {
         const { name, order, is_enabled, is_read_only, is_checkable } = this.moduleData;
         this.editDetailsForm = { name, order, is_enabled, is_read_only, is_checkable };
         this.isEditDetailsModalOpen = true;
+
+        setTimeout(() => {
+            this.moduleNameInput.nativeElement.focus();
+        }, 0);
     }
 
     closeEditModal(): void {
@@ -150,6 +157,10 @@ export class EditListModuleComponent {
         }
 
         this.isSetFieldModalOpen = true;
+
+        setTimeout(() => {
+            this.fieldNameInput.nativeElement.focus();
+        });
     }
 
     closeSetFieldModal(): void {
@@ -267,7 +278,6 @@ export class EditListModuleComponent {
     }
 
     removeOption(option: ListFieldOption, index: number): void {
-        // if option.id is not defined, use index to remove the option, otherwise use option.id
         if (!option.id) {
             this.setFieldForm.options.splice(index, 1);
             return;

@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions
 
-from api.serializers.serializers_reference import FieldTypeSerializer, FieldTypeDetailSerializer
-from api.models import FieldType
+from api.serializers.serializers_reference import FieldTypeSerializer, FieldTypeDetailSerializer, PeriodSerializer
+from api.models import FieldType, Period
 
 class FieldTypeViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -16,3 +16,13 @@ class FieldTypeViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == 'retrieve' or self.request.query_params.get('detailed') == 'true':
             return FieldTypeDetailSerializer
         return FieldTypeSerializer
+
+class PeriodViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint for viewing periods.
+    Provides read-only access to all available periods.
+    """
+    queryset = Period.objects.all()
+    serializer_class = PeriodSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None

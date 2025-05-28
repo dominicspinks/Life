@@ -4,6 +4,9 @@ from dotenv import load_dotenv
 from datetime import timedelta
 from django.core.exceptions import ImproperlyConfigured
 
+# API Version Number
+API_VERSION = '1.2.0'
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -209,6 +212,6 @@ APPEND_SLASH = True
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Life API',
     'DESCRIPTION': 'API for my Life Management application',
-    'VERSION': '1.1.0',
+    'VERSION': API_VERSION,
     'SERVE_INCLUDE_SCHEMA': False,
 }

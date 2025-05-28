@@ -11,13 +11,15 @@ from api.models import (
     ListFieldOption,
     ListItem,
     BudgetCategory,
-    BudgetPurchase
+    BudgetPurchase,
+    BudgetCashFlow,
+    Period
 )
 from api.serializers.serializers_auth import EmailTokenObtainSerializer, RegisterSerializer
-from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer, BudgetPurchaseSummarySerializer
+from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer, BudgetPurchaseSummarySerializer, BudgetCashFlowSerializer
 from api.serializers.serializers_lists import ListConfigurationSerializer, ListDataSerializer, ListFieldSerializer, ListItemSerializer
 from api.serializers.serializers_modules import ModuleTypeSerializer, UserModuleSerializer
-from api.serializers.serializers_reference import FieldTypeDetailSerializer, FieldTypeSerializer
+from api.serializers.serializers_reference import FieldTypeDetailSerializer, FieldTypeSerializer, PeriodSerializer
 
 User = get_user_model()
 
@@ -541,3 +543,61 @@ class BudgetPurchaseSummarySerializerTests(TestCase):
         self.assertIn('week', serializer.errors)
         self.assertIn('category', serializer.errors)
         self.assertIn('total', serializer.errors)
+
+class BudgetCashFlowSerializerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='testpass123')
+        self.module_type = ModuleType.objects.get(name='budget')
+        self.user_module = UserModule.objects.create(user=self.user, module=self.module_type, name='My Budget', order=0, is_enabled=True)
+        self.yearlyPeriod = Period.objects.get(name='yearly')
+
+    def test_valid_serialization(self):
+        cashflow = BudgetCashFlow.objects.create(
+            user_module=self.user_module,
+            amount=20000.00,
+            description='Salary',
+            is_income=True,
+            period=self.yearlyPeriod
+        )
+        serializer = BudgetCashFlowSerializer(cashflow)
+        self.assertEqual(serializer.data['amount'], '20000.00')
+        self.assertEqual(serializer.data['period_name'], 'yearly')
+
+    def test_valid_creation(self):
+        data = {
+            'amount': 20000,
+            'description': 'Salary',
+            'is_income': True,
+            'period': self.yearlyPeriod.id
+        }
+        serializer = BudgetCashFlowSerializer(data=data, context={'user_module': self.user_module})
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instance = serializer.save(user_module=self.user_module)
+        self.assertEqual(instance.amount, 20000)
+        self.assertEqual(instance.description, 'Salary')
+        self.assertTrue(instance.is_income)
+        self.assertEqual(instance.period, self.yearlyPeriod)
+
+
+    def test_invalid_period(self):
+        data = {
+            'amount': 20000,
+            'description': 'Salary',
+            'is_income': True,
+            'period': 0
+        }
+        serializer = BudgetCashFlowSerializer(data=data, context={'user_module': self.user_module})
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('period', serializer.errors)
+
+class PeriodSerializerTests(TestCase):
+    def setUp(self):
+        self.period = Period.objects.get(name='monthly')
+
+    def test_serializes_period(self):
+        """Test serialising a Period instance"""
+        serializer = PeriodSerializer(self.period)
+        self.assertEqual(serializer.data, {
+            'id': self.period.id,
+            'name': 'monthly'
+        })

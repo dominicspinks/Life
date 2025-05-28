@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Life API
-  version: 1.1.0
+  version: 1.2.0
   description: API for my Life Management application
 paths:
   /api/auth/login/:
@@ -161,6 +161,203 @@ paths:
               schema:
                 $ref: '#/components/schemas/Budget'
           description: ''
+  /api/budgets/{budget_id}/cashflows/:
+    get:
+      operationId: budgets_cashflows_list
+      description: |-
+        API endpoint for CRUD operations on cash flow data for a budget
+        Allows users to view, create, update and delete their cash flow data
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BudgetCashFlow'
+          description: ''
+    post:
+      operationId: budgets_cashflows_create
+      description: |-
+        API endpoint for CRUD operations on cash flow data for a budget
+        Allows users to view, create, update and delete their cash flow data
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetCashFlow'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BudgetCashFlow'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BudgetCashFlow'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetCashFlow'
+          description: ''
+  /api/budgets/{budget_id}/cashflows/{id}/:
+    get:
+      operationId: budgets_cashflows_retrieve
+      description: |-
+        API endpoint for CRUD operations on cash flow data for a budget
+        Allows users to view, create, update and delete their cash flow data
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetCashFlow'
+          description: ''
+    put:
+      operationId: budgets_cashflows_update
+      description: |-
+        API endpoint for CRUD operations on cash flow data for a budget
+        Allows users to view, create, update and delete their cash flow data
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetCashFlow'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BudgetCashFlow'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BudgetCashFlow'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetCashFlow'
+          description: ''
+    patch:
+      operationId: budgets_cashflows_partial_update
+      description: |-
+        API endpoint for CRUD operations on cash flow data for a budget
+        Allows users to view, create, update and delete their cash flow data
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetCashFlow'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetCashFlow'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetCashFlow'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetCashFlow'
+          description: ''
+    delete:
+      operationId: budgets_cashflows_destroy
+      description: |-
+        API endpoint for CRUD operations on cash flow data for a budget
+        Allows users to view, create, update and delete their cash flow data
+      parameters:
+      - in: path
+        name: budget_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - budgets
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/budgets/{budget_id}/categories/:
     get:
       operationId: budgets_categories_list
@@ -1660,6 +1857,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/FieldTypeDetail'
           description: ''
+  /api/reference/periods/:
+    get:
+      operationId: reference_periods_list
+      description: |-
+        API endpoint for viewing periods.
+        Provides read-only access to all available periods.
+      tags:
+      - reference
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Period'
+          description: ''
+  /api/reference/periods/{id}/:
+    get:
+      operationId: reference_periods_retrieve
+      description: |-
+        API endpoint for viewing periods.
+        Provides read-only access to all available periods.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this period.
+        required: true
+      tags:
+      - reference
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Period'
+          description: ''
 components:
   schemas:
     Budget:
@@ -1708,6 +1948,36 @@ components:
       - module_name
       - name
       - order
+    BudgetCashFlow:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        description:
+          type: string
+          nullable: true
+        is_income:
+          type: boolean
+        period:
+          type: integer
+          nullable: true
+        period_name:
+          type: string
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - id
+      - modified_at
+      - period_name
     BudgetCategory:
       type: object
       properties:
@@ -2252,6 +2522,31 @@ components:
           items:
             $ref: '#/components/schemas/BudgetCategory'
           readOnly: true
+    PatchedBudgetCashFlow:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        description:
+          type: string
+          nullable: true
+        is_income:
+          type: boolean
+        period:
+          type: integer
+          nullable: true
+        period_name:
+          type: string
+          readOnly: true
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
     PatchedBudgetCategory:
       type: object
       properties:
@@ -2420,6 +2715,18 @@ components:
           type: string
           format: date-time
           readOnly: true
+    Period:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - name
     Register:
       type: object
       properties:

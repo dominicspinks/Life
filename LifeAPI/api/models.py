@@ -127,3 +127,20 @@ class BudgetPurchase(models.Model):
 
     def __str__(self):
         return f"{self.purchase_date} - {self.description or ''}"
+
+class Period(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+class BudgetCashFlow(models.Model):
+    user_module = models.ForeignKey(UserModule, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(null=True,blank=True)
+    is_income = models.BooleanField(default=False)
+    period = models.ForeignKey(Period, on_delete=models.PROTECT, null=True, blank=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.modified_at} - {self.description or ''}"

@@ -5,8 +5,12 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from api.models import (
-    ModuleType, UserModule,
-    BudgetCategory, BudgetPurchase
+    ModuleType,
+    UserModule,
+    BudgetCategory,
+    BudgetPurchase,
+    BudgetCashFlow,
+    Period
 )
 
 User = get_user_model()
@@ -307,3 +311,107 @@ class BudgetPurchaseSummaryYearsTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.other_url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+class BudgetCashFlowViewSetTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='user@example.com', password='password123')
+        self.other_user = User.objects.create_user(email='other@example.com', password='password456')
+        self.budget_type = ModuleType.objects.get(name='budget')
+
+        self.budget = UserModule.objects.create(user=self.user, module=self.budget_type, name='Main Budget', order=0, is_enabled=True)
+        self.other_budget = UserModule.objects.create(user=self.other_user, module=self.budget_type, name='Other Budget', order=1, is_enabled=True)
+
+        self.yearlyPeriod = Period.objects.get(name='yearly')
+        self.monthlyPeriod = Period.objects.get(name='monthly')
+
+        self.cashflow1 = BudgetCashFlow.objects.create(
+            user_module=self.budget,
+            amount=1000,
+            description='Annual Salary',
+            is_income=True,
+            period_id=self.yearlyPeriod.id
+        )
+
+        self.cashflow2 = BudgetCashFlow.objects.create(
+            user_module=self.other_budget,
+            amount=500,
+            description='Monthly Rent',
+            is_income=False,
+            period_id=self.monthlyPeriod.id
+        )
+
+        self.base_url = f'/api/budgets/{self.budget.id}/cashflows/'
+
+    def test_unauthenticated_user_cannot_access(self):
+        response = self.client.get(self.base_url)
+        self.assertEqual(response.status_code, 401)
+
+    def test_list_cashflows(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.base_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['description'], 'Annual Salary')
+
+    def test_retrieve_cashflow(self):
+        self.client.force_authenticate(user=self.user)
+        url = f'{self.base_url}{self.cashflow1.id}/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['amount'], '1000.00')
+
+    def test_create_cashflow(self):
+        self.client.force_authenticate(user=self.user)
+        data = {
+            'amount': 500,
+            'description': 'Freelance',
+            'is_income': True,
+            'period': self.yearlyPeriod.id
+        }
+        response = self.client.post(self.base_url, data)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['description'], 'Freelance')
+
+    def test_update_cashflow(self):
+        self.client.force_authenticate(user=self.user)
+        url = f'{self.base_url}{self.cashflow1.id}/'
+        data = {
+            'amount': 1200,
+            'description': 'Updated Salary',
+            'is_income': True,
+            'period': 4
+        }
+        response = self.client.put(url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['amount'], '1200.00')
+
+    def test_delete_cashflow(self):
+        self.client.force_authenticate(user=self.user)
+        url = f'{self.base_url}{self.cashflow1.id}/'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(BudgetCashFlow.objects.filter(id=self.cashflow1.id).exists())
+
+    def test_user_cannot_access_other_budget(self):
+        self.client.force_authenticate(user=self.user)
+        other_url = f'/api/budgets/{self.other_budget.id}/cashflows/'
+        response = self.client.get(other_url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_user_cannot_access_other_cashflow(self):
+        self.client.force_authenticate(user=self.user)
+        other_url = f'/api/budgets/{self.budget.id}/cashflows/{self.cashflow2.id}/'
+        response = self.client.get(other_url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_invalid_period(self):
+        self.client.force_authenticate(user=self.user)
+        data = {
+            'amount': 250,
+            'description': 'Invalid Period',
+            'is_income': False,
+            'period': 9999  # Non-existent
+        }
+        response = self.client.post(self.base_url, data)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('period', response.data)

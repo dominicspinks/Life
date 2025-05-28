@@ -11,28 +11,30 @@ from api.models import (
     ListFieldOption,
     ListItem,
     BudgetCategory,
-    BudgetPurchase
+    BudgetPurchase,
+    Period,
+    BudgetCashFlow
 )
 
 User = get_user_model()
 
 class ReferenceDataTests(TestCase):
-    def test_static_reference_data_exists(self):
-        """Ensure all expected static reference data exists in the DB."""
-
-        # Module types
+    def test_module_types_exist(self):
+        """Ensure all expected ModuleType entries exist in the DB."""
         expected_modules = {'budget', 'list'}
         actual_modules = set(ModuleType.objects.values_list('name', flat=True))
         for name in expected_modules:
             self.assertIn(name, actual_modules, f"Missing ModuleType: {name}")
 
-        # Field types
+    def test_field_types_exist(self):
+        """Ensure all expected FieldType entries exist in the DB."""
         expected_field_types = {'dropdown', 'text', 'date', 'number'}
         actual_field_types = set(FieldType.objects.values_list('name', flat=True))
         for name in expected_field_types:
             self.assertIn(name, actual_field_types, f"Missing FieldType: {name}")
 
-        # FieldType rules
+    def test_field_type_rules_exist(self):
+        """Ensure expected FieldTypeRule entries exist for each FieldType."""
         expected_rules = {
             'text': {'email', 'mobile'},
             'number': {'positive_only', 'integer', 'money'}
@@ -40,9 +42,18 @@ class ReferenceDataTests(TestCase):
 
         for field_type_name, rules in expected_rules.items():
             field_type = FieldType.objects.get(name=field_type_name)
-            actual_rules = set(FieldTypeRule.objects.filter(field_type=field_type).values_list('rule', flat=True))
+            actual_rules = set(
+                FieldTypeRule.objects.filter(field_type=field_type).values_list('rule', flat=True)
+            )
             for rule in rules:
                 self.assertIn(rule, actual_rules, f"Missing rule '{rule}' for FieldType '{field_type_name}'")
+
+    def test_periods_exist(self):
+        """Ensure all expected Period entries exist in the DB."""
+        expected_periods = {'daily', 'weekly', 'monthly', 'yearly'}
+        actual_periods = set(Period.objects.values_list('name', flat=True))
+        for name in expected_periods:
+            self.assertIn(name, actual_periods, f"Missing Period: {name}")
 
 class UserModelTests(TestCase):
     def setUp(self):
@@ -411,3 +422,34 @@ class BudgetPurchaseTests(TestCase):
         )
         self.assertIsNone(purchase.category)
         self.assertIn('Miscellaneous', str(purchase))
+
+class BudgetCashFlowTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='password123'
+        )
+        self.module_type = ModuleType.objects.get(name='budget')
+        self.user_module = UserModule.objects.create(
+            user=self.user,
+            module=self.module_type,
+            name='My Budget',
+            order=1,
+            is_enabled=True
+        )
+
+        self.weeklyPeriod = Period.objects.get(name='Weekly')
+
+    def test_budget_cash_flow_creation(self):
+        cash_flow = BudgetCashFlow.objects.create(
+            user_module=self.user_module,
+            amount=500,
+            is_income=True,
+            description='Salary',
+            period=self.weeklyPeriod
+        )
+        self.assertEqual(cash_flow.amount, 500)
+        self.assertEqual(cash_flow.description, 'Salary')
+        self.assertEqual(str(cash_flow), '2024-01-01 - Salary')
+        self.assertTrue(cash_flow.is_income)
+        self.assertEqual(cash_flow.period, self.weeklyPeriod)

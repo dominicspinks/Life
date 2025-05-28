@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from api.models import BudgetCategory, BudgetPurchase
+from api.models import BudgetCategory, BudgetPurchase, BudgetCashFlow
 from api.serializers.serializers_modules import UserModuleSerializer
 
 User = get_user_model()
@@ -90,3 +90,19 @@ class BudgetPurchaseSummarySerializer(serializers.Serializer):
     week = serializers.IntegerField()
     category = serializers.IntegerField()
     total = serializers.FloatField()
+
+class BudgetCashFlowSerializer(serializers.ModelSerializer):
+    period_name = serializers.StringRelatedField(source='period', read_only=True)
+
+    class Meta:
+        model = BudgetCashFlow
+        fields = [
+            'id',
+            'amount',
+            'description',
+            'is_income',
+            'period',
+            'period_name',
+            'modified_at'
+        ]
+        readOnlyFields = ['period_name', 'modified_at']

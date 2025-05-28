@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from api.models import FieldType, FieldTypeRule, ModuleType
+from api.models import FieldType, FieldTypeRule, ModuleType, Period
 
 User = get_user_model()
 
@@ -169,4 +169,84 @@ class FieldTypeViewSetTests(TestCase):
         response = self.client.delete(detail_url)
 
         # Check that the request is rejected
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+class PeriodViewSetTests(TestCase):
+    """Test the Period ViewSet functionality"""
+
+    def setUp(self):
+        """Set up test data and authenticated client"""
+        self.client = APIClient()
+
+        # Create a test user
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='testpassword123'
+        )
+
+        # Get static period data (assumes test for static seed already exists)
+        self.daily = Period.objects.get(name='daily')
+        self.weekly = Period.objects.get(name='weekly')
+        self.monthly = Period.objects.get(name='monthly')
+        self.yearly = Period.objects.get(name='yearly')
+
+        self.periods_url = reverse('period-list')
+
+    def test_periods_unauthenticated(self):
+        """Test that unauthenticated requests are rejected"""
+        response = self.client.get(self.periods_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_list_periods_authenticated(self):
+        """Test listing all periods"""
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(self.periods_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 4)
+
+        names = [p['name'] for p in response.data]
+        self.assertIn('daily', names)
+        self.assertIn('weekly', names)
+        self.assertIn('monthly', names)
+        self.assertIn('yearly', names)
+
+        for period in response.data:
+            self.assertIn('id', period)
+            self.assertIn('name', period)
+
+    def test_retrieve_single_period(self):
+        """Test retrieving a single period"""
+        self.client.force_authenticate(user=self.user)
+
+        url = reverse('period-detail', args=[self.weekly.id])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], self.weekly.id)
+        self.assertEqual(response.data['name'], 'weekly')
+
+    def test_post_not_allowed(self):
+        """Test that POST requests are not allowed"""
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(self.periods_url, {'name': 'hourly'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_put_not_allowed(self):
+        """Test that PUT requests are not allowed"""
+        self.client.force_authenticate(user=self.user)
+
+        url = reverse('period-detail', args=[self.daily.id])
+        response = self.client.put(url, {'name': 'weekly'})
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_delete_not_allowed(self):
+        """Test that DELETE requests are not allowed"""
+        self.client.force_authenticate(user=self.user)
+
+        url = reverse('period-detail', args=[self.monthly.id])
+        response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

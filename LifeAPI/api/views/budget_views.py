@@ -12,8 +12,19 @@ from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from datetime import datetime
 
-from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer, BudgetPurchaseSummarySerializer
-from api.models import BudgetCategory, BudgetPurchase, UserModule
+from api.serializers.serializers_budgets import (
+    BudgetCategorySerializer,
+    BudgetPurchaseSerializer,
+    BudgetSerializer,
+    BudgetPurchaseSummarySerializer,
+    BudgetCashFlowSerializer
+)
+from api.models import (
+    BudgetCategory,
+    BudgetPurchase,
+    UserModule,
+    BudgetCashFlow
+)
 from api.pagination import Unpaginatable
 from api.filters import PurchaseFilterSet
 
@@ -284,3 +295,33 @@ class BudgetPurchaseSummaryViewSet(viewsets.GenericViewSet):
 
         years = sorted({int(row[0]) for row in rows})
         return Response(years)
+
+class BudgetCashFlowViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for CRUD operations on cash flow data for a budget
+    Allows users to view, create, update and delete their cash flow data
+    """
+    queryset = UserModule.objects.none()
+    serializer_class = BudgetCashFlowSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    lookup_field = 'id'
+    lookup_value_regex = r'\d+'
+
+    def get_queryset(self):
+        budget_id = self.kwargs.get('budget_id')
+        if not UserModule.objects.filter(id=budget_id, user=self.request.user).exists():
+            raise Http404("Budget not found.")
+        return BudgetCashFlow.objects.filter(user_module__id=budget_id, user_module__user=self.request.user)
+
+    def get_serializer_context(self):
+        # Include the user module in the serializer context
+        context = super().get_serializer_context()
+        budget_id = self.kwargs.get('budget_id')
+        user_module = get_object_or_404(UserModule, id=budget_id, user=self.request.user)
+        context['user_module'] = user_module
+        return context
+
+    def perform_create(self, serializer):
+        serializer.save(user_module=self.get_serializer_context()['user_module'])

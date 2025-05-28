@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '@environments/environment';
-import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '@core/models/budget.model';
+import { BudgetCashFlow, BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '@core/models/budget.model';
 
 @Injectable({
     providedIn: 'root'
@@ -102,6 +102,22 @@ export class BudgetService {
             ...p,
             purchase_date: new Date(p.purchase_date)
         };
+    }
+
+    getCashFlows(budgetId: number): Observable<BudgetCashFlow[]> {
+        return this.http.get<BudgetCashFlow[]>(`${this.apiUrl}/budgets/${budgetId}/cashflows/`);
+    }
+
+    addCashFlow(budgetId: number, cashFlow: BudgetCashFlow): Observable<BudgetCashFlow> {
+        return this.http.post<BudgetCashFlow>(`${this.apiUrl}/budgets/${budgetId}/cashflows/`, cashFlow);
+    }
+
+    updateCashFlow(budgetId: number, cashFlowId: number, cashFlow: BudgetCashFlow): Observable<BudgetCashFlow> {
+        return this.http.patch<BudgetCashFlow>(`${this.apiUrl}/budgets/${budgetId}/cashflows/${cashFlowId}/`, cashFlow);
+    }
+
+    deleteCashFlow(budgetId: number, cashFlowId: number): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/budgets/${budgetId}/cashflows/${cashFlowId}/`);
     }
 
 }

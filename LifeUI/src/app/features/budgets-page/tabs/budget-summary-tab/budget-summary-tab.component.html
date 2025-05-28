@@ -12,6 +12,7 @@
         </div>
     </div>
 
+    <!-- Summary -->
     <div class="rounded-2xl bg-white shadow">
         <h2 class="text-xl font-semibold mb-2 pt-6 px-4">Summary</h2>
         @if (isLoading) {
@@ -75,6 +76,7 @@
         }
     </div>
 
+    <!-- Weekly Breakdown -->
     <div class="rounded-2xl bg-white shadow">
         <div class="flex justify-between items-center p-4">
             <h2 class="text-xl font-semibold">Weekly Breakdown</h2>
@@ -138,4 +140,180 @@
 
         }
     </div>
+
+    <!-- Forecast Card -->
+    <div class="rounded-2xl bg-white shadow">
+        <div class="flex justify-between items-center p-4">
+            <h2 class="text-xl font-semibold">Forecasting</h2>
+            <button (click)="showForecast = !showForecast" class="text-sm text-blue-600 hover:underline">
+                {{ showForecast ? 'Hide' : 'Show' }}
+            </button>
+        </div>
+
+        @if (showForecast) {
+        <!-- Savings Projection Section -->
+        <div class="px-4">
+            <div class="flex items-center gap-2 mb-4">
+                <label class="text-sm font-medium">Period:</label>
+                <select class="border px-2 py-1 text-sm rounded capitalize" [(ngModel)]="forecastPeriod"
+                    (change)="onPeriodChange()">
+                    @for (period of periods; track period.id) {
+                    <option class="capitalize" [value]="period.name">{{ period.name }}</option>
+                    }
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg shadow-sm">
+                <div>
+                    <h3 class="text-xs uppercase text-gray-500 mb-1">Current Projected Expenses</h3>
+                    <p class="text-lg font-semibold text-red-700">{{ forecastData.currentExpenses | currency:'AUD' }}
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-xs uppercase text-gray-500 mb-1">Current Projected Savings</h3>
+                    <p class="text-lg font-semibold text-green-700">{{ forecastData.currentSavings | currency:'AUD' }}
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-xs uppercase text-gray-500 mb-1">Target Expenses</h3>
+                    <p class="text-lg font-semibold text-red-700">{{ forecastData.targetExpenses | currency:'AUD' }}</p>
+                </div>
+                <div>
+                    <h3 class="text-xs uppercase text-gray-500 mb-1">Target Savings</h3>
+                    <p class="text-lg font-semibold text-green-700">{{ forecastData.targetSavings | currency:'AUD' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <div class="flex justify-between items-center mb-2 px-4">
+                <h3 class="text-sm font-semibold">Cash Flow</h3>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full hidden sm:table">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-60">
+                                Description
+                            </th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Amount
+                            </th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Period
+                            </th>
+                            <th class="px-4 py-2 text-right">
+                                <button (click)="openSetCashFlowModal()" class="text-sm text-blue-700 hover:underline">
+                                    <ng-icon name="ionAdd" size="24" />
+                                </button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @for (cf of forecastCashFlows; track cf.id) {
+                        <tr>
+                            <td class="px-4 py-2 text-sm text-gray-700 max-w-60 break-words whitespace-pre-line">
+                                {{ cf.description }}
+                            </td>
+                            <td [class]="`px-4 py-2 text-sm ${cf.is_income ? 'text-green-800' : 'text-red-800'}`">
+                                {{ cf.amount | currency:'AUD' }}
+                            </td>
+                            <td class="px-4 py-2 text-sm capitalize">{{ cf.period_name }}</td>
+                            <td class="px-4 py-2 text-sm text-right">
+                                <button
+                                    class="text-orange-400 hover:text-orange-500 m-1 hover:scale-125 disabled:opacity-50"
+                                    [disabled]="budgetConfiguration?.is_read_only" (click)="openSetCashFlowModal(cf)">
+                                    <ng-icon name="ionPencil" size="16" />
+                                </button>
+                                <button class="text-red-600 hover:text-red-900 m-1 hover:scale-125 disabled:opacity-50"
+                                    [disabled]="budgetConfiguration?.is_read_only" (click)="confirmDeleteCashFlow(cf)">
+                                    <ng-icon name="ionTrashBin" size="16" />
+                                </button>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="sm:hidden space-y-3">
+                @for (cf of forecastCashFlows; track cf.id) {
+                <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-sm font-semibold text-gray-900 break-words">{{ cf.description }}</div>
+                        <div class="flex gap-2">
+                            <button class="text-orange-500 hover:text-orange-600 hover:scale-110 transition"
+                                [disabled]="budgetConfiguration?.is_read_only" (click)="openSetCashFlowModal(cf)">
+                                <ng-icon name="ionPencil" size="18" />
+                            </button>
+                            <button class="text-red-600 hover:text-red-700 hover:scale-110 transition"
+                                [disabled]="budgetConfiguration?.is_read_only" (click)="confirmDeleteCashFlow(cf)">
+                                <ng-icon name="ionTrashBin" size="18" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-sm text-gray-600 flex justify-between mb-1">
+                        <span class="font-medium">Amount:</span>
+                        <span [class]="cf.is_income ? 'text-green-800' : 'text-red-800'">
+                            {{ cf.amount | currency:'AUD' }}
+                        </span>
+                    </div>
+
+                    <div class="text-sm text-gray-600 flex justify-between">
+                        <span class="font-medium">Period:</span>
+                        <span class="capitalize">{{ cf.period_name }}</span>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+        }
+    </div>
+
+    <!-- Modals -->
+    <!-- Add/Edit Cash Flow Modal -->
+    <app-modal [show]="showCashFlowModal" (closed)="closeCashFlowModal()"
+        [title]="setCashFlowForm.id ? 'Edit Cash Flow' : 'Add Cash Flow'">
+        <form (submit)="saveCashFlow()" modal-content>
+            <!-- Description -->
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <input #cashFlowDescriptionInput [(ngModel)]="setCashFlowForm.description"
+                [ngModelOptions]="{ standalone: true }" type="text" class="w-full mb-4 border rounded px-3 py-2" />
+
+            <!-- Amount -->
+            <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+            <input [(ngModel)]="setCashFlowForm.amount" [ngModelOptions]="{ standalone: true }" type="number"
+                step="0.01" class="w-full mb-4 border rounded px-3 py-2" />
+
+            <!-- Period -->
+            <label class="block text-sm font-medium text-gray-700 mb-1">Period</label>
+            <select [(ngModel)]="setCashFlowForm.period" [ngModelOptions]="{ standalone: true }"
+                class="w-full mb-4 border rounded px-3 py-2 capitalize">
+                @for (period of periods; track period.id) {
+                <option class="capitalize" [value]="period.id">{{ period.name }}</option>
+                }
+            </select>
+
+            <!-- Is Income -->
+            <label class="inline-flex items-center space-x-2 mb-2">
+                <input type="checkbox" [(ngModel)]="setCashFlowForm.is_income" [ngModelOptions]="{ standalone: true }"
+                    class="form-checkbox" />
+                <span class="text-sm text-gray-700">Income</span>
+            </label><br />
+
+            <button type="submit" hidden></button>
+        </form>
+
+        <div modal-actions class="flex justify-end gap-2">
+            <button (click)="closeCashFlowModal()"
+                class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
+            <button (click)="saveCashFlow()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Save
+            </button>
+        </div>
+    </app-modal>
 </div>

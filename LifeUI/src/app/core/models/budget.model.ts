@@ -38,3 +38,12 @@ export interface BudgetPurchaseSummary {
     category: number;
     total: number;
 }
+
+export interface BudgetCashFlow {
+    id?: number;
+    amount: number;
+    description: string;
+    is_income: boolean;
+    period: number;
+    period_name?: string;
+}

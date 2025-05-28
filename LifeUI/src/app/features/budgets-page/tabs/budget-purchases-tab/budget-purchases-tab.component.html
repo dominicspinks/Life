@@ -32,7 +32,7 @@
 
     <!-- Table -->
     <div class="overflow-x-auto bg-white shadow rounded-lg">
-        <table class="min-w-full table-auto">
+        <table class="min-w-full table-auto hidden sm:table">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -42,7 +42,7 @@
                         Category
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Cost
+                        Amount
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-60">
                         Description
@@ -91,6 +91,49 @@
                 }}
             </tbody>
         </table>
+    </div>
+
+    <!-- Mobile stacked purchases view -->
+    <div class="sm:hidden space-y-3">
+        @if (isLoading) {
+        <div class="flex justify-center items-center h-20">
+            <app-spinning-icon colour="text-blue-600" size="h-8 w-8" />
+        </div>
+        }
+        @else {
+        @for (item of purchases; track item.id) {
+        <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+            <div class="flex justify-between items-start mb-2">
+                <div class="text-sm font-semibold text-gray-900 break-words">
+                    {{ item.description || '(No description)' }}
+                </div>
+                <div class="flex gap-2">
+                    <button class="text-orange-500 hover:text-orange-600 hover:scale-110 transition"
+                        [disabled]="budgetConfiguration?.is_read_only" (click)="openSetPurchaseModal(item)">
+                        <ng-icon name="ionPencil" size="18" />
+                    </button>
+                    <button class="text-red-600 hover:text-red-700 hover:scale-110 transition"
+                        [disabled]="budgetConfiguration?.is_read_only" (click)="confirmDeletePurchase(item.id!)">
+                        <ng-icon name="ionTrashBin" size="18" />
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-sm text-gray-600 flex justify-between mb-1">
+                <span class="font-medium">Date:</span>
+                <span>{{ item.purchase_date | date:'shortDate' }}</span>
+            </div>
+            <div class="text-sm text-gray-600 flex justify-between mb-1">
+                <span class="font-medium">Category:</span>
+                <span>{{ item.category_name }}</span>
+            </div>
+            <div class="text-sm text-gray-600 flex justify-between">
+                <span class="font-medium">Amount:</span>
+                <span>{{ item.amount | currency:'AUD':'symbol':'1.2-2' }}</span>
+            </div>
+        </div>
+        }
+        }
     </div>
 
 

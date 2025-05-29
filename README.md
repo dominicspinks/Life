@@ -1,6 +1,6 @@
 # Life App
 
-> A modular personal management app built with Angular and TailwindCSS.
+> A modular personal management app built with Angular and Django Rest Framework.
 
 ![Dashboard Screenshot](screenshots/dashboard.png)
 
@@ -17,6 +17,7 @@ Version 1.0 introduces foundational support for list-based modules — think of 
   - Weekly budgets with category breakdowns
   - Quick-add and bulk import purchases
   - Category tracking and weekly summaries
+  - Automatic categorisation of purchases
 - User authentication with token-based access
 - Responsive layout and mobile-friendly design
 - Simple, clean interface built with TailwindCSS
@@ -34,7 +35,7 @@ Email: demo@demo.com
 Password: demo1234
 ~~~
 
-> Feel free to play around, this account is temporary and reset regularly.
+> Feel free to play around with the app and explore its features
 
 ## 🧱 Tech Stack
 
@@ -90,16 +91,27 @@ Ensure the frontend is pointing to your backend API in `src/environments/environ
 ## 🗺️ Roadmap
 
 - ✅ v1.0 — List Module (basic CRUD)
-- 🚧 v1.1 — Budget Module (in development)
+- ✅ v1.1 — Budget Module
+- ✅ v1.2 — Automatic Category Detection
 - 🔜 Future: Notes, Calendar, Reminders, etc.
 
 ## 📷 Screenshots
 
-![List module Configuration Screenshot](screenshots/list-module-configuration.png)
-
-![List module Data Screenshot](screenshots/list-module-data.png)
+> Budget Summary
 
 ![Budget module Summary Screenshot](screenshots/budget-module-summary.png)
+
+> Budget Purchase Import
+
+![Budget module Purchase Screenshot](screenshots/budget-module-purchase-import.png)
+
+> List Configuration
+
+![List module Configuration Screenshot](screenshots/list-module-configuration.png)
+
+> List Data
+
+![List module Data Screenshot](screenshots/list-module-data.png)
 
 
 ## 📄 License

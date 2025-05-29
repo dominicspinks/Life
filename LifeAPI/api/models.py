@@ -143,4 +143,33 @@ class BudgetCashFlow(models.Model):
     modified_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.modified_at} - {self.description or ''}"
+        return f"{self.description or ''} - ${self.amount}"
+
+
+class BudgetTermType(models.Model):
+    word_length = models.IntegerField(unique=True)
+    weight = models.IntegerField()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['word_length'], name='idx_termtype_wordlength'),
+        ]
+
+    def __str__(self):
+        return f"{self.word_length}-gram"
+
+class BudgetCategoryTermFrequency(models.Model):
+    category = models.ForeignKey(BudgetCategory, on_delete=models.CASCADE)
+    term = models.CharField(max_length=255)
+    term_type = models.ForeignKey(BudgetTermType, on_delete=models.PROTECT)
+    frequency = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('category', 'term', 'term_type')
+        indexes = [
+            models.Index(fields=['term_type', 'term'], name='idx_termtype_term'),
+            models.Index(fields=['category', 'term_type'], name='idx_category_termtype'),
+        ]
+
+    def __str__(self):
+        return self.term

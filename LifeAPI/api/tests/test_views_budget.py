@@ -10,6 +10,8 @@ from api.models import (
     BudgetCategory,
     BudgetPurchase,
     BudgetCashFlow,
+    BudgetCategoryTermFrequency,
+    BudgetTermType,
     Period
 )
 
@@ -415,3 +417,71 @@ class BudgetCashFlowViewSetTests(APITestCase):
         response = self.client.post(self.base_url, data)
         self.assertEqual(response.status_code, 400)
         self.assertIn('period', response.data)
+
+class BudgetPurchaseAnalyseReprocessTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='user@example.com', password='pass')
+        self.other_user = User.objects.create_user(email='other@example.com', password='pass')
+
+        self.module_type = ModuleType.objects.get(name='budget')
+        self.budget = UserModule.objects.create(
+            user=self.user,
+            module=self.module_type,
+            name='Test Budget',
+            order=0,
+            is_enabled=True
+        )
+
+        self.category = BudgetCategory.objects.create(
+            user_module=self.budget,
+            name='Groceries',
+            weekly_target=100,
+            order=0
+        )
+
+        self.term_type = BudgetTermType.objects.get(word_length=1)
+
+        self.purchase = BudgetPurchase.objects.create(
+            user_module=self.budget,
+            purchase_date='2024-01-01',
+            amount=42.00,
+            description='Woolworths Market',
+            category=self.category
+        )
+
+        self.base_url = f'/api/budgets/{self.budget.id}/purchases/analyse/'
+        self.reprocess_url = f'{self.base_url}reprocess/'
+
+    def test_reprocess_frequency_table(self):
+        self.client.force_authenticate(user=self.user)
+
+        # Pre-create an existing frequency entry (to be wiped)
+        BudgetCategoryTermFrequency.objects.create(
+            category=self.category,
+            term='oldterm',
+            term_type=self.term_type,
+            frequency=5
+        )
+
+        response = self.client.post(self.reprocess_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Reprocessed', response.data['detail'])
+
+        # Ensure the old frequency is deleted
+        self.assertFalse(BudgetCategoryTermFrequency.objects.filter(term='oldterm').exists())
+
+        # Ensure new frequency terms are populated
+        terms = [t.term for t in BudgetCategoryTermFrequency.objects.filter(category=self.category)]
+        self.assertIn('woolworths', terms)
+        self.assertIn('market', terms)
+        self.assertIn('woolworths market', terms)
+
+    def test_reprocess_unauthorised_user(self):
+        self.client.force_authenticate(user=self.other_user)
+        response = self.client.post(self.reprocess_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_unauthenticated(self):
+        response = self.client.get(self.base_url)
+        self.assertEqual(response.status_code, 401)

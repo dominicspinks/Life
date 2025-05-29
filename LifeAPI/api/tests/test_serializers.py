@@ -15,11 +15,34 @@ from api.models import (
     BudgetCashFlow,
     Period
 )
-from api.serializers.serializers_auth import EmailTokenObtainSerializer, RegisterSerializer
-from api.serializers.serializers_budgets import BudgetCategorySerializer, BudgetPurchaseSerializer, BudgetSerializer, BudgetPurchaseSummarySerializer, BudgetCashFlowSerializer
-from api.serializers.serializers_lists import ListConfigurationSerializer, ListDataSerializer, ListFieldSerializer, ListItemSerializer
-from api.serializers.serializers_modules import ModuleTypeSerializer, UserModuleSerializer
-from api.serializers.serializers_reference import FieldTypeDetailSerializer, FieldTypeSerializer, PeriodSerializer
+from api.serializers.serializers_auth import (
+    EmailTokenObtainSerializer,
+    RegisterSerializer
+)
+from api.serializers.serializers_budgets import (
+    BudgetCategorySerializer,
+    BudgetPurchaseSerializer,
+    BudgetSerializer,
+    BudgetPurchaseSummarySerializer,
+    BudgetCashFlowSerializer,
+    BudgetPurchaseAnalyseInputSerializer,
+    BudgetPurchaseAnalyseOutputSerializer
+)
+from api.serializers.serializers_lists import (
+    ListConfigurationSerializer,
+    ListDataSerializer,
+    ListFieldSerializer,
+    ListItemSerializer
+)
+from api.serializers.serializers_modules import (
+    ModuleTypeSerializer,
+    UserModuleSerializer
+)
+from api.serializers.serializers_reference import (
+    FieldTypeDetailSerializer,
+    FieldTypeSerializer,
+    PeriodSerializer
+)
 
 User = get_user_model()
 
@@ -601,3 +624,43 @@ class PeriodSerializerTests(TestCase):
             'id': self.period.id,
             'name': 'monthly'
         })
+
+class BudgetPurchaseAnalyseInputSerializerTests(TestCase):
+    def test_valid_input(self):
+        data = {'index': 1, 'description': 'Woolworths'}
+        serializer = BudgetPurchaseAnalyseInputSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(serializer.validated_data['index'], 1)
+        self.assertEqual(serializer.validated_data['description'], 'Woolworths')
+
+    def test_missing_description(self):
+        data = {'index': 1}
+        serializer = BudgetPurchaseAnalyseInputSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('description', serializer.errors)
+
+    def test_invalid_index_type(self):
+        data = {'index': 'one', 'description': 'Coles'}
+        serializer = BudgetPurchaseAnalyseInputSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('index', serializer.errors)
+
+class BudgetPurchaseAnalyseOutputSerializerTests(TestCase):
+    def test_valid_output_with_category(self):
+        data = {'index': 2, 'category': 5}
+        serializer = BudgetPurchaseAnalyseOutputSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(serializer.validated_data['index'], 2)
+        self.assertEqual(serializer.validated_data['category'], 5)
+
+    def test_valid_output_with_null_category(self):
+        data = {'index': 3, 'category': None}
+        serializer = BudgetPurchaseAnalyseOutputSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertIsNone(serializer.validated_data['category'])
+
+    def test_missing_index(self):
+        data = {'category': 1}
+        serializer = BudgetPurchaseAnalyseOutputSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('index', serializer.errors)

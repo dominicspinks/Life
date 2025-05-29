@@ -17,16 +17,25 @@ from api.serializers.serializers_budgets import (
     BudgetPurchaseSerializer,
     BudgetSerializer,
     BudgetPurchaseSummarySerializer,
-    BudgetCashFlowSerializer
+    BudgetCashFlowSerializer,
+    BudgetPurchaseAnalyseInputSerializer,
+    BudgetPurchaseAnalyseOutputSerializer
 )
 from api.models import (
     BudgetCategory,
     BudgetPurchase,
     UserModule,
-    BudgetCashFlow
+    BudgetCashFlow,
+    BudgetCategoryTermFrequency,
 )
 from api.pagination import Unpaginatable
 from api.filters import PurchaseFilterSet
+from api.services.budget_analysis import (
+    update_term_frequencies_from_purchase,
+    get_all_term_types,
+    suggest_category_for_description
+)
+
 
 class BudgetViewSet(viewsets.ModelViewSet):
     """
@@ -129,7 +138,6 @@ class BudgetCategoryViewSet(viewsets.ModelViewSet):
         serializer = BudgetSerializer(user_module, context={'request': request})
         return Response(serializer.data, status=200)
 
-
 class BudgetPurchaseViewSet(viewsets.ModelViewSet):
     """
     API endpoint for CRUD operations on budget purchases
@@ -162,38 +170,11 @@ class BudgetPurchaseViewSet(viewsets.ModelViewSet):
         return context
 
     def perform_create(self, serializer):
-        serializer.save(user_module=self.get_serializer_context()['user_module'])
+        instance = serializer.save(user_module=self.get_serializer_context()['user_module'])
+        update_term_frequencies_from_purchase(instance)
 
-@extend_schema_view(
-    create=extend_schema(
-        summary="Bulk create purchases",
-        description="Imports a list of purchases into the given budget.",
-        responses={201: BudgetPurchaseSerializer(many=True)},
-    ),
-    list=extend_schema(exclude=True),
-    retrieve=extend_schema(exclude=True),
-    update=extend_schema(exclude=True),
-    partial_update=extend_schema(exclude=True),
-    destroy=extend_schema(exclude=True),
-)
-class BudgetPurchaseBulkViewSet(viewsets.GenericViewSet, CreateModelMixin):
-    """
-    API endpoint for bulk importing purchases into a budget
-    Only supports POST
-    """
-    queryset = BudgetPurchase.objects.none()
-    serializer_class = BudgetPurchaseSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    lookup_field = 'id'
-    lookup_value_regex = r'\d+'
-
-    def get_serializer_context(self):
-        budget_id = self.kwargs.get('budget_id')
-        user_module = get_object_or_404(UserModule, id=budget_id, user=self.request.user)
-        return {**super().get_serializer_context(), 'user_module': user_module}
-
-    def create(self, request, *args, **kwargs):
+    @action(detail=False, methods=['post'], url_path='bulk')
+    def bulk_create(self, request, budget_id=None):
         data = request.data
         if not isinstance(data, list):
             return Response({"detail": "Expected a list of items."}, status=status.HTTP_400_BAD_REQUEST)
@@ -205,25 +186,10 @@ class BudgetPurchaseBulkViewSet(viewsets.GenericViewSet, CreateModelMixin):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_bulk_create(self, serializer):
-        # Assumes user_module is injected via context
         user_module = self.get_serializer_context()['user_module']
-        serializer.save(user_module=user_module)
-
-    def list(self, request, *args, **kwargs):
-        return Response({"detail": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def retrieve(self, request, *args, **kwargs):
-        return Response({"detail": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def update(self, request, *args, **kwargs):
-        return Response({"detail": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def partial_update(self, request, *args, **kwargs):
-        return Response({"detail": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def destroy(self, request, *args, **kwargs):
-        return Response({"detail": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
+        instances = serializer.save(user_module=user_module)
+        for purchase in instances:
+            update_term_frequencies_from_purchase(purchase)
 
 class BudgetPurchaseSummaryViewSet(viewsets.GenericViewSet):
     """
@@ -325,3 +291,50 @@ class BudgetCashFlowViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user_module=self.get_serializer_context()['user_module'])
+
+class BudgetPurchaseAnalyseViewSet(viewsets.ViewSet):
+    """
+    API endpoint for analysing budget purchase descriptions.
+    Includes a reprocess endpoint for resetting and rebuilding term frequency data.
+    """
+    queryset = UserModule.objects.none()
+    permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=False, methods=['post'])
+    def reprocess(self, request, budget_id=None):
+        user_module = get_object_or_404(UserModule, id=budget_id, user=request.user)
+
+        # Clear all term frequencies for this budget's categories
+        category_ids = BudgetCategory.objects.filter(user_module=user_module).values_list('id', flat=True)
+        BudgetCategoryTermFrequency.objects.filter(category_id__in=category_ids).delete()
+
+        # Reprocess all purchases to rebuild frequencies
+        purchases = BudgetPurchase.objects.filter(user_module=user_module)
+        count = 0
+        for purchase in purchases:
+            if purchase.description and purchase.category:
+                update_term_frequencies_from_purchase(purchase)
+                count += 1
+
+        return Response(
+            {"detail": f"Reprocessed {count} purchases for term frequency analysis."},
+            status=status.HTTP_200_OK
+        )
+
+    def create(self, request, budget_id=None):
+        serializer = BudgetPurchaseAnalyseInputSerializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+
+        user_module = get_object_or_404(UserModule, id=budget_id, user=request.user)
+
+        results = []
+        for item in serializer.validated_data:
+            description = item['description']
+            index = item['index']
+            suggested = suggest_category_for_description(description, user_module)
+            results.append({
+                "index": index,
+                "category": suggested
+            })
+
+        return Response(BudgetPurchaseAnalyseOutputSerializer(results, many=True).data)

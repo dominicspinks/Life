@@ -106,3 +106,11 @@ class BudgetCashFlowSerializer(serializers.ModelSerializer):
             'modified_at'
         ]
         readOnlyFields = ['period_name', 'modified_at']
+
+class BudgetPurchaseAnalyseInputSerializer(serializers.Serializer):
+    index = serializers.IntegerField()
+    description = serializers.CharField()
+
+class BudgetPurchaseAnalyseOutputSerializer(serializers.Serializer):
+    index = serializers.IntegerField()
+    category = serializers.IntegerField(allow_null=True)

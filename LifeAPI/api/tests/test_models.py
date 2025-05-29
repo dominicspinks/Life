@@ -13,7 +13,9 @@ from api.models import (
     BudgetCategory,
     BudgetPurchase,
     Period,
-    BudgetCashFlow
+    BudgetCashFlow,
+    BudgetCategoryTermFrequency,
+    BudgetTermType
 )
 
 User = get_user_model()
@@ -54,6 +56,13 @@ class ReferenceDataTests(TestCase):
         actual_periods = set(Period.objects.values_list('name', flat=True))
         for name in expected_periods:
             self.assertIn(name, actual_periods, f"Missing Period: {name}")
+
+    def test_term_types_exist(self):
+        """Ensure all expected TermType entries exist in the DB."""
+        expected_term_types = {1,2,3}
+        actual_term_types = set(BudgetTermType.objects.values_list('word_length', flat=True))
+        for name in expected_term_types:
+            self.assertIn(name, actual_term_types, f"Missing TermType: {name}")
 
 class UserModelTests(TestCase):
     def setUp(self):
@@ -438,18 +447,73 @@ class BudgetCashFlowTests(TestCase):
             is_enabled=True
         )
 
-        self.weeklyPeriod = Period.objects.get(name='Weekly')
+        self.weeklyPeriod = Period.objects.get(name='weekly')
 
     def test_budget_cash_flow_creation(self):
         cash_flow = BudgetCashFlow.objects.create(
             user_module=self.user_module,
-            amount=500,
+            amount=500.25,
             is_income=True,
             description='Salary',
             period=self.weeklyPeriod
         )
-        self.assertEqual(cash_flow.amount, 500)
+        self.assertEqual(cash_flow.amount, 500.25)
         self.assertEqual(cash_flow.description, 'Salary')
-        self.assertEqual(str(cash_flow), '2024-01-01 - Salary')
+        self.assertEqual(str(cash_flow), 'Salary - $500.25')
         self.assertTrue(cash_flow.is_income)
         self.assertEqual(cash_flow.period, self.weeklyPeriod)
+
+class BudgetCategoryTermFrequencyTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='password123')
+        self.module_type = ModuleType.objects.get(name='budget')
+        self.user_module = UserModule.objects.create(
+            user=self.user,
+            module=self.module_type,
+            name='My Budget',
+            order=1,
+            is_enabled=True
+        )
+        self.category = BudgetCategory.objects.create(
+            user_module=self.user_module,
+            name='Dining Out',
+            weekly_target=100,
+            order=0
+        )
+        self.term_type = BudgetTermType.objects.get(word_length=2)
+
+    def test_term_frequency_creation(self):
+        tf = BudgetCategoryTermFrequency.objects.create(
+            category=self.category,
+            term="angkor cafe",
+            term_type=self.term_type,
+            frequency=3
+        )
+        self.assertEqual(tf.term, "angkor cafe")
+        self.assertEqual(tf.frequency, 3)
+        self.assertEqual(tf.term_type.word_length, 2)
+        self.assertEqual(tf.category, self.category)
+
+    def test_term_frequency_uniqueness(self):
+        BudgetCategoryTermFrequency.objects.create(
+            category=self.category,
+            term="angkor cafe",
+            term_type=self.term_type,
+            frequency=1
+        )
+        with self.assertRaises(IntegrityError):
+            BudgetCategoryTermFrequency.objects.create(
+                category=self.category,
+                term="angkor cafe",
+                term_type=self.term_type,
+                frequency=2
+            )
+
+    def test_string_representation(self):
+        tf = BudgetCategoryTermFrequency.objects.create(
+            category=self.category,
+            term="angkor cafe",
+            term_type=self.term_type,
+            frequency=1
+        )
+        self.assertEqual(str(tf), "angkor cafe")

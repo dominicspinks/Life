@@ -9,9 +9,9 @@ from api.views import (
     BudgetViewSet,
     BudgetCategoryViewSet,
     BudgetPurchaseViewSet,
-    BudgetPurchaseBulkViewSet,
     BudgetPurchaseSummaryViewSet,
     BudgetCashFlowViewSet,
+    BudgetPurchaseAnalyseViewSet,
     FieldTypeViewSet,
     ModuleTypeViewSet,
     UserModuleViewSet,
@@ -171,9 +171,9 @@ class BudgetURLTests(TestCase):
 
     def test_budget_bulk_purchase_urls(self):
         """Test nested budget bulk purchase viewset URLs."""
-        url = reverse('budget-purchase-bulk-list', args=[1])
+        url = reverse('budget-purchase-bulk-create', args=[1])
         self.assertEqual(url, '/api/budgets/1/purchases/bulk/')
-        self.assertEqual(resolve(url).func.cls, BudgetPurchaseBulkViewSet)
+        self.assertEqual(resolve(url).func.cls, BudgetPurchaseViewSet)
 
     def test_budget_summary_urls(self):
         """Test nested budget summary viewset URLs."""
@@ -204,3 +204,21 @@ class BudgetURLTests(TestCase):
         url = reverse('budget-cashflow-list', args=[1])
         self.assertEqual(url, '/api/budgets/1/cashflows/')
         self.assertEqual(resolve(url).func.cls, BudgetCashFlowViewSet)
+
+    def test_budget_purchase_analyse_urls(self):
+        """Test nested budget purchase analyse viewset URLs."""
+        url = reverse('budget-purchase-analyse-list', args=[1])
+        self.assertEqual(url, '/api/budgets/1/purchases/analyse/')
+        self.assertEqual(resolve(url).func.cls, BudgetPurchaseAnalyseViewSet)
+
+    def test_budget_purchase_analyse_resolver_kwargs(self):
+        """Check nested kwargs in budget purchase analyse route."""
+        resolver = resolve('/api/budgets/1/purchases/analyse/')
+        self.assertEqual(resolver.func.cls, BudgetPurchaseAnalyseViewSet)
+        self.assertEqual(resolver.kwargs['budget_id'], '1')
+
+    def test_budget_purchase_analyse_reprocess_urls(self):
+        """Test nested budget purchase analyse reprocess viewset URLs."""
+        url = reverse('budget-purchase-analyse-reprocess', args=[1])
+        self.assertEqual(url, '/api/budgets/1/purchases/analyse/reprocess/')
+        self.assertEqual(resolve(url).func.cls, BudgetPurchaseAnalyseViewSet)

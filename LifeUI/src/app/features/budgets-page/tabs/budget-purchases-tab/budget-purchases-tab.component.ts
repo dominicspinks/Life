@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { BudgetConfiguration, BudgetPurchase } from '@core/models/budget.model';
+import { BudgetConfiguration, BudgetDescriptionCategoryRequest, BudgetPurchase } from '@core/models/budget.model';
 import { BudgetService } from '@core/services/budget.service';
 import { LoggerService } from '@core/services/logger.service';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -7,7 +7,8 @@ import {
     ionAdd,
     ionClose,
     ionPencil,
-    ionTrashBin
+    ionTrashBin,
+    ionSearch
 } from '@ng-icons/ionicons';
 import { CommonModule } from '@angular/common';
 import { ToastService } from '@shared/ui/toast/toast.service';
@@ -24,7 +25,8 @@ import { ActivatedRoute, Router } from '@angular/router';
         ionAdd,
         ionClose,
         ionPencil,
-        ionTrashBin
+        ionTrashBin,
+        ionSearch
     })],
     templateUrl: './budget-purchases-tab.component.html',
     styleUrl: './budget-purchases-tab.component.css'
@@ -62,6 +64,8 @@ export class BudgetPurchasesTabComponent {
     bulkPreviewRows: { values: string[]; category: number | null }[] = [];
     bulkInvertPrice = false;
     isParsing = false;
+
+    isSearchingCategories = false;
 
     ngOnInit(): void {
         this.isLoading = true;
@@ -200,7 +204,7 @@ export class BudgetPurchasesTabComponent {
         });
     }
 
-    onParseBulkInput() {
+    parseBulkInput() {
         this.isParsing = true;
         const lines = this.bulkRawInput.trim().split(/\r?\n/);
         const rows = lines.map(line => line.split(/\t+/));
@@ -208,16 +212,15 @@ export class BudgetPurchasesTabComponent {
         if (!rows.length) return;
 
         // Detect if the first row is a header
-        const hasHeader = rows[0].every(col => isNaN(Number(col)));
-
+        const hasHeader = rows[0].every(col => isNaN(Number(col.replace(/[\$,]/g, '').trim())));
         const dataRows = hasHeader ? rows.slice(1) : rows;
-        this.bulkParsedHeaders = hasHeader ? rows[0] : rows[0].map((_, i) => `Column ${i + 1}`);
+        this.bulkParsedHeaders = rows[0];
 
         // Try to auto-detect field mapping
         this.bulkFieldMapping = this.bulkParsedHeaders.map(header => {
             const lower = header.toLowerCase();
             if (hasHeader && (lower.includes('desc') || lower.includes('details'))) return 'description';
-            if ((hasHeader && lower.includes('date')) || (!isNaN((new Date(header)).getTime()))) return 'purchase_date';
+            if ((hasHeader && lower.includes('date')) || (!isNaN(this.parseFlexibleDate(header)?.getTime() ?? NaN))) return 'purchase_date';
             if (
                 (hasHeader && (
                     lower.includes('amount')
@@ -229,11 +232,37 @@ export class BudgetPurchasesTabComponent {
         });
 
         this.bulkPreviewRows = dataRows.map(row => ({
-            values: row,
+            values: row.map(val => val.trim()),
             category: null
         }));
 
         this.isParsing = false;
+    }
+
+    findCategoriesFromDescriptions() {
+        this.isSearchingCategories = true;
+        const descriptionIndex = this.bulkFieldMapping.indexOf('description');
+        const descriptionRequestData: BudgetDescriptionCategoryRequest[] = this.bulkPreviewRows.map((row, i) => ({
+            index: i,
+            description: row.values[descriptionIndex]
+        }));
+
+        this.budgetService.getDescriptionCategories(this.budgetConfiguration!.id, descriptionRequestData).subscribe({
+            next: (res) => {
+                this.bulkPreviewRows.forEach((row, i) => {
+                    // if (row.category) return;
+                    const category_id = res.find(f => f.index === i)?.category;
+                    if (!category_id) return;
+                    row.category = category_id;
+                })
+                this.isSearchingCategories = false;
+            },
+            error: (error) => {
+                this.logger.error('Error getting description categories', error);
+                this.toastService.show('Error getting description categories', 'error', 3000);
+                this.isSearchingCategories = false;
+            }
+        })
     }
 
     removeBulkRow(index: number) {
@@ -244,18 +273,37 @@ export class BudgetPurchasesTabComponent {
         const formats = [
             { regex: /^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/, order: ['year', 'month', 'day'] }, // yyyy-mm-dd or yyyy/mm/dd
             { regex: /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/, order: ['day', 'month', 'year'] }, // dd/mm/yyyy or dd-mm-yyyy
-            { regex: /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2})$/, order: ['day', 'month', 'yearShort'] } // dd/mm/yy or dd-mm-yy
+            { regex: /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2})$/, order: ['day', 'month', 'yearShort'] }, // dd/mm/yy or dd-mm-yy
+            { regex: /^(\d{1,2})[ -](\w{3})[ -](\d{2})$/, order: ['day', 'monthShort', 'yearShort'] }, // dd MMM yy
+            { regex: /^(\d{1,2})[ -](\w{3})[ -](\d{4})$/, order: ['day', 'monthShort', 'year'] }, // dd MMM yyyy
+            { regex: /^(\w{3})[ -](\d{1,2})[ -](\d{2})$/, order: ['monthShort', 'day', 'yearShort'] }, // MMM dd yy
+            { regex: /^(\w{3})[ -](\d{1,2})[ -](\d{4})$/, order: ['monthShort', 'day', 'year'] }, // MMM dd yyyy}
         ];
 
+        const monthShorts = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
         for (const fmt of formats) {
-            const match = input.trim().match(fmt.regex);
+            const match = input.trim().toLowerCase().match(fmt.regex);
             if (!match) continue;
 
             const parts: Record<string, number> = {};
             fmt.order.forEach((part, i) => {
-                let val = parseInt(match[i + 1], 10);
-                if (part === 'yearShort') val += val < 50 ? 2000 : 1900;
-                parts[part.replace('Short', '')] = val;
+                let valRaw = match[i + 1].trim();
+                let val: number;
+
+                if (part === 'monthShort') {
+                    const idx = monthShorts.indexOf(valRaw.toLowerCase().slice(0, 3));
+                    if (idx === -1) return; // invalid month
+                    parts['month'] = idx + 1;
+                } else if (part === 'yearShort') {
+                    val = parseInt(valRaw, 10);
+                    parts['year'] = val < 50 ? 2000 + val : 1900 + val;
+                } else if (part === 'yearAny') {
+                    val = parseInt(valRaw, 10);
+                    parts['year'] = valRaw.length === 2 ? (val < 50 ? 2000 + val : 1900 + val) : val;
+                } else {
+                    parts[part] = parseInt(valRaw, 10);
+                }
             });
 
             // JS months are 0-indexed
@@ -319,8 +367,6 @@ export class BudgetPurchasesTabComponent {
                 category: row.category ?? null
             };
         });
-
-        console.log('Imported purchases:', result);
 
         this.budgetService.addBulkPurchase(this.budgetConfiguration!.id, result).subscribe({
             next: (res) => {

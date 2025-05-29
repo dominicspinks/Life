@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '@environments/environment';
-import { BudgetCashFlow, BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '@core/models/budget.model';
+import { BudgetCashFlow, BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetDescriptionCategoryRequest, BudgetDescriptionCategoryResponse, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '@core/models/budget.model';
 
 @Injectable({
     providedIn: 'root'
@@ -118,6 +118,10 @@ export class BudgetService {
 
     deleteCashFlow(budgetId: number, cashFlowId: number): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/budgets/${budgetId}/cashflows/${cashFlowId}/`);
+    }
+
+    getDescriptionCategories(budgetId: number, descriptions: BudgetDescriptionCategoryRequest[]): Observable<BudgetDescriptionCategoryResponse[]> {
+        return this.http.post<BudgetDescriptionCategoryResponse[]>(`${this.apiUrl}/budgets/${budgetId}/purchases/analyse/`, descriptions);
     }
 
 }

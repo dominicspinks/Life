@@ -197,13 +197,12 @@
     <!-- Bulk add purchases modal -->
     <app-modal [show]="isBulkImportModalOpen" (closed)="isBulkImportModalOpen = false" title="Bulk Import Purchases">
         <div modal-content class="flex flex-col gap-4">
-
             <!-- Paste Input -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Paste Data</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Paste TAB SEPARATED Data</label>
                 <textarea [(ngModel)]="bulkRawInput"
                     class="w-full border rounded px-3 py-2 min-h-32 font-mono"></textarea>
-                <button (click)="onParseBulkInput()"
+                <button (click)="parseBulkInput()"
                     [class]="`mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 ${isParsing ? 'opacity-50 cursor-not-allowed' : ''}`">
                     @if (isParsing) {
                     <app-spinning-icon class="h-4 w-4 text-white" />
@@ -237,7 +236,22 @@
                                 </select>
                             </th>
                             }
-                            <th class="px-2 py-1 border border-gray-300">Category</th>
+                            <th class="px-2 py-1 flex flex-row gap-1 justify-between items-center">
+                                <span>Category </span>
+                                @if (isSearchingCategories) {
+                                <app-spinning-icon size="h-4 w-4" colour="text-blue-950" />
+                                }
+                                @else if (bulkFieldMapping.includes('description')) {
+                                <button (click)="findCategoriesFromDescriptions()"
+                                    class="flex text-blue-950 hover:scale-125 hover:cursor-pointer items-center h-full">
+                                    <ng-icon name="ionSearch" size="16" />
+                                </button>
+                                }
+                                @else {
+                                <!-- Empty space to prevent layout shift -->
+                                <div class="w-3"></div>
+                                }
+                            </th>
                             <th class="px-2 py-1 border border-gray-300"></th>
                         </tr>
                     </thead>
@@ -245,12 +259,13 @@
                         @for (row of bulkPreviewRows; track $index) {
                         <tr>
                             @for (val of row.values; track $index) {
-                            <td class="border border-gray-200 px-2 py-1">
+                            <td
+                                [class]="`border border-gray-200 px-2 py-1 ${bulkFieldMapping[$index] === 'description' ? 'min-w-80' : bulkFieldMapping[$index] === 'amount' || bulkFieldMapping[$index] === 'purchase_date' ? 'min-w-24 w-24' : 'min-w-20 w-20'}`">
                                 <input [(ngModel)]="row.values[$index]"
                                     class="w-full text-xs px-1 py-0.5 border rounded" />
                             </td>
                             }
-                            <td class="border border-gray-200 px-2 py-1">
+                            <td class="border border-gray-200 px-2 py-1 whitespace-nowrap">
                                 <select [(ngModel)]="row.category"
                                     (ngModelChange)="row.category = $event === '' ? null : +$event"
                                     class="text-xs border rounded px-1 py-0.5 w-full">

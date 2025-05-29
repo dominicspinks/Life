@@ -47,3 +47,13 @@ export interface BudgetCashFlow {
     period: number;
     period_name?: string;
 }
+
+export interface BudgetDescriptionCategoryRequest {
+    index: number;
+    description: string;
+}
+
+export interface BudgetDescriptionCategoryResponse {
+    index: number;
+    category: number;
+}

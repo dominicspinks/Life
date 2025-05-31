@@ -6,8 +6,7 @@
 
 ## ✨ Overview
 
-**Life App** is a personal dashboard for managing modular tools that help organise your digital life.
-Version 1.0 introduces foundational support for list-based modules — think of it like simple, flexible todo or checklist modules, with more features planned in future updates.
+**Life App** is a personal dashboard with modular tools to help organise your digital life.
 
 ## 🔧 Features
 

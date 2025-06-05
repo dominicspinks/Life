@@ -28,13 +28,6 @@
 You can try out the app live at:
 🔗 [https://life.domsapps.com](https://life.domsapps.com)
 
-**Sample credentials:**
-~~~
-Email: demo@demo.com
-Password: demo1234
-~~~
-
-> Feel free to play around with the app and explore its features
 
 ## 🧱 Tech Stack
 

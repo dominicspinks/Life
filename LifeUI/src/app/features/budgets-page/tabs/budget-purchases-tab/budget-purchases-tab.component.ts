@@ -1,5 +1,9 @@
 import { Component, inject } from '@angular/core';
-import { BudgetConfiguration, BudgetDescriptionCategoryRequest, BudgetPurchase } from '@core/models/budget.model';
+import {
+    BudgetConfiguration,
+    BudgetDescriptionCategoryRequest,
+    BudgetPurchase,
+} from '@core/models/budget.model';
 import { BudgetService } from '@core/services/budget.service';
 import { LoggerService } from '@core/services/logger.service';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -8,28 +12,36 @@ import {
     ionClose,
     ionPencil,
     ionTrashBin,
-    ionSearch
+    ionSearch,
 } from '@ng-icons/ionicons';
 import { CommonModule } from '@angular/common';
 import { ToastService } from '@shared/ui/toast/toast.service';
 import { ModalComponent } from '@layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';
-import { SpinningIconComponent } from "@shared/icons/spinning-icon/spinning-icon.component";
+import { SpinningIconComponent } from '@shared/icons/spinning-icon/spinning-icon.component';
 import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
     selector: 'app-budget-purchases-tab',
     standalone: true,
-    imports: [NgIcon, CommonModule, ModalComponent, FormsModule, SpinningIconComponent],
-    providers: [provideIcons({
-        ionAdd,
-        ionClose,
-        ionPencil,
-        ionTrashBin,
-        ionSearch
-    })],
+    imports: [
+        NgIcon,
+        CommonModule,
+        ModalComponent,
+        FormsModule,
+        SpinningIconComponent,
+    ],
+    providers: [
+        provideIcons({
+            ionAdd,
+            ionClose,
+            ionPencil,
+            ionTrashBin,
+            ionSearch,
+        }),
+    ],
     templateUrl: './budget-purchases-tab.component.html',
-    styleUrl: './budget-purchases-tab.component.css'
+    styleUrl: './budget-purchases-tab.component.css',
 })
 export class BudgetPurchasesTabComponent {
     private route = inject(ActivatedRoute);
@@ -53,8 +65,8 @@ export class BudgetPurchasesTabComponent {
         purchase_date: new Date(),
         amount: 0,
         description: '',
-        category: null
-    }
+        category: null,
+    };
 
     // Bulk add purchases
     isBulkImportModalOpen = false;
@@ -78,23 +90,33 @@ export class BudgetPurchasesTabComponent {
             error: (error) => {
                 this.isLoading = false;
                 this.logger.error('Error fetching budget details', error);
-                this.toastService.show('Error fetching budget details', 'error', 3000);
+                this.toastService.show(
+                    'Error fetching budget details',
+                    'error',
+                    3000
+                );
                 this.router.navigate(['/modules']);
-            }
-        })
+            },
+        });
 
         // Get purchase history from API
-        this.budgetService.getPurchases(this.budgetId, { get_all: true }).subscribe({
-            next: (res) => {
-                this.purchases = res;
-                this.isLoading = false;
-            },
-            error: (error) => {
-                this.logger.error('Error fetching budget purchases', error);
-                this.toastService.show('Error fetching budget purchases', 'error', 3000);
-                this.isLoading = false;
-            }
-        })
+        this.budgetService
+            .getPurchases(this.budgetId, { get_all: true })
+            .subscribe({
+                next: (res) => {
+                    this.purchases = res;
+                    this.isLoading = false;
+                },
+                error: (error) => {
+                    this.logger.error('Error fetching budget purchases', error);
+                    this.toastService.show(
+                        'Error fetching budget purchases',
+                        'error',
+                        3000
+                    );
+                    this.isLoading = false;
+                },
+            });
     }
 
     onAddOption(option: 'single' | 'bulk' | 'import') {
@@ -132,8 +154,8 @@ export class BudgetPurchasesTabComponent {
                 purchase_date: new Date(),
                 amount: 0,
                 description: '',
-                category: null
-            }
+                category: null,
+            };
         }
     }
 
@@ -144,14 +166,21 @@ export class BudgetPurchasesTabComponent {
     saveSetPurchase() {
         // Validate the form
         // Validate mandatory fields are filled
-        if (!this.setPurchaseForm.purchase_date || !this.setPurchaseForm.amount || !this.setPurchaseForm.description) {
+        if (
+            !this.setPurchaseForm.purchase_date ||
+            this.setPurchaseForm.amount == null ||
+            isNaN(this.setPurchaseForm.amount) ||
+            !this.setPurchaseForm.description
+        ) {
             this.toastService.show('Fill all mandatory fields', 'error', 3000);
             return;
         }
 
         // Validate category exists (if selected)
         if (this.setPurchaseForm.category) {
-            const category = this.budgetConfiguration!.categories.find(f => f.id === this.setPurchaseForm.category);
+            const category = this.budgetConfiguration!.categories.find(
+                (f) => f.id === this.setPurchaseForm.category
+            );
             if (!category) {
                 this.toastService.show('Invalid category', 'error', 3000);
                 return;
@@ -159,81 +188,129 @@ export class BudgetPurchasesTabComponent {
         }
 
         if (this.setPurchaseForm.id) {
-            this.budgetService.updatePurchase(this.budgetConfiguration!.id, this.setPurchaseForm.id, this.setPurchaseForm).subscribe({
-                next: (res) => {
-                    this.purchases = this.purchases.map(p => p.id === res.id ? res : p);
-                    this.purchases.sort((a, b) => b.purchase_date.getTime() - a.purchase_date.getTime());
-                    this.closeSetPurchaseModal();
-                },
-                error: (error) => {
-                    this.logger.error('Error updating purchase', error);
-                    this.toastService.show('Error updating purchase', 'error', 3000);
-                }
-            });
+            this.budgetService
+                .updatePurchase(
+                    this.budgetConfiguration!.id,
+                    this.setPurchaseForm.id,
+                    this.setPurchaseForm
+                )
+                .subscribe({
+                    next: (res) => {
+                        this.purchases = this.purchases.map((p) =>
+                            p.id === res.id ? res : p
+                        );
+                        this.purchases.sort(
+                            (a, b) =>
+                                b.purchase_date.getTime() -
+                                a.purchase_date.getTime()
+                        );
+                        this.closeSetPurchaseModal();
+                    },
+                    error: (error) => {
+                        this.logger.error('Error updating purchase', error);
+                        this.toastService.show(
+                            'Error updating purchase',
+                            'error',
+                            3000
+                        );
+                    },
+                });
         } else {
-            this.budgetService.addPurchase(this.budgetConfiguration!.id, this.setPurchaseForm).subscribe({
-                next: (res) => {
-                    this.purchases.push(res);
-                    this.purchases.sort((a, b) => b.purchase_date.getTime() - a.purchase_date.getTime());
-                    this.closeSetPurchaseModal();
-                },
-                error: (error) => {
-                    this.logger.error('Error adding purchase', error);
-                    this.toastService.show('Error adding purchase', 'error', 3000);
-                }
-            });
+            this.budgetService
+                .addPurchase(this.budgetConfiguration!.id, this.setPurchaseForm)
+                .subscribe({
+                    next: (res) => {
+                        this.purchases.push(res);
+                        this.purchases.sort(
+                            (a, b) =>
+                                b.purchase_date.getTime() -
+                                a.purchase_date.getTime()
+                        );
+                        this.closeSetPurchaseModal();
+                    },
+                    error: (error) => {
+                        this.logger.error('Error adding purchase', error);
+                        this.toastService.show(
+                            'Error adding purchase',
+                            'error',
+                            3000
+                        );
+                    },
+                });
         }
     }
 
     confirmDeletePurchase(purchaseId: number): void {
-        const confirmed = confirm('Are you sure you want to delete this purchase?');
+        const confirmed = confirm(
+            'Are you sure you want to delete this purchase?'
+        );
         if (confirmed) {
             this.deletePurchase(purchaseId);
         }
     }
 
     deletePurchase(purchaseId: number): void {
-        this.budgetService.deletePurchase(this.budgetConfiguration!.id, purchaseId).subscribe({
-            next: () => {
-                this.purchases = this.purchases.filter(f => f.id !== purchaseId);
-            },
-            error: (error) => {
-                this.logger.error('Error deleting purchase', error);
-                this.toastService.show('Error deleting purchase', 'error', 3000);
-            }
-        });
+        this.budgetService
+            .deletePurchase(this.budgetConfiguration!.id, purchaseId)
+            .subscribe({
+                next: () => {
+                    this.purchases = this.purchases.filter(
+                        (f) => f.id !== purchaseId
+                    );
+                },
+                error: (error) => {
+                    this.logger.error('Error deleting purchase', error);
+                    this.toastService.show(
+                        'Error deleting purchase',
+                        'error',
+                        3000
+                    );
+                },
+            });
     }
 
     parseBulkInput() {
         this.isParsing = true;
         const lines = this.bulkRawInput.trim().split(/\r?\n/);
-        const rows = lines.map(line => line.split(/\t+/));
+        const rows = lines.map((line) => line.split(/\t+/));
 
         if (!rows.length) return;
 
         // Detect if the first row is a header
-        const hasHeader = rows[0].every(col => isNaN(Number(col.replace(/[\$,]/g, '').trim())));
+        const hasHeader = rows[0].every((col) =>
+            isNaN(Number(col.replace(/[\$,]/g, '').trim()))
+        );
         const dataRows = hasHeader ? rows.slice(1) : rows;
         this.bulkParsedHeaders = rows[0];
 
         // Try to auto-detect field mapping
-        this.bulkFieldMapping = this.bulkParsedHeaders.map(header => {
+        this.bulkFieldMapping = this.bulkParsedHeaders.map((header) => {
             const lower = header.toLowerCase();
-            if (hasHeader && (lower.includes('desc') || lower.includes('details'))) return 'description';
-            if ((hasHeader && lower.includes('date')) || (!isNaN(this.parseFlexibleDate(header)?.getTime() ?? NaN))) return 'purchase_date';
             if (
-                (hasHeader && (
-                    lower.includes('amount')
-                    || lower.includes('amt')
-                    || lower.includes('price')
-                    || lower.includes('cost')))
-                || !isNaN(Number(header.replace(/[\$,]/g, '').trim()))) return 'amount';
+                hasHeader &&
+                (lower.includes('desc') || lower.includes('details'))
+            )
+                return 'description';
+            if (
+                (hasHeader && lower.includes('date')) ||
+                !isNaN(this.parseFlexibleDate(header)?.getTime() ?? NaN)
+            )
+                return 'purchase_date';
+            if (
+                (hasHeader &&
+                    (lower.includes('amount') ||
+                        lower.includes('amt') ||
+                        lower.includes('price') ||
+                        lower.includes('cost'))) ||
+                !isNaN(Number(header.replace(/[\$,]/g, '').trim()))
+            )
+                return 'amount';
             return '';
         });
 
-        this.bulkPreviewRows = dataRows.map(row => ({
-            values: row.map(val => val.trim()),
-            category: null
+        this.bulkPreviewRows = dataRows.map((row) => ({
+            values: row.map((val) => val.trim()),
+            category: null,
         }));
 
         this.isParsing = false;
@@ -242,27 +319,42 @@ export class BudgetPurchasesTabComponent {
     findCategoriesFromDescriptions() {
         this.isSearchingCategories = true;
         const descriptionIndex = this.bulkFieldMapping.indexOf('description');
-        const descriptionRequestData: BudgetDescriptionCategoryRequest[] = this.bulkPreviewRows.map((row, i) => ({
-            index: i,
-            description: row.values[descriptionIndex]
-        }));
+        const descriptionRequestData: BudgetDescriptionCategoryRequest[] =
+            this.bulkPreviewRows.map((row, i) => ({
+                index: i,
+                description: row.values[descriptionIndex],
+            }));
 
-        this.budgetService.getDescriptionCategories(this.budgetConfiguration!.id, descriptionRequestData).subscribe({
-            next: (res) => {
-                this.bulkPreviewRows.forEach((row, i) => {
-                    // if (row.category) return;
-                    const category_id = res.find(f => f.index === i)?.category;
-                    if (!category_id) return;
-                    row.category = category_id;
-                })
-                this.isSearchingCategories = false;
-            },
-            error: (error) => {
-                this.logger.error('Error getting description categories', error);
-                this.toastService.show('Error getting description categories', 'error', 3000);
-                this.isSearchingCategories = false;
-            }
-        })
+        this.budgetService
+            .getDescriptionCategories(
+                this.budgetConfiguration!.id,
+                descriptionRequestData
+            )
+            .subscribe({
+                next: (res) => {
+                    this.bulkPreviewRows.forEach((row, i) => {
+                        // if (row.category) return;
+                        const category_id = res.find(
+                            (f) => f.index === i
+                        )?.category;
+                        if (!category_id) return;
+                        row.category = category_id;
+                    });
+                    this.isSearchingCategories = false;
+                },
+                error: (error) => {
+                    this.logger.error(
+                        'Error getting description categories',
+                        error
+                    );
+                    this.toastService.show(
+                        'Error getting description categories',
+                        'error',
+                        3000
+                    );
+                    this.isSearchingCategories = false;
+                },
+            });
     }
 
     removeBulkRow(index: number) {
@@ -271,16 +363,50 @@ export class BudgetPurchasesTabComponent {
 
     parseFlexibleDate(input: string): Date | null {
         const formats = [
-            { regex: /^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/, order: ['year', 'month', 'day'] }, // yyyy-mm-dd or yyyy/mm/dd
-            { regex: /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/, order: ['day', 'month', 'year'] }, // dd/mm/yyyy or dd-mm-yyyy
-            { regex: /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2})$/, order: ['day', 'month', 'yearShort'] }, // dd/mm/yy or dd-mm-yy
-            { regex: /^(\d{1,2})[ -](\w{3})[ -](\d{2})$/, order: ['day', 'monthShort', 'yearShort'] }, // dd MMM yy
-            { regex: /^(\d{1,2})[ -](\w{3})[ -](\d{4})$/, order: ['day', 'monthShort', 'year'] }, // dd MMM yyyy
-            { regex: /^(\w{3})[ -](\d{1,2})[ -](\d{2})$/, order: ['monthShort', 'day', 'yearShort'] }, // MMM dd yy
-            { regex: /^(\w{3})[ -](\d{1,2})[ -](\d{4})$/, order: ['monthShort', 'day', 'year'] }, // MMM dd yyyy}
+            {
+                regex: /^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/,
+                order: ['year', 'month', 'day'],
+            }, // yyyy-mm-dd or yyyy/mm/dd
+            {
+                regex: /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/,
+                order: ['day', 'month', 'year'],
+            }, // dd/mm/yyyy or dd-mm-yyyy
+            {
+                regex: /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2})$/,
+                order: ['day', 'month', 'yearShort'],
+            }, // dd/mm/yy or dd-mm-yy
+            {
+                regex: /^(\d{1,2})[ -](\w{3})[ -](\d{2})$/,
+                order: ['day', 'monthShort', 'yearShort'],
+            }, // dd MMM yy
+            {
+                regex: /^(\d{1,2})[ -](\w{3})[ -](\d{4})$/,
+                order: ['day', 'monthShort', 'year'],
+            }, // dd MMM yyyy
+            {
+                regex: /^(\w{3})[ -](\d{1,2})[ -](\d{2})$/,
+                order: ['monthShort', 'day', 'yearShort'],
+            }, // MMM dd yy
+            {
+                regex: /^(\w{3})[ -](\d{1,2})[ -](\d{4})$/,
+                order: ['monthShort', 'day', 'year'],
+            }, // MMM dd yyyy}
         ];
 
-        const monthShorts = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+        const monthShorts = [
+            'jan',
+            'feb',
+            'mar',
+            'apr',
+            'may',
+            'jun',
+            'jul',
+            'aug',
+            'sep',
+            'oct',
+            'nov',
+            'dec',
+        ];
 
         for (const fmt of formats) {
             const match = input.trim().toLowerCase().match(fmt.regex);
@@ -292,7 +418,9 @@ export class BudgetPurchasesTabComponent {
                 let val: number;
 
                 if (part === 'monthShort') {
-                    const idx = monthShorts.indexOf(valRaw.toLowerCase().slice(0, 3));
+                    const idx = monthShorts.indexOf(
+                        valRaw.toLowerCase().slice(0, 3)
+                    );
                     if (idx === -1) return; // invalid month
                     parts['month'] = idx + 1;
                 } else if (part === 'yearShort') {
@@ -300,14 +428,23 @@ export class BudgetPurchasesTabComponent {
                     parts['year'] = val < 50 ? 2000 + val : 1900 + val;
                 } else if (part === 'yearAny') {
                     val = parseInt(valRaw, 10);
-                    parts['year'] = valRaw.length === 2 ? (val < 50 ? 2000 + val : 1900 + val) : val;
+                    parts['year'] =
+                        valRaw.length === 2
+                            ? val < 50
+                                ? 2000 + val
+                                : 1900 + val
+                            : val;
                 } else {
                     parts[part] = parseInt(valRaw, 10);
                 }
             });
 
             // JS months are 0-indexed
-            const date = new Date(parts['year'], parts['month'] - 1, parts['day']);
+            const date = new Date(
+                parts['year'],
+                parts['month'] - 1,
+                parts['day']
+            );
             if (!isNaN(date.getTime())) {
                 return date;
             }
@@ -318,7 +455,11 @@ export class BudgetPurchasesTabComponent {
 
     saveBulkImport() {
         // Ensure required fields are mapped
-        const requiredFields: (keyof BudgetPurchase)[] = ['purchase_date', 'amount', 'description'];
+        const requiredFields: (keyof BudgetPurchase)[] = [
+            'purchase_date',
+            'amount',
+            'description',
+        ];
 
         const fieldCounts: Record<string, number> = {};
         for (const field of this.bulkFieldMapping) {
@@ -330,21 +471,38 @@ export class BudgetPurchasesTabComponent {
         for (const key of requiredFields) {
             const count = fieldCounts[key] || 0;
             if (count === 0) {
-                this.toastService.show(`Missing mapping for ${key}`, 'error', 5000);
+                this.toastService.show(
+                    `Missing mapping for ${key}`,
+                    'error',
+                    5000
+                );
                 return;
             }
             if (count > 1) {
-                this.toastService.show(`Field type "${key}" is mapped more than once. Each field must be unique.`, 'error', 5000);
+                this.toastService.show(
+                    `Field type "${key}" is mapped more than once. Each field must be unique.`,
+                    'error',
+                    5000
+                );
                 return;
             }
         }
         // Get column indexes
-        const purchaseDateIndex = this.bulkFieldMapping.indexOf('purchase_date');
+        const purchaseDateIndex =
+            this.bulkFieldMapping.indexOf('purchase_date');
         const amountIndex = this.bulkFieldMapping.indexOf('amount');
         const descriptionIndex = this.bulkFieldMapping.indexOf('description');
 
-        if (purchaseDateIndex === -1 || amountIndex === -1 || descriptionIndex === -1) {
-            this.toastService.show('All field types must be mapped before importing.', 'error', 3000);
+        if (
+            purchaseDateIndex === -1 ||
+            amountIndex === -1 ||
+            descriptionIndex === -1
+        ) {
+            this.toastService.show(
+                'All field types must be mapped before importing.',
+                'error',
+                3000
+            );
             return;
         }
 
@@ -354,31 +512,47 @@ export class BudgetPurchasesTabComponent {
             const parsedDate = this.parseFlexibleDate(rawDate);
 
             if (!parsedDate) {
-                this.toastService.show(`Invalid date format in row ${i + 1}`, 'error', 3000);
+                this.toastService.show(
+                    `Invalid date format in row ${i + 1}`,
+                    'error',
+                    3000
+                );
                 throw new Error('Invalid date format');
             }
 
-            const amount = parseFloat(row.values[amountIndex].replace(/[\$,]/g, '') || '0');
+            const amount = parseFloat(
+                row.values[amountIndex].replace(/[\$,]/g, '') || '0'
+            );
 
             return {
                 purchase_date: parsedDate,
                 amount: this.bulkInvertPrice ? -amount : amount,
                 description: row.values[descriptionIndex],
-                category: row.category ?? null
+                category: row.category ?? null,
             };
         });
 
-        this.budgetService.addBulkPurchase(this.budgetConfiguration!.id, result).subscribe({
-            next: (res) => {
-                this.toastService.show(`Imported ${res.length} purchases`, 'success', 3000);
-                this.purchases.push(...res);
-                this.isBulkImportModalOpen = false;
-            },
-            error: (error) => {
-                this.toastService.show('Error importing purchases', 'error', 3000);
-                this.logger.error('Error importing purchases', error);
-            }
-        })
+        this.budgetService
+            .addBulkPurchase(this.budgetConfiguration!.id, result)
+            .subscribe({
+                next: (res) => {
+                    this.toastService.show(
+                        `Imported ${res.length} purchases`,
+                        'success',
+                        3000
+                    );
+                    this.purchases.push(...res);
+                    this.isBulkImportModalOpen = false;
+                },
+                error: (error) => {
+                    this.toastService.show(
+                        'Error importing purchases',
+                        'error',
+                        3000
+                    );
+                    this.logger.error('Error importing purchases', error);
+                },
+            });
     }
 
     parseDate(date: string | null): Date {

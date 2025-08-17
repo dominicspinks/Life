@@ -125,8 +125,6 @@ export class BudgetPurchasesTabComponent {
             this.openSetPurchaseModal();
         } else if (option === 'bulk') {
             this.openBulkPurchaseModal();
-        } else if (option === 'import') {
-            this.openImportModal();
         }
     }
 

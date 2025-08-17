@@ -156,7 +156,10 @@ export class BudgetSummaryTabComponent {
     getWeekTotal(week: number): number {
         return this.weeklySummary
             .filter(row => row.week === week)
-            .reduce((sum, row) => sum + row.total, 0);
+            .reduce((sum, row) => {
+                if (this.budgetConfiguration?.categories.find(c => c.id === row.category)?.excluded_from_budget) return sum;
+                return sum + row.total
+            }, 0);
     }
 
     onYearChange(year: number): void {

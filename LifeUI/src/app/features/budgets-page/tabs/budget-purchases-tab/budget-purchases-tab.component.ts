@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, ViewChild } from '@angular/core';
 import {
     BudgetConfiguration,
     BudgetDescriptionCategoryRequest,
@@ -57,6 +57,19 @@ export class BudgetPurchasesTabComponent {
     purchases: BudgetPurchase[] = [];
 
     showAddMenu = false;
+
+    @ViewChild('menuWrapper') menuWrapper!: ElementRef;
+
+    toggleMenu(event: MouseEvent) {
+        event.stopPropagation();
+        this.showAddMenu = !this.showAddMenu;
+    }
+    @HostListener('document:click', ['$event'])
+    onClickOutside(event: MouseEvent) {
+        if (this.showAddMenu && this.menuWrapper && !this.menuWrapper.nativeElement.contains(event.target)) {
+        this.showAddMenu = false;
+        }
+    }
 
     // Add/edit purchase
     isSetPurchaseModalOpen = false;

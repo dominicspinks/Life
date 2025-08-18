@@ -6,7 +6,7 @@ import {
     ionTrashBin,
     ionAdd,
 } from '@ng-icons/ionicons';
-import { ListConfiguration, ListItem } from '@core/models/list.model';
+import { ListConfiguration, ListField, ListItem } from '@core/models/list.model';
 import { ListService } from '@core/services/list.service';
 import { ReferenceService } from '@core/services/reference.service';
 import { FieldType } from '@core/models/fieldType.model';
@@ -136,6 +136,52 @@ export class ViewListModuleComponent {
             fieldValue.value = value;
         } else {
             this.setItemForm.field_values.push({ field: fieldId, value });
+        }
+    }
+
+    filterNumberInput(event: InputEvent, fieldId: number): void {
+        const fieldRules = this.listConfiguration?.list_fields.find(f => f.id === fieldId)?.rules;
+        if (!fieldRules) return;
+
+        const input = event.target as HTMLInputElement;
+        const valueBefore = input.value;
+        if (event.data) {
+            // Only allow digits, dash and dot
+            if (!/^\d|-|\.$/.test(event.data)) {
+                event.preventDefault();
+            }
+
+            // Only allow one dot
+            if (event.data === '.' && valueBefore.includes('.')) {
+                event.preventDefault();
+            }
+
+            // Only allow dash at start
+            if (event.data === '-' && input.selectionStart !== 0) {
+                event.preventDefault();
+            }
+        }
+
+        const isPositiveOnly = fieldRules.some(r => r.field_type_rule.rule === 'positive_only');
+        const isIntegerOnly = fieldRules.some(r => r.field_type_rule.rule === 'integer');
+
+        if (isPositiveOnly) {
+            // Block any non-digit character
+            if (event.data && !/^\d|\.+$/.test(event.data)) {
+                event.preventDefault();
+            }
+        }
+
+        if (isIntegerOnly) {
+            // Block dots
+            if (event.data === '.') {
+                event.preventDefault();
+            }
+        } else {
+            // If first character is dot, add zero before it
+            if (event.data === '.' && valueBefore === '') {
+                input.value = '0.';
+            }
         }
     }
 
@@ -281,4 +327,7 @@ export class ViewListModuleComponent {
         }
     }
 
+    isMoneyField(field: ListField): boolean {
+        return field.rules.some(r => r.field_type_rule.rule === 'money');
+    }
 }

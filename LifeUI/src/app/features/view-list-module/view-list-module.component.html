@@ -127,6 +127,11 @@
                     }
                 </select>
                 }
+                @case ('number') {
+                <input #inputField [ngModel]="getFormFieldValue(field.id!)"
+                    (ngModelChange)="setFormFieldValue(field.id!, $event)" [ngModelOptions]="{standalone: true}"
+                    type="number" class="w-full border rounded px-3 py-2" />
+                }
                 @default {
                 <input #inputField [ngModel]="getFormFieldValue(field.id!)"
                     (ngModelChange)="setFormFieldValue(field.id!, $event)" [ngModelOptions]="{standalone: true}"

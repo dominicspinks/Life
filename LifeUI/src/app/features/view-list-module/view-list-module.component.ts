@@ -14,6 +14,7 @@ import { PaginatedResponse } from '@core/models/pagination.model';
 import { FormsModule } from '@angular/forms';
 import { LoggerService } from '@core/services/logger.service';
 import { ModalComponent } from '@layout/modal/modal.component';
+import { environment } from '@environments/environment';
 
 @Component({
     selector: 'app-view-list-module',
@@ -256,13 +257,19 @@ export class ViewListModuleComponent {
     addItemLocally(newItem: ListItem) {
         if (!this.listData?.results) return;
 
-        this.listData.results.unshift(newItem);
+        const pageSize = 10;
 
-        if (this.listData.results.length > 10) {
+        this.listData.results.unshift(newItem);
+        this.listData.count += 1;
+
+        if (this.listData.results.length > pageSize) {
             this.listData.results.pop();
         }
 
-        this.listData.count += 1;
+        if (this.listData.count > pageSize && !this.listData.next) {
+            const baseUrl = `${environment.apiUrl}/lists/data/${this.moduleId}/items/`;
+            this.listData.next = `${baseUrl}?page=${this.currentPage + 1}`;
+        }
     }
 
     updateItemLocally(updatedItem: ListItem) {

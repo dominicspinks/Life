@@ -180,15 +180,15 @@ export class EditListModuleComponent {
     }
 
     isRuleSelected(ruleId: number): boolean {
-        return this.setFieldForm.rules.some(r => r.id === ruleId);
+        return this.setFieldForm.rules.some(r => r.field_type_rule.id === ruleId);
     }
 
     toggleRule(rule: any): void {
-        const exists = this.setFieldForm.rules.some(r => r.id === rule.id);
+        const exists = this.setFieldForm.rules.some(r => r.field_type_rule.id === rule.id);
         if (exists) {
-            this.setFieldForm.rules = this.setFieldForm.rules.filter(r => r.id !== rule.id);
+            this.setFieldForm.rules = this.setFieldForm.rules.filter(r => r.field_type_rule.id !== rule.id);
         } else {
-            this.setFieldForm.rules.push(rule);
+            this.setFieldForm.rules.push({ field_type_rule: rule });
         }
     }
 

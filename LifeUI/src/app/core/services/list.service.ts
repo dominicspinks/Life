@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '@environments/environment';
 import { ListConfiguration, ListConfigurationDetails, ListField, ListItem } from '@core/models/list.model';
 import { PaginatedResponse } from '@core/models/pagination.model';
+import { getFieldPayload } from '@core/utilities/helper-utils';
 
 @Injectable({
     providedIn: 'root'
@@ -22,11 +23,11 @@ export class ListService {
     }
 
     addField(configurationId: number, field: ListField): Observable<ListField> {
-        return this.http.post<ListField>(`${this.apiUrl}/lists/configurations/${configurationId}/fields/`, field);
+        return this.http.post<ListField>(`${this.apiUrl}/lists/configurations/${configurationId}/fields/`, getFieldPayload(field));
     }
 
     updateField(configurationId: number, fieldId: number, field: ListField): Observable<ListField> {
-        return this.http.patch<ListField>(`${this.apiUrl}/lists/configurations/${configurationId}/fields/${fieldId}/`, field);
+        return this.http.patch<ListField>(`${this.apiUrl}/lists/configurations/${configurationId}/fields/${fieldId}/`, getFieldPayload(field));
     }
 
     deleteField(configurationId: number, fieldId: number): Observable<void> {

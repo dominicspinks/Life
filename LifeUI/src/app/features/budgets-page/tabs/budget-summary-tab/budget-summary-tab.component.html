@@ -171,10 +171,7 @@
                 </div>
                 <div>
                     <h3 class="text-xs uppercase text-gray-500 mb-1">Current Projected Savings</h3>
-                    <p class="text-lg font-semibold" [ngClass]="{
-                        'text-red-700': forecastData.currentSavings < 0,
-                        'text-green-700': forecastData.currentSavings >= 0
-                      }">{{ forecastData.currentSavings | currency:'AUD' }}
+                    <p class="text-lg font-semibold" [ngClass]="forecastData.targetSavings < 0 ? 'text-red-700' : 'text-green-700'">{{ forecastData.currentSavings | currency:'AUD' }}
                     </p>
                 </div>
                 <div>

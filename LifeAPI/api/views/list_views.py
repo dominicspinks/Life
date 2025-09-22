@@ -3,8 +3,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, status, serializers
 from rest_framework.response import Response
 from datetime import datetime
+from rest_framework.decorators import action
 
-from api.serializers.serializers_lists import ListConfigurationSerializer, ListFieldSerializer, ListItemSerializer, ListDataSerializer
+from api.serializers.serializers_lists import ListConfigurationSerializer, ListFieldReorderSerializer, ListFieldSerializer, ListItemSerializer, ListDataSerializer
 from api.models import UserModule, ListField, ListFieldRule, ListFieldOption, ListItem
 from api.pagination import Unpaginatable
 
@@ -194,6 +195,44 @@ class ListConfigurationFieldViewSet(viewsets.ModelViewSet):
         ListFieldOption.objects.filter(list_field=instance).delete()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'], url_path='reorder')
+    def reorder(self, request, configuration_id=None, id=None):
+        """
+        Reorder a list field by moving it to a new position.
+        Expects {"new_order": <int>} in the body.
+        """
+        serializer = ListFieldReorderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        new_order = serializer.validated_data['new_order']
+
+        # Fetch the field and ensure ownership
+        user_module = get_object_or_404(UserModule, id=configuration_id, user=self.request.user)
+        field = get_object_or_404(
+            ListField.objects.select_related('user_module'),
+            id=id,
+            user_module__user=request.user
+        )
+        user_module = field.user_module
+
+        # Fetch fields ordered by current order
+        fields = list(ListField.objects.filter(user_module=user_module).order_by('order'))
+
+        # Move field
+        original_order = field.order
+        if original_order != new_order:
+            moved_field = fields.pop(original_order - 1)
+            fields.insert(new_order - 1, moved_field)
+
+            # Reassign orders
+            with transaction.atomic():
+                for idx, f in enumerate(fields):
+                    f.order = idx + 1
+                ListField.objects.bulk_update(fields, ['order'])
+
+        # Return updated configuration
+        config_serializer = ListConfigurationSerializer(user_module, context={'request': request})
+        return Response(config_serializer.data, status=status.HTTP_200_OK)
 
 class ListDataViewSet(viewsets.ReadOnlyModelViewSet):
     """

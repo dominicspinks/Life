@@ -3,30 +3,41 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ListService } from '@core/services/list.service';
 import { SpinningIconComponent } from '@shared/icons/spinning-icon/spinning-icon.component';
-import { ListConfiguration, ListConfigurationDetails, ListField, ListFieldOption } from '@core/models/list.model';
+import {
+    ListConfiguration,
+    ListConfigurationDetails,
+    ListField,
+    ListFieldOption,
+} from '@core/models/list.model';
 import { ModalComponent } from '@layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';
 import { ModuleService } from '@core/services/module.service';
 import { FieldType } from '@core/models/fieldType.model';
 import { ReferenceService } from '@core/services/reference.service';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import {
-    ionAdd,
-    ionTrashBin,
-    ionPencil
-} from '@ng-icons/ionicons';
+import { ionAdd, ionTrashBin, ionPencil, ionMenu } from '@ng-icons/ionicons';
 import { LoggerService } from '@core/services/logger.service';
 
 @Component({
     standalone: true,
     selector: 'app-edit-list-module',
-    imports: [CommonModule, SpinningIconComponent, ModalComponent, FormsModule, NgIcon, RouterLink],
-    providers: [provideIcons({
-        ionAdd,
-        ionTrashBin,
-        ionPencil
-    })],
-    templateUrl: './edit-list-module.component.html'
+    imports: [
+        CommonModule,
+        SpinningIconComponent,
+        ModalComponent,
+        FormsModule,
+        NgIcon,
+        RouterLink,
+    ],
+    providers: [
+        provideIcons({
+            ionAdd,
+            ionTrashBin,
+            ionPencil,
+            ionMenu,
+        }),
+    ],
+    templateUrl: './edit-list-module.component.html',
 })
 export class EditListModuleComponent {
     private route = inject(ActivatedRoute);
@@ -46,7 +57,7 @@ export class EditListModuleComponent {
         order: 1,
         is_enabled: false,
         is_read_only: false,
-        is_checkable: false
+        is_checkable: false,
     };
     isSetFieldModalOpen = false;
     setFieldForm: ListField = {
@@ -57,11 +68,12 @@ export class EditListModuleComponent {
         is_mandatory: false,
         order: 1 + (this.moduleData?.list_fields.length ?? 1),
         rules: [],
-        options: []
+        options: [],
     };
 
     @ViewChild('fieldNameInput') fieldNameInput!: ElementRef<HTMLInputElement>;
-    @ViewChild('moduleNameInput') moduleNameInput!: ElementRef<HTMLInputElement>;
+    @ViewChild('moduleNameInput')
+    moduleNameInput!: ElementRef<HTMLInputElement>;
 
     ngOnInit(): void {
         this.listService.getModule(this.moduleId).subscribe({
@@ -73,7 +85,7 @@ export class EditListModuleComponent {
                 this.isLoading = false;
                 alert('Module not found');
                 this.router.navigate(['/modules']);
-            }
+            },
         });
 
         this.referenceService.getFieldTypesWithRules().subscribe({
@@ -82,15 +94,22 @@ export class EditListModuleComponent {
             },
             error: (error) => {
                 this.logger.error('Error fetching field types', error);
-            }
-        })
+            },
+        });
     }
 
     openEditDetailsModal(): void {
         if (!this.moduleData) return;
 
-        const { name, order, is_enabled, is_read_only, is_checkable } = this.moduleData;
-        this.editDetailsForm = { name, order, is_enabled, is_read_only, is_checkable };
+        const { name, order, is_enabled, is_read_only, is_checkable } =
+            this.moduleData;
+        this.editDetailsForm = {
+            name,
+            order,
+            is_enabled,
+            is_read_only,
+            is_checkable,
+        };
         this.isEditDetailsModalOpen = true;
 
         setTimeout(() => {
@@ -105,7 +124,7 @@ export class EditListModuleComponent {
     saveEditedModule(): void {
         const updated: ListConfigurationDetails = {
             ...this.editDetailsForm,
-            id: this.moduleId
+            id: this.moduleId,
         };
 
         this.listService.updateModuleDetails(updated).subscribe({
@@ -114,14 +133,16 @@ export class EditListModuleComponent {
             },
             error: (error) => {
                 this.logger.error('Error updating module details', error);
-            }
+            },
         });
 
         this.closeEditModal();
     }
 
     confirmDeleteModule(): void {
-        const confirmed = confirm('Are you sure you want to delete this list? All data will be removed and cannot be restored.');
+        const confirmed = confirm(
+            'Are you sure you want to delete this list? All data will be removed and cannot be restored.'
+        );
         if (confirmed) {
             this.deleteModule();
         }
@@ -134,7 +155,7 @@ export class EditListModuleComponent {
             },
             error: (error) => {
                 this.logger.error('Error deleting module', error);
-            }
+            },
         });
     }
 
@@ -152,7 +173,7 @@ export class EditListModuleComponent {
                 is_mandatory: false,
                 order: 1 + (this.moduleData?.list_fields.length ?? 1),
                 rules: [],
-                options: []
+                options: [],
             };
         }
 
@@ -170,30 +191,41 @@ export class EditListModuleComponent {
     addOption(): void {
         this.setFieldForm.options.push({
             id: undefined,
-            option_name: ''
+            option_name: '',
         });
     }
 
     hasRules(): boolean {
-        const type = this.fieldTypes.find(t => t.id === this.setFieldForm.field_type);
+        const type = this.fieldTypes.find(
+            (t) => t.id === this.setFieldForm.field_type
+        );
         return !!type && !!type.rules && type.rules.length > 0;
     }
 
     isRuleSelected(ruleId: number): boolean {
-        return this.setFieldForm.rules.some(r => r.field_type_rule.id === ruleId);
+        return this.setFieldForm.rules.some(
+            (r) => r.field_type_rule.id === ruleId
+        );
     }
 
     toggleRule(rule: any): void {
-        const exists = this.setFieldForm.rules.some(r => r.field_type_rule.id === rule.id);
+        const exists = this.setFieldForm.rules.some(
+            (r) => r.field_type_rule.id === rule.id
+        );
         if (exists) {
-            this.setFieldForm.rules = this.setFieldForm.rules.filter(r => r.field_type_rule.id !== rule.id);
+            this.setFieldForm.rules = this.setFieldForm.rules.filter(
+                (r) => r.field_type_rule.id !== rule.id
+            );
         } else {
             this.setFieldForm.rules.push({ field_type_rule: rule });
         }
     }
 
     get selectedRules() {
-        return this.fieldTypes.find(t => t.id === this.setFieldForm.field_type)?.rules ?? [];
+        return (
+            this.fieldTypes.find((t) => t.id === this.setFieldForm.field_type)
+                ?.rules ?? []
+        );
     }
 
     get sortedFields() {
@@ -201,7 +233,9 @@ export class EditListModuleComponent {
     }
 
     get optionName() {
-        return this.fieldTypes.find(t => t.id === this.setFieldForm.field_type)?.name;
+        return this.fieldTypes.find(
+            (t) => t.id === this.setFieldForm.field_type
+        )?.name;
     }
 
     onFieldTypeChange(value: number): void {
@@ -216,48 +250,65 @@ export class EditListModuleComponent {
 
     saveSetField(): void {
         // Validate all options have values
-        if (this.fieldTypes.find(t => t.id === this.setFieldForm.field_type)?.name.toLowerCase() === 'dropdown') {
+        if (
+            this.fieldTypes
+                .find((t) => t.id === this.setFieldForm.field_type)
+                ?.name.toLowerCase() === 'dropdown'
+        ) {
             if (!this.setFieldForm.options.length) {
                 alert('Please add at least one option');
                 return;
             }
 
-            const hasEmptyOption = this.setFieldForm.options.some(o => !o.option_name);
+            const hasEmptyOption = this.setFieldForm.options.some(
+                (o) => !o.option_name
+            );
             if (hasEmptyOption) {
                 alert('All options must have a value');
                 return;
             }
-        }
-        else {
+        } else {
             this.setFieldForm.options = [];
         }
 
         if (this.setFieldForm.id) {
-            this.listService.updateField(this.moduleId, this.setFieldForm.id!, this.setFieldForm).subscribe({
-                next: (field: ListField) => {
-                    this.closeSetFieldModal();
-                    this.moduleData!.list_fields = this.moduleData!.list_fields.map(f => f.id === field.id ? field : f);
-                },
-                error: (error) => {
-                    this.logger.error('Error updating field', error);
-                }
-            });
-        }
-        else {
-            this.listService.addField(this.moduleId, this.setFieldForm).subscribe({
-                next: (field: ListField) => {
-                    this.closeSetFieldModal();
-                    this.moduleData!.list_fields.push(field);
-                },
-                error: (error) => {
-                    this.logger.error('Error adding field', error);
-                }
-            });
+            this.listService
+                .updateField(
+                    this.moduleId,
+                    this.setFieldForm.id!,
+                    this.setFieldForm
+                )
+                .subscribe({
+                    next: (field: ListField) => {
+                        this.closeSetFieldModal();
+                        this.moduleData!.list_fields =
+                            this.moduleData!.list_fields.map((f) =>
+                                f.id === field.id ? field : f
+                            );
+                    },
+                    error: (error) => {
+                        this.logger.error('Error updating field', error);
+                    },
+                });
+        } else {
+            this.listService
+                .addField(this.moduleId, this.setFieldForm)
+                .subscribe({
+                    next: (field: ListField) => {
+                        this.closeSetFieldModal();
+                        this.moduleData!.list_fields.push(field);
+                    },
+                    error: (error) => {
+                        this.logger.error('Error adding field', error);
+                    },
+                });
         }
     }
 
     confirmDeleteField(fieldId: number): void {
-        const confirmed = confirm('Are you sure you want to delete this field? All data saved to this field will be removed and cannot be restored.');
+        const confirmed = confirm(
+            'Are you sure you want to delete this field? All data saved to this field will be removed and cannot be restored.'
+        );
         if (confirmed) {
             this.deleteField(fieldId);
         }
@@ -268,12 +319,14 @@ export class EditListModuleComponent {
             next: () => {
                 this.moduleData = {
                     ...this.moduleData!,
-                    list_fields: this.moduleData!.list_fields.filter(f => f.id !== fieldId)
+                    list_fields: this.moduleData!.list_fields.filter(
+                        (f) => f.id !== fieldId
+                    ),
                 };
             },
             error: (error) => {
                 this.logger.error('Error deleting field', error);
-            }
+            },
         });
     }
 
@@ -282,6 +335,53 @@ export class EditListModuleComponent {
             this.setFieldForm.options.splice(index, 1);
             return;
         }
-        this.setFieldForm.options = this.setFieldForm.options.filter(o => o.id !== option.id);
+        this.setFieldForm.options = this.setFieldForm.options.filter(
+            (o) => o.id !== option.id
+        );
+    }
+
+    draggedField: any | null = null;
+    dragStartIndex = -1;
+    dragTargetIndex = -1;
+
+    onFieldDragStart(field: any, index: number): void {
+        this.draggedField = field;
+        this.dragStartIndex = index;
+    }
+
+    onFieldDragOver(event: DragEvent, index: number): void {
+        event.preventDefault();
+        this.dragTargetIndex = index;
+    }
+
+    onFieldDrop(event: DragEvent, index: number): void {
+        event.preventDefault();
+        if (this.draggedField && this.moduleData) {
+            this.listService
+                .reorderFields(
+                    this.moduleData.id,
+                    this.draggedField.id,
+                    index + 1
+                )
+                .subscribe({
+                    next: (res) => {
+                        this.moduleData!.list_fields = res.list_fields;
+                    },
+                    error: (err) => {
+                        this.logger.error('Failed to reorder fields', err);
+                    },
+                });
+        }
+        this.resetFieldDrag();
+    }
+
+    onFieldDragEnd(): void {
+        this.resetFieldDrag();
+    }
+
+    resetFieldDrag(): void {
+        this.draggedField = null;
+        this.dragStartIndex = -1;
+        this.dragTargetIndex = -1;
     }
 }

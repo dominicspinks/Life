@@ -106,3 +106,6 @@ class ListDataSerializer(ListConfigurationSerializer):
     def get_list_items(self, obj):
         list_items = ListItem.objects.filter(user_module=obj)
         return ListItemSerializer(list_items, many=True).data
+
+class ListFieldReorderSerializer(serializers.Serializer):
+    new_order = serializers.IntegerField(min_value=1)

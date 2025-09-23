@@ -15,11 +15,12 @@ import { FormsModule } from '@angular/forms';
 import { LoggerService } from '@core/services/logger.service';
 import { ModalComponent } from '@layout/modal/modal.component';
 import { environment } from '@environments/environment';
+import { DeleteModalComponent } from '@layout/delete-modal/delete-modal/delete-modal.component';
 
 @Component({
     selector: 'app-view-list-module',
     standalone: true,
-    imports: [NgIcon, RouterLink, ModalComponent, FormsModule],
+    imports: [NgIcon, RouterLink, ModalComponent, FormsModule, DeleteModalComponent],
     providers: [provideIcons({
         ionPencil,
         ionTrashBin,
@@ -47,6 +48,9 @@ export class ViewListModuleComponent {
         is_completed: false,
         field_values: []
     };
+
+    showDeleteModal = false;
+    deleteItemId: number | null = null;
 
     @ViewChildren('inputField') inputFields!: QueryList<ElementRef>;
 
@@ -197,15 +201,21 @@ export class ViewListModuleComponent {
     }
 
     confirmDeleteItem(itemId: number): void {
-        if (confirm('Are you sure you want to delete this item?')) {
-            this.deleteItem(itemId);
-        }
+        this.showDeleteModal = true;
+        this.deleteItemId = itemId;
     }
 
-    deleteItem(itemId: number): void {
-        this.listService.deleteListItem(this.moduleId, itemId).subscribe({
+    closeDeleteModal(): void {
+        this.showDeleteModal = false;
+        this.deleteItemId = null;
+    }
+
+    deleteItem(): void {
+        if (!this.deleteItemId) return;
+        this.listService.deleteListItem(this.moduleId, this.deleteItemId).subscribe({
             next: () => {
-                this.deleteItemLocally(itemId);
+                this.deleteItemLocally(this.deleteItemId);
+                this.closeDeleteModal();
             },
             error: (error) => {
                 this.logger.error('Error deleting item', error);
@@ -213,8 +223,8 @@ export class ViewListModuleComponent {
         });
     }
 
-    deleteItemLocally(itemId: number) {
-        if (!this.listData?.results) return;
+    deleteItemLocally(itemId: number | null) {
+        if (!this.listData?.results || !itemId) return;
 
         const index = this.listData.results.findIndex(item => item.id === itemId);
         if (index !== -1) {

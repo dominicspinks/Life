@@ -1,4 +1,10 @@
-import { Component, ElementRef, HostListener, inject, ViewChild } from '@angular/core';
+import {
+    Component,
+    ElementRef,
+    HostListener,
+    inject,
+    ViewChild,
+} from '@angular/core';
 import {
     BudgetConfiguration,
     BudgetDescriptionCategoryRequest,
@@ -20,6 +26,7 @@ import { ModalComponent } from '@layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';
 import { SpinningIconComponent } from '@shared/icons/spinning-icon/spinning-icon.component';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DeleteModalComponent } from '@layout/delete-modal/delete-modal/delete-modal.component';
 
 @Component({
     selector: 'app-budget-purchases-tab',
@@ -30,6 +37,7 @@ import { ActivatedRoute, Router } from '@angular/router';
         ModalComponent,
         FormsModule,
         SpinningIconComponent,
+        DeleteModalComponent,
     ],
     providers: [
         provideIcons({
@@ -66,8 +74,12 @@ export class BudgetPurchasesTabComponent {
     }
     @HostListener('document:click', ['$event'])
     onClickOutside(event: MouseEvent) {
-        if (this.showAddMenu && this.menuWrapper && !this.menuWrapper.nativeElement.contains(event.target)) {
-        this.showAddMenu = false;
+        if (
+            this.showAddMenu &&
+            this.menuWrapper &&
+            !this.menuWrapper.nativeElement.contains(event.target)
+        ) {
+            this.showAddMenu = false;
         }
     }
 
@@ -91,6 +103,9 @@ export class BudgetPurchasesTabComponent {
     isParsing = false;
 
     isSearchingCategories = false;
+
+    showDeleteModal = false;
+    deletePurchaseId: number | null = null;
 
     ngOnInit(): void {
         this.isLoading = true;
@@ -252,22 +267,25 @@ export class BudgetPurchasesTabComponent {
     }
 
     confirmDeletePurchase(purchaseId: number): void {
-        const confirmed = confirm(
-            'Are you sure you want to delete this purchase?'
-        );
-        if (confirmed) {
-            this.deletePurchase(purchaseId);
-        }
+        this.showDeleteModal = true;
+        this.deletePurchaseId = purchaseId;
     }
 
-    deletePurchase(purchaseId: number): void {
+    closeDeleteModal() {
+        this.showDeleteModal = false;
+        this.deletePurchaseId = null;
+    }
+
+    deletePurchase(): void {
+        if (!this.deletePurchaseId) return;
         this.budgetService
-            .deletePurchase(this.budgetConfiguration!.id, purchaseId)
+            .deletePurchase(this.budgetConfiguration!.id, this.deletePurchaseId)
             .subscribe({
                 next: () => {
                     this.purchases = this.purchases.filter(
-                        (f) => f.id !== purchaseId
+                        (f) => f.id !== this.deletePurchaseId
                     );
+                    this.closeDeleteModal();
                 },
                 error: (error) => {
                     this.logger.error('Error deleting purchase', error);

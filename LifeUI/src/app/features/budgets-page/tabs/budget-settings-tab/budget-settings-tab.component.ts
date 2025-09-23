@@ -1,33 +1,41 @@
 import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import {
-    ionAdd,
-    ionTrashBin,
-    ionPencil,
-    ionMenu
-} from '@ng-icons/ionicons';
+import { ionAdd, ionTrashBin, ionPencil, ionMenu } from '@ng-icons/ionicons';
 import { LoggerService } from '@core/services/logger.service';
 import { BudgetService } from '@core/services/budget.service';
 import { SpinningIconComponent } from '@shared/icons/spinning-icon/spinning-icon.component';
 import { ModalComponent } from '@layout/modal/modal.component';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails } from '@core/models/budget.model';
+import {
+    BudgetCategory,
+    BudgetConfiguration,
+    BudgetConfigurationDetails,
+} from '@core/models/budget.model';
 import { ModuleService } from '@core/services/module.service';
 import { ToastService } from '@shared/ui/toast/toast.service';
+import { DeleteModalComponent } from '@layout/delete-modal/delete-modal/delete-modal.component';
 
 @Component({
     selector: 'app-budget-settings-tab',
     standalone: true,
-    imports: [NgIcon, SpinningIconComponent, ModalComponent, FormsModule,],
-    providers: [provideIcons({
-        ionAdd,
-        ionTrashBin,
-        ionPencil,
-        ionMenu
-    })],
+    imports: [
+        NgIcon,
+        SpinningIconComponent,
+        ModalComponent,
+        FormsModule,
+        DeleteModalComponent,
+    ],
+    providers: [
+        provideIcons({
+            ionAdd,
+            ionTrashBin,
+            ionPencil,
+            ionMenu,
+        }),
+    ],
     templateUrl: './budget-settings-tab.component.html',
-    styleUrl: './budget-settings-tab.component.css'
+    styleUrl: './budget-settings-tab.component.css',
 })
 export class BudgetSettingsTabComponent {
     private route = inject(ActivatedRoute);
@@ -56,49 +64,62 @@ export class BudgetSettingsTabComponent {
         weekly_target: 0,
         excluded_from_budget: false,
         order: 1,
-        is_enabled: true
+        is_enabled: true,
     };
 
     draggedCategory: BudgetCategory | null = null;
     dragStartIndex = -1;
     dragTargetIndex = -1;
 
-    @ViewChild('categoryNameInput') categoryNameInput!: ElementRef<HTMLInputElement>;
-    @ViewChild('detailsNameInput') detailsNameInput!: ElementRef<HTMLInputElement>;
+    showDeleteModuleModal = false;
+
+    showDeleteCategoryModal = false;
+    deleteCategoryId: number | null = null;
+
+    @ViewChild('categoryNameInput')
+    categoryNameInput!: ElementRef<HTMLInputElement>;
+    @ViewChild('detailsNameInput')
+    detailsNameInput!: ElementRef<HTMLInputElement>;
 
     ngOnInit(): void {
         // Get budget details from API
         this.budgetService.getBudgetConfiguration(this.budgetId).subscribe({
             next: (res) => {
                 this.budgetConfiguration = res;
-                this.sortedCategories = [...this.budgetConfiguration.categories];
+                this.sortedCategories = [
+                    ...this.budgetConfiguration.categories,
+                ];
                 this.sortedCategories.sort((a, b) => a.order - b.order);
 
                 this.editDetailsForm = {
                     name: this.budgetConfiguration.name,
                     order: this.budgetConfiguration.order,
                     is_enabled: this.budgetConfiguration.is_enabled,
-                    is_read_only: this.budgetConfiguration.is_read_only
+                    is_read_only: this.budgetConfiguration.is_read_only,
                 };
 
-                this.setCategoryForm.order = 1 + this.budgetConfiguration.categories.length;
+                this.setCategoryForm.order =
+                    1 + this.budgetConfiguration.categories.length;
                 this.isLoading = false;
             },
             error: (error) => {
                 this.isLoading = false;
                 this.logger.error('Error fetching budget details', error);
-                this.toastService.show('Error fetching budget details', 'error', 3000);
+                this.toastService.show(
+                    'Error fetching budget details',
+                    'error',
+                    3000
+                );
                 this.router.navigate(['/modules']);
-            }
-        })
-
+            },
+        });
     }
-
 
     openEditDetailsModal(): void {
         if (!this.budgetConfiguration) return;
 
-        const { name, order, is_enabled, is_read_only, is_checkable } = this.budgetConfiguration;
+        const { name, order, is_enabled, is_read_only, is_checkable } =
+            this.budgetConfiguration;
         this.editDetailsForm = { name, order, is_enabled, is_read_only };
         this.isEditDetailsModalOpen = true;
 
@@ -114,7 +135,7 @@ export class BudgetSettingsTabComponent {
     saveEditedModule(): void {
         const updated: BudgetConfigurationDetails = {
             ...this.editDetailsForm,
-            id: this.budgetConfiguration!.id
+            id: this.budgetConfiguration!.id,
         };
 
         this.budgetService.updateBudgetDetails(updated).subscribe({
@@ -123,28 +144,32 @@ export class BudgetSettingsTabComponent {
             },
             error: (error) => {
                 this.logger.error('Error updating module details', error);
-            }
+            },
         });
 
         this.closeEditModal();
     }
 
     confirmDeleteModule(): void {
-        const confirmed = confirm('Are you sure you want to delete this list? All data will be removed and cannot be restored.');
-        if (confirmed) {
-            this.deleteModule();
-        }
+        this.showDeleteModuleModal = true;
+    }
+
+    closeDeleteModuleModal(): void {
+        this.showDeleteModuleModal = false;
     }
 
     deleteModule(): void {
-        this.moduleService.deleteModule(this.budgetConfiguration!.id).subscribe({
-            next: () => {
-                this.router.navigate(['/modules']);
-            },
-            error: (error) => {
-                this.logger.error('Error deleting module', error);
-            }
-        });
+        this.moduleService
+            .deleteModule(this.budgetConfiguration!.id)
+            .subscribe({
+                next: () => {
+                    this.showDeleteModuleModal = false;
+                    this.router.navigate(['/modules']);
+                },
+                error: (error) => {
+                    this.logger.error('Error deleting module', error);
+                },
+            });
     }
 
     openSetCategoryModal(category?: BudgetCategory): void {
@@ -177,70 +202,105 @@ export class BudgetSettingsTabComponent {
     saveSetCategory(): void {
         // Validate the form
         // Validate name is filled
-        if (!this.setCategoryForm.name || this.setCategoryForm.name.trim() === '') {
+        if (
+            !this.setCategoryForm.name ||
+            this.setCategoryForm.name.trim() === ''
+        ) {
             this.toastService.show('Name is required', 'error', 3000);
             return;
         }
 
         // Validate the name is unique
-        if (this.budgetConfiguration!.categories.some(c => c.name.toLowerCase() === this.setCategoryForm.name.toLowerCase() && c.id !== this.setCategoryForm.id)) {
+        if (
+            this.budgetConfiguration!.categories.some(
+                (c) =>
+                    c.name.toLowerCase() ===
+                        this.setCategoryForm.name.toLowerCase() &&
+                    c.id !== this.setCategoryForm.id
+            )
+        ) {
             this.toastService.show('Name must be unique', 'error', 3000);
             return;
         }
 
         // Validate weekly target is filled
-        if (!this.setCategoryForm.weekly_target && this.setCategoryForm.weekly_target !== 0) {
+        if (
+            !this.setCategoryForm.weekly_target &&
+            this.setCategoryForm.weekly_target !== 0
+        ) {
             this.toastService.show('Weekly target is required', 'error', 3000);
             return;
         }
 
-
         if (this.setCategoryForm.id) {
-            this.budgetService.updateCategory(this.budgetConfiguration!.id, this.setCategoryForm.id!, this.setCategoryForm).subscribe({
-                next: (category: BudgetCategory) => {
-                    this.closeSetCategoryModal();
-                    this.budgetConfiguration!.categories = this.budgetConfiguration!.categories.map(c => c.id === category.id ? category : c);
-                    this.sortedCategories = this.sortedCategories!.map(c => c.id === category.id ? category : c);
-                },
-                error: (error) => {
-                    this.logger.error('Error updating category', error);
-                }
-            });
-        }
-        else {
-            this.budgetService.addCategory(this.budgetConfiguration!.id, this.setCategoryForm).subscribe({
-                next: (category: BudgetCategory) => {
-                    this.closeSetCategoryModal();
-                    this.budgetConfiguration!.categories.push(category);
-                    this.sortedCategories?.push(category);
-                },
-                error: (error) => {
-                    this.logger.error('Error adding category', error);
-                }
-            });
+            this.budgetService
+                .updateCategory(
+                    this.budgetConfiguration!.id,
+                    this.setCategoryForm.id!,
+                    this.setCategoryForm
+                )
+                .subscribe({
+                    next: (category: BudgetCategory) => {
+                        this.closeSetCategoryModal();
+                        this.budgetConfiguration!.categories =
+                            this.budgetConfiguration!.categories.map((c) =>
+                                c.id === category.id ? category : c
+                            );
+                        this.sortedCategories = this.sortedCategories!.map(
+                            (c) => (c.id === category.id ? category : c)
+                        );
+                    },
+                    error: (error) => {
+                        this.logger.error('Error updating category', error);
+                    },
+                });
+        } else {
+            this.budgetService
+                .addCategory(this.budgetConfiguration!.id, this.setCategoryForm)
+                .subscribe({
+                    next: (category: BudgetCategory) => {
+                        this.closeSetCategoryModal();
+                        this.budgetConfiguration!.categories.push(category);
+                        this.sortedCategories?.push(category);
+                    },
+                    error: (error) => {
+                        this.logger.error('Error adding category', error);
+                    },
+                });
         }
     }
 
     confirmDeleteCategory(categoryId: number): void {
-        const confirmed = confirm('Are you sure you want to delete this category?');
-        if (confirmed) {
-            this.deleteCategory(categoryId);
-        }
+        this.showDeleteCategoryModal = true;
+        this.deleteCategoryId = categoryId;
     }
 
-    deleteCategory(categoryId: number): void {
-        this.budgetService.deleteCategory(this.budgetConfiguration!.id, categoryId).subscribe({
-            next: () => {
-                this.budgetConfiguration = {
-                    ...this.budgetConfiguration!,
-                    categories: this.budgetConfiguration!.categories.filter(f => f.id !== categoryId)
-                };
-                this.sortedCategories = this.sortedCategories!.filter(f => f.id !== categoryId);
-            },
-            error: (error) => {
-                this.logger.error('Error deleting category', error);
-            }
-        });
+    closeDeleteCategoryModal(): void {
+        this.showDeleteCategoryModal = false;
+        this.deleteCategoryId = null;
+    }
+
+    deleteCategory(): void {
+        if (!this.deleteCategoryId) return;
+        this.budgetService
+            .deleteCategory(this.budgetConfiguration!.id, this.deleteCategoryId)
+            .subscribe({
+                next: () => {
+                    this.budgetConfiguration = {
+                        ...this.budgetConfiguration!,
+                        categories: this.budgetConfiguration!.categories.filter(
+                            (f) => f.id !== this.deleteCategoryId
+                        ),
+                    };
+                    this.sortedCategories = this.sortedCategories!.filter(
+                        (f) => f.id !== this.deleteCategoryId
+                    );
+                    this.closeDeleteCategoryModal();
+                },
+                error: (error) => {
+                    this.logger.error('Error deleting category', error);
+                },
+            });
     }
 
     onDragStart(category: BudgetCategory, index: number): void {
@@ -258,16 +318,24 @@ export class BudgetSettingsTabComponent {
 
         if (this.draggedCategory && this.budgetConfiguration) {
             // Save new order
-            this.budgetService.reorderCategories(this.budgetConfiguration.id, this.draggedCategory.id!, index + 1).subscribe({
-                next: (res) => {
-                    this.budgetConfiguration!.categories = res.categories;
-                    this.sortedCategories = [...res.categories].sort((a, b) => a.order - b.order);
-                },
-                error: (err) => {
-                    this.logger.error('Failed to reorder categories', err);
-                    this.revertDrag();
-                }
-            });
+            this.budgetService
+                .reorderCategories(
+                    this.budgetConfiguration.id,
+                    this.draggedCategory.id!,
+                    index + 1
+                )
+                .subscribe({
+                    next: (res) => {
+                        this.budgetConfiguration!.categories = res.categories;
+                        this.sortedCategories = [...res.categories].sort(
+                            (a, b) => a.order - b.order
+                        );
+                    },
+                    error: (err) => {
+                        this.logger.error('Failed to reorder categories', err);
+                        this.revertDrag();
+                    },
+                });
         }
 
         this.resetDrag();

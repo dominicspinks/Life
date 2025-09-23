@@ -17,6 +17,7 @@ import { ReferenceService } from '@core/services/reference.service';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { ionAdd, ionTrashBin, ionPencil, ionMenu } from '@ng-icons/ionicons';
 import { LoggerService } from '@core/services/logger.service';
+import { DeleteModalComponent } from '@layout/delete-modal/delete-modal/delete-modal.component';
 
 @Component({
     standalone: true,
@@ -28,6 +29,7 @@ import { LoggerService } from '@core/services/logger.service';
         FormsModule,
         NgIcon,
         RouterLink,
+        DeleteModalComponent,
     ],
     providers: [
         provideIcons({
@@ -74,6 +76,10 @@ export class EditListModuleComponent {
     @ViewChild('fieldNameInput') fieldNameInput!: ElementRef<HTMLInputElement>;
     @ViewChild('moduleNameInput')
     moduleNameInput!: ElementRef<HTMLInputElement>;
+
+    showDeleteModuleModal = false;
+    showDeleteFieldModal = false;
+    deleteFieldId: number | null = null;
 
     ngOnInit(): void {
         this.listService.getModule(this.moduleId).subscribe({
@@ -140,17 +146,17 @@ export class EditListModuleComponent {
     }
 
     confirmDeleteModule(): void {
-        const confirmed = confirm(
-            'Are you sure you want to delete this list? All data will be removed and cannot be restored.'
-        );
-        if (confirmed) {
-            this.deleteModule();
-        }
+        this.showDeleteModuleModal = true;
+    }
+
+    closeDeleteModuleModal(): void {
+        this.showDeleteModuleModal = false;
     }
 
     deleteModule(): void {
         this.moduleService.deleteModule(this.moduleId).subscribe({
             next: () => {
+                this.closeDeleteModuleModal();
                 this.router.navigate(['/modules']);
             },
             error: (error) => {
@@ -229,7 +235,9 @@ export class EditListModuleComponent {
     }
 
     get sortedFields() {
-        return this.moduleData?.list_fields.sort((a, b) => a.order - b.order) ?? [];
+        return (
+            this.moduleData?.list_fields.sort((a, b) => a.order - b.order) ?? []
+        );
     }
 
     get optionName() {
@@ -306,15 +314,18 @@ export class EditListModuleComponent {
     }
 
     confirmDeleteField(fieldId: number): void {
-        const confirmed = confirm(
-            'Are you sure you want to delete this field? All data saved to this field will be removed and cannot be restored.'
-        );
-        if (confirmed) {
-            this.deleteField(fieldId);
-        }
+        this.showDeleteFieldModal = true;
+        this.deleteFieldId = fieldId;
     }
 
-    deleteField(fieldId: number): void {
+    closeDeleteFieldModal(): void {
+        this.showDeleteFieldModal = false;
+        this.deleteFieldId = null;
+    }
+
+    deleteField(): void {
+        if (!this.deleteFieldId) return;
+        const fieldId = this.deleteFieldId;
         this.listService.deleteField(this.moduleId, fieldId).subscribe({
             next: () => {
                 this.moduleData = {
@@ -323,6 +334,7 @@ export class EditListModuleComponent {
                         (f) => f.id !== fieldId
                     ),
                 };
+                this.closeDeleteFieldModal();
             },
             error: (error) => {
                 this.logger.error('Error deleting field', error);

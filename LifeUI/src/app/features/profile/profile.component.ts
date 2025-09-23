@@ -2,12 +2,12 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
 import { ProfileService } from '@core/services/profile.service';
-import { ModalComponent } from '@layout/modal/modal.component';
+import { DeleteModalComponent } from '@layout/delete-modal/delete-modal/delete-modal.component';
 
 @Component({
     selector: 'app-profile',
     standalone: true,
-    imports: [ModalComponent],
+    imports: [DeleteModalComponent],
     templateUrl: './profile.component.html',
     styleUrl: './profile.component.css',
 })
@@ -42,7 +42,7 @@ export class ProfileComponent {
                     error: (err) => {
                         console.error('Error logging out:', err);
                         this.router.navigate(['/login']);
-                    }
+                    },
                 });
             },
             error: (err) => {

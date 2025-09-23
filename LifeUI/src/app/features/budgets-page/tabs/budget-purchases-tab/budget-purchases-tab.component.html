@@ -294,4 +294,7 @@
         </div>
     </app-modal>
 
+    <app-delete-modal [show]="showDeleteModal" [message]="'Are you sure you want to delete this purchase?'"
+        [title]="'Delete Purchase'" (onCancel)="closeDeleteModal()" (onDelete)="deletePurchase()" />
+
 </div>

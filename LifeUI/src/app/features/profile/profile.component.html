@@ -27,20 +27,7 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <app-modal [show]="showDeleteModal" (closed)="closeDeleteModal()" title="Delete Account">
-        <div modal-content>
-            <p class="text-sm text-gray-700">
-                Are you sure you want to delete your account? This action cannot be undone.
-            </p>
-        </div>
-
-        <div modal-actions class="flex justify-end gap-2">
-            <button (click)="closeDeleteModal()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-                Cancel
-            </button>
-            <button (click)="deleteAccount()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                Delete
-            </button>
-        </div>
-    </app-modal>
+    <app-delete-modal [show]="showDeleteModal"
+        [message]="'Are you sure you want to delete your account? This action cannot be undone.'"
+        [title]="'Delete Account'" (onCancel)="closeDeleteModal()" (onDelete)="deleteAccount()" />
 </div>

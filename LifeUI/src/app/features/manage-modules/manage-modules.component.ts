@@ -145,13 +145,18 @@ export class ManageModulesComponent implements OnInit {
         event.preventDefault();
 
         if (this.draggedModule) {
+            // Optimistic update
+            const originalData = [...this.modules];
+            const movedModule = this.modules.splice(this.dragStartIndex, 1)[0];
+            this.modules.splice(index, 0, movedModule);
+
             this.moduleService.reorderModule(this.draggedModule.id, index + 1).subscribe({
                 next: (res) => {
                     this.modules = res;
                 },
                 error: (err) => {
                     this.logger.error('Failed to reorder modules', err);
-                    this.revertDrag();
+                    this.modules = originalData;
                 }
             });
         }

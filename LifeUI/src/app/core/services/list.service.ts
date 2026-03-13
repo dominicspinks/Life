@@ -116,4 +116,11 @@ export class ListService {
             { new_order: newOrder }
         );
     }
+
+    reorderListItem(listId: number, itemId: number, newOrder: number): Observable<PaginatedResponse<ListItem>> {
+        return this.http.post<PaginatedResponse<ListItem>>(
+            `${this.apiUrl}/lists/data/${listId}/items/${itemId}/reorder/`,
+            { new_order: newOrder }
+        );
+    }
 }

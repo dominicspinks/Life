@@ -5,6 +5,7 @@ import {
     ionPencil,
     ionTrashBin,
     ionAdd,
+    ionMenu,
 } from '@ng-icons/ionicons';
 import { ListConfiguration, ListField, ListItem } from '@core/models/list.model';
 import { ListService } from '@core/services/list.service';
@@ -25,6 +26,7 @@ import { DeleteModalComponent } from '@layout/delete-modal/delete-modal/delete-m
         ionPencil,
         ionTrashBin,
         ionAdd,
+        ionMenu,
     })],
     templateUrl: './view-list-module.component.html'
 })
@@ -51,6 +53,10 @@ export class ViewListModuleComponent {
 
     showDeleteModal = false;
     deleteItemId: number | null = null;
+
+    draggedItem: ListItem | null = null;
+    dragStartIndex = -1;
+    dragTargetIndex = -1;
 
     @ViewChildren('inputField') inputFields!: QueryList<ElementRef>;
 
@@ -339,5 +345,58 @@ export class ViewListModuleComponent {
 
     isMoneyField(field: ListField): boolean {
         return field.rules.some(r => r.field_type_rule.rule === 'money');
+    }
+
+    onDragStart(item: ListItem, index: number): void {
+        this.draggedItem = item;
+        this.dragStartIndex = index;
+    }
+
+    onDragOver(event: DragEvent, index: number): void {
+        event.preventDefault();
+        this.dragTargetIndex = index;
+    }
+
+    onDrop(event: DragEvent, index: number): void {
+        event.preventDefault();
+
+        if (this.draggedItem && this.listData) {
+            // Optimistic update
+            const originalData = [...this.listData.results];
+            const movedItem = this.listData.results.splice(this.dragStartIndex, 1)[0];
+            this.listData.results.splice(index, 0, movedItem);
+
+            this.listService.reorderListItem(this.moduleId, this.draggedItem.id!, index + 1).subscribe({
+                next: (res) => {
+                    this.listData = res;
+                },
+                error: (error) => {
+                    this.logger.error('Error reordering list item', error);
+                    // Revert on error
+                    if (this.listData) {
+                        this.listData.results = originalData;
+                    }
+                }
+            });
+        }
+
+        this.resetDrag();
+    }
+
+    onDragEnd(): void {
+        // If dragTargetIndex is still -1 it means we didn't drop it on a valid target.
+        // We shouldn't revert here because drop handle optimistic vs server sync.
+        this.resetDrag();
+    }
+
+    resetDrag(): void {
+        this.draggedItem = null;
+        this.dragStartIndex = -1;
+        this.dragTargetIndex = -1;
+    }
+
+    revertDrag(): void {
+        // Just reload the current page if drag was cancelled or failed
+        this.reloadCurrentPage();
     }
 }

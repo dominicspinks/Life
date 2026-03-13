@@ -269,7 +269,49 @@ class ListItemViewSet(viewsets.ModelViewSet):
             id=list_id
         )
 
-        return ListItem.objects.filter(user_module=user_module).order_by('-modified_at')
+        return ListItem.objects.filter(user_module=user_module).order_by('order', '-modified_at')
+
+    @action(detail=True, methods=['post'], url_path='reorder')
+    def reorder(self, request, list_id=None, id=None):
+        """
+        Reorder a list item by moving it to a new position.
+        Expects {"new_order": <int>} in the body.
+        """
+        new_order = request.data.get('new_order')
+        if new_order is None:
+            return Response({'detail': 'new_order is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            new_order = int(new_order)
+        except ValueError:
+            return Response({'detail': 'Invalid order value.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_module = get_object_or_404(UserModule, id=list_id, user=self.request.user)
+        item = get_object_or_404(ListItem, id=id, user_module=user_module)
+
+        items = list(ListItem.objects.filter(user_module=user_module).order_by('order', '-modified_at'))
+
+        original_order = item.order
+        if original_order != new_order:
+            moved_item = None
+            for idx, i in enumerate(items):
+                if i.id == item.id:
+                    moved_item = items.pop(idx)
+                    break
+            
+            if moved_item:
+                insert_index = max(0, new_order - 1)
+                items.insert(insert_index, moved_item)
+
+                with transaction.atomic():
+                    for idx, i in enumerate(items):
+                        i.order = idx + 1
+                    ListItem.objects.bulk_update(items, ['order'])
+
+        # Return the updated page of list items, ideally just returning success to refetch
+        page = self.paginate_queryset(self.get_queryset())
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
     def perform_create(self, serializer):
         list_id = self.kwargs.get('list_id')

@@ -37,4 +37,10 @@ export class ModuleService {
     deleteModule(moduleId: number): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/modules/user-modules/${moduleId}/`);
     }
+
+    reorderModule(moduleId: number, newOrder: number): Observable<UserModule[]> {
+        return this.http.post<UserModule[]>(`${this.apiUrl}/modules/user-modules/${moduleId}/reorder/`, {
+            new_order: newOrder
+        });
+    }
 }

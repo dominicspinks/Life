@@ -17,7 +17,6 @@
     <div class="bg-white shadow rounded p-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><strong>Name:</strong> {{ moduleData?.name }}</div>
-            <div><strong>Order:</strong> {{ moduleData?.order }}</div>
             <div><strong>Enabled:</strong> {{ moduleData?.is_enabled ? 'Yes' : 'No' }}</div>
             <div><strong>Read Only:</strong> {{ moduleData?.is_read_only ? 'Yes' : 'No' }}</div>
             <div><strong>Checklist:</strong> {{ moduleData?.is_checkable ? 'Yes' : 'No' }}</div>
@@ -102,11 +101,6 @@
             <!-- Module Name -->
             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <input #moduleNameInput [(ngModel)]="editDetailsForm.name" [ngModelOptions]="{standalone: true}" type="text"
-                class="w-full mb-4 border rounded px-3 py-2" />
-
-            <!-- Order -->
-            <label class="block text-sm font-medium text-gray-700 mb-1">Order</label>
-            <input [(ngModel)]="editDetailsForm.order" [ngModelOptions]="{standalone: true}" type="number" min="0"
                 class="w-full mb-4 border rounded px-3 py-2" />
 
             <!-- Enabled -->

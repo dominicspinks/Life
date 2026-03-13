@@ -5,6 +5,7 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
     ionEye,
     ionPencil,
+    ionMenu,
 } from '@ng-icons/ionicons';
 import { LoggerService } from '@core/services/logger.service';
 import { ModuleService } from '@core/services/module.service';
@@ -17,7 +18,7 @@ import { ModalComponent } from "@layout/modal/modal.component";
     standalone: true,
     imports: [ModalComponent, FormsModule, NgIcon],
     templateUrl: './manage-modules.component.html',
-    providers: [provideIcons({ ionEye, ionPencil })]
+    providers: [provideIcons({ ionEye, ionPencil, ionMenu })]
 })
 export class ManageModulesComponent implements OnInit {
     private moduleService = inject(ModuleService);
@@ -33,6 +34,10 @@ export class ManageModulesComponent implements OnInit {
     newModuleName = '';
     isCheckable = false;
     listTypeId: number | null = null;
+
+    draggedModule: UserModule | null = null;
+    dragStartIndex = -1;
+    dragTargetIndex = -1;
 
     getDefaultModuleTypeId(types: ModuleType[]): number {
         // Default type is 'list'
@@ -124,5 +129,53 @@ export class ManageModulesComponent implements OnInit {
         } else if (this.modules.find(m => m.id === moduleId)?.module_name === 'budget') {
             return;
         }
+    }
+
+    onDragStart(module: UserModule, index: number): void {
+        this.draggedModule = module;
+        this.dragStartIndex = index;
+    }
+
+    onDragOver(event: DragEvent, index: number): void {
+        event.preventDefault();
+        this.dragTargetIndex = index;
+    }
+
+    onDrop(event: DragEvent, index: number): void {
+        event.preventDefault();
+
+        if (this.draggedModule) {
+            this.moduleService.reorderModule(this.draggedModule.id, index + 1).subscribe({
+                next: (res) => {
+                    this.modules = res;
+                },
+                error: (err) => {
+                    this.logger.error('Failed to reorder modules', err);
+                    this.revertDrag();
+                }
+            });
+        }
+
+        this.resetDrag();
+    }
+
+    onDragEnd(): void {
+        if (this.dragTargetIndex === -1) {
+            this.revertDrag();
+        }
+        this.resetDrag();
+    }
+
+    resetDrag(): void {
+        this.draggedModule = null;
+        this.dragStartIndex = -1;
+        this.dragTargetIndex = -1;
+    }
+
+    revertDrag(): void {
+        this.moduleService.getUserModules(true).subscribe({
+            next: (res) => this.modules = res.results,
+            error: (err) => this.logger.error('Failed to load modules', err)
+        });
     }
 }

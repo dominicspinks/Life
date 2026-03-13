@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 
 from api.serializers.serializers_lists import ListConfigurationSerializer, ListFieldReorderSerializer, ListFieldSerializer, ListItemSerializer, ListDataSerializer
 from api.models import UserModule, ListField, ListFieldRule, ListFieldOption, ListItem
+from api.views.mixins import UserModuleAuthorizationMixin
 from api.pagination import Unpaginatable
 
 class ListConfigurationViewSet(viewsets.ModelViewSet):
@@ -249,7 +250,7 @@ class ListDataViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return UserModule.objects.filter(user=self.request.user, module__name='list')
 
-class ListItemViewSet(viewsets.ModelViewSet):
+class ListItemViewSet(UserModuleAuthorizationMixin, viewsets.ModelViewSet):
     """
     API endpoint for CRUD operations on list items
     """
@@ -257,18 +258,13 @@ class ListItemViewSet(viewsets.ModelViewSet):
     serializer_class = ListItemSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = Unpaginatable
+    user_module_kwarg = 'list_id'
 
     lookup_field = 'id'
     lookup_value_regex = r'\d+'
 
     def get_queryset(self):
-        list_id = self.kwargs.get('list_id')
-
-        user_module = get_object_or_404(
-            UserModule.objects.filter(user=self.request.user),
-            id=list_id
-        )
-
+        user_module = self.get_user_module()
         return ListItem.objects.filter(user_module=user_module).order_by('order', '-modified_at')
 
     @action(detail=True, methods=['post'], url_path='reorder')
@@ -286,7 +282,7 @@ class ListItemViewSet(viewsets.ModelViewSet):
         except ValueError:
             return Response({'detail': 'Invalid order value.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        user_module = get_object_or_404(UserModule, id=list_id, user=self.request.user)
+        user_module = self.get_user_module()
         item = get_object_or_404(ListItem, id=id, user_module=user_module)
 
         items = list(ListItem.objects.filter(user_module=user_module).order_by('order', '-modified_at'))
@@ -315,7 +311,7 @@ class ListItemViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         list_id = self.kwargs.get('list_id')
-        user_module = UserModule.objects.get(id=list_id, user=self.request.user)
+        user_module = self.get_user_module()
         # Validate field IDs before saving
         field_values = self.request.data.get('field_values', [])
         self._validate_field_values(field_values, list_id)

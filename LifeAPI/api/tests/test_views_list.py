@@ -560,6 +560,15 @@ class ListDataViewSetTests(APITestCase):
         self.assertEqual(len(response.data['list_fields']), 1)
         self.assertEqual(len(response.data['list_items']), 2)
 
+    def test_user_cannot_access_other_list_data(self):
+        self.client.force_authenticate(user=self.user)
+        other_user = User.objects.create_user(email='other@example.com', password='password456')
+        other_list = UserModule.objects.create(user=other_user, module=self.list_module_type, name='Other List', order=1, is_enabled=True)
+        
+        detail_url = reverse('data-detail', args=[other_list.id])
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_get_list_data_with_get_all(self):
         """Test retrieving list data with get_all=true returns raw list"""
         self.client.force_authenticate(user=self.user)

@@ -4,14 +4,20 @@ import {
     HostListener,
     inject,
     ViewChild,
+    OnInit,
+    OnDestroy,
+    AfterViewChecked
 } from '@angular/core';
 import {
     BudgetConfiguration,
     BudgetDescriptionCategoryRequest,
     BudgetPurchase,
 } from '@core/models/budget.model';
+import { PaginatedResponse } from '@core/models/pagination.model';
 import { BudgetService } from '@core/services/budget.service';
 import { LoggerService } from '@core/services/logger.service';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
     ionAdd,
@@ -19,6 +25,7 @@ import {
     ionPencil,
     ionTrashBin,
     ionSearch,
+    ionFilter,
 } from '@ng-icons/ionicons';
 import { CommonModule } from '@angular/common';
 import { ToastService } from '@shared/ui/toast/toast.service';
@@ -46,12 +53,13 @@ import { DeleteModalComponent } from '@layout/delete-modal/delete-modal/delete-m
             ionPencil,
             ionTrashBin,
             ionSearch,
+            ionFilter
         }),
     ],
     templateUrl: './budget-purchases-tab.component.html',
     styleUrl: './budget-purchases-tab.component.css',
 })
-export class BudgetPurchasesTabComponent {
+export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterViewChecked {
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     private budgetService = inject(BudgetService);
@@ -66,7 +74,23 @@ export class BudgetPurchasesTabComponent {
 
     showAddMenu = false;
 
+    // Filters and Pagination
+    availableYears: number[] = [];
+    selectedYear?: number;
+    currentPage = 1;
+    hasMore = true;
+    isLoadingMore = false;
+    private needsScrollCheck = false;
+
+    searchQuery = '';
+    searchSubject = new Subject<string>();
+
+    showCategoryFilter = false;
+    selectedCategories = new Set<number>();
+    categorySubject = new Subject<void>();
+
     @ViewChild('menuWrapper') menuWrapper!: ElementRef;
+    @ViewChild('categoryFilterWrapper') categoryFilterWrapper!: ElementRef;
 
     toggleMenu(event: MouseEvent) {
         event.stopPropagation();
@@ -80,6 +104,9 @@ export class BudgetPurchasesTabComponent {
             !this.menuWrapper.nativeElement.contains(event.target)
         ) {
             this.showAddMenu = false;
+        }
+        if (this.showCategoryFilter && this.categoryFilterWrapper && !this.categoryFilterWrapper.nativeElement.contains(event.target)) {
+            this.showCategoryFilter = false;
         }
     }
 
@@ -109,42 +136,178 @@ export class BudgetPurchasesTabComponent {
 
     ngOnInit(): void {
         this.isLoading = true;
+
+        // Set up search debouncing
+        this.searchSubject.pipe(
+            debounceTime(500),
+            distinctUntilChanged()
+        ).subscribe(query => {
+            this.searchQuery = query;
+            this.loadPurchases(true);
+        });
+
+        // Set up category debouncing
+        this.categorySubject.pipe(
+            debounceTime(500)
+        ).subscribe(() => {
+            this.loadPurchases(true);
+        });
+
         // Get budget details from API
         this.budgetService.getBudgetConfiguration(this.budgetId).subscribe({
             next: (res) => {
                 this.budgetConfiguration = res;
-                this.isLoading = false;
+                this.budgetConfiguration.categories.filter(c => c.is_enabled).forEach(c => {
+                    this.selectedCategories.add(c.id!);
+                });
+
+                this.budgetService.getBudgetYears(this.budgetId).subscribe({
+                    next: (years) => {
+                        this.availableYears = years.sort((a,b) => b - a);
+                        const currentYear = new Date().getFullYear();
+                        if (!this.availableYears.includes(currentYear)) {
+                            this.availableYears.unshift(currentYear);
+                        }
+
+                        const savedYear = this.budgetService.getSelectedYear(this.budgetId);
+                        this.selectedYear = savedYear ? savedYear : currentYear;
+
+                        this.loadPurchases(true);
+                    },
+                    error: (error) => {
+                        this.logger.error('Error fetching budget years', error);
+                        // Fallback to basic load
+                        this.loadPurchases(true);
+                    }
+                });
             },
             error: (error) => {
                 this.isLoading = false;
                 this.logger.error('Error fetching budget details', error);
-                this.toastService.show(
-                    'Error fetching budget details',
-                    'error',
-                    3000
-                );
+                this.toastService.show('Error fetching budget details', 'error', 3000);
                 this.router.navigate(['/modules']);
             },
         });
+    }
 
-        // Get purchase history from API
-        this.budgetService
-            .getPurchases(this.budgetId, { get_all: true })
-            .subscribe({
-                next: (res) => {
-                    this.purchases = res;
-                    this.isLoading = false;
-                },
-                error: (error) => {
-                    this.logger.error('Error fetching budget purchases', error);
-                    this.toastService.show(
-                        'Error fetching budget purchases',
-                        'error',
-                        3000
-                    );
-                    this.isLoading = false;
-                },
-            });
+    ngOnDestroy(): void {
+        this.searchSubject.complete();
+        this.categorySubject.complete();
+    }
+
+    ngAfterViewChecked(): void {
+        if (this.needsScrollCheck && !this.isLoading && !this.isLoadingMore && this.hasMore) {
+            this.needsScrollCheck = false;
+            // Use setTimeout to wait for the view to fully render the new rows
+            setTimeout(() => {
+                const docElement = document.documentElement;
+                const hasScrollbar = docElement.scrollHeight > docElement.clientHeight;
+
+                // If there's no vertical scrollbar, auto-fetch the next page to fill the screen
+                if (!hasScrollbar && this.hasMore && !this.isLoadingMore) {
+                    this.currentPage++;
+                    this.loadPurchases(false);
+                }
+            }, 50);
+        }
+    }
+
+    onSearchChange(query: string) {
+        this.searchSubject.next(query);
+    }
+
+    toggleCategoryFilter(event: MouseEvent) {
+        event.stopPropagation();
+        this.showCategoryFilter = !this.showCategoryFilter;
+    }
+
+    onCategoryToggle(categoryId: number) {
+        if (this.selectedCategories.has(categoryId)) {
+            this.selectedCategories.delete(categoryId);
+        } else {
+            this.selectedCategories.add(categoryId);
+        }
+        this.categorySubject.next();
+    }
+
+    get allCategoriesSelected(): boolean {
+        const enabledCount = this.budgetConfiguration?.categories.filter(c => c.is_enabled).length || 0;
+        return this.selectedCategories.size === enabledCount;
+    }
+
+    toggleAllCategories() {
+        if (this.allCategoriesSelected) {
+            this.selectedCategories.clear();
+        } else {
+            const enabledCategories = this.budgetConfiguration?.categories.filter(c => c.is_enabled) || [];
+            enabledCategories.forEach(c => this.selectedCategories.add(c.id!));
+        }
+        this.categorySubject.next();
+    }
+
+    onYearChange(year: string) {
+        this.selectedYear = parseInt(year, 10);
+        this.budgetService.setSelectedYear(this.budgetId, this.selectedYear);
+        this.loadPurchases(true);
+    }
+
+    loadPurchases(reset = false) {
+        if (reset) {
+            this.currentPage = 1;
+            this.hasMore = true;
+            this.purchases = [];
+            this.isLoading = true;
+        } else {
+            this.isLoadingMore = true;
+        }
+
+        if (!this.hasMore && !reset) {
+            this.isLoadingMore = false;
+            return;
+        }
+
+        const enabledCatsCount = this.budgetConfiguration?.categories.filter(c => c.is_enabled).length || 0;
+        const sendCategories = this.selectedCategories.size > 0 && this.selectedCategories.size < enabledCatsCount;
+
+        this.budgetService.getPurchases(this.budgetId, {
+            page: this.currentPage,
+            purchase_date__year: this.selectedYear,
+            description: this.searchQuery || undefined,
+            category: sendCategories ? Array.from(this.selectedCategories) : undefined,
+        }).subscribe({
+            next: (res) => {
+                const paginated = res as PaginatedResponse<BudgetPurchase>;
+                if (reset) {
+                    this.purchases = paginated.results;
+                } else {
+                    this.purchases.push(...paginated.results);
+                }
+                this.hasMore = !!paginated.next;
+                this.isLoading = false;
+                this.isLoadingMore = false;
+
+                // Trigger a scrollbar check after view updates
+                this.needsScrollCheck = true;
+            },
+            error: (error) => {
+                this.logger.error('Error fetching budget purchases', error);
+                this.toastService.show('Error fetching budget purchases', 'error', 3000);
+                this.isLoading = false;
+                this.isLoadingMore = false;
+            }
+        });
+    }
+
+    @HostListener('window:scroll', ['$event'])
+    onWindowScroll() {
+        if (this.isLoading || this.isLoadingMore || !this.hasMore) return;
+
+        const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
+        const max = document.documentElement.scrollHeight;
+        if (pos > max - 200) {
+            this.currentPage++;
+            this.loadPurchases(false);
+        }
     }
 
     onAddOption(option: 'single' | 'bulk' | 'import') {
@@ -225,11 +388,6 @@ export class BudgetPurchasesTabComponent {
                         this.purchases = this.purchases.map((p) =>
                             p.id === res.id ? res : p
                         );
-                        this.purchases.sort(
-                            (a, b) =>
-                                b.purchase_date.getTime() -
-                                a.purchase_date.getTime()
-                        );
                         this.closeSetPurchaseModal();
                     },
                     error: (error) => {
@@ -246,12 +404,7 @@ export class BudgetPurchasesTabComponent {
                 .addPurchase(this.budgetConfiguration!.id, this.setPurchaseForm)
                 .subscribe({
                     next: (res) => {
-                        this.purchases.push(res);
-                        this.purchases.sort(
-                            (a, b) =>
-                                b.purchase_date.getTime() -
-                                a.purchase_date.getTime()
-                        );
+                        this.loadPurchases(true);
                         this.closeSetPurchaseModal();
                     },
                     error: (error) => {
@@ -282,9 +435,7 @@ export class BudgetPurchasesTabComponent {
             .deletePurchase(this.budgetConfiguration!.id, this.deletePurchaseId)
             .subscribe({
                 next: () => {
-                    this.purchases = this.purchases.filter(
-                        (f) => f.id !== this.deletePurchaseId
-                    );
+                    this.loadPurchases(true);
                     this.closeDeleteModal();
                 },
                 error: (error) => {
@@ -570,7 +721,7 @@ export class BudgetPurchasesTabComponent {
                         'success',
                         3000
                     );
-                    this.purchases.push(...res);
+                    this.loadPurchases(true);
                     this.isBulkImportModalOpen = false;
                 },
                 error: (error) => {

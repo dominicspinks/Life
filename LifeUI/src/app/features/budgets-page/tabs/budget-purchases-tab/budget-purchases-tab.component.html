@@ -1,7 +1,14 @@
-<div class="max-w-7xl mx-auto px-2 py-2 sm:py-0 min-h-[200px]">
+<div class="max-w-7xl mx-auto px-2 py-2 sm:py-0 min-h-[400px] pb-32">
     <!-- Title -->
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">{{ budgetConfiguration?.name }}</h1>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <h1 class="text-2xl font-bold text-gray-800">{{ budgetConfiguration?.name }}</h1>
+            <select [ngModel]="selectedYear" (ngModelChange)="onYearChange($event)" class="border rounded shadow-sm px-2 py-1 text-sm bg-white font-semibold text-gray-700 cursor-pointer w-fit focus:outline-none focus:ring-1 focus:ring-blue-500">
+                @for (year of availableYears; track $index) {
+                <option [value]="year">{{ year }}</option>
+                }
+            </select>
+        </div>
         <div class="relative inline-block text-left" #menuWrapper>
             <button
                 class="text-blue-800 hover:text-blue-900 hover:scale-125 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -27,21 +34,59 @@
     </div>
 
     <!-- Table -->
-    <div class="overflow-x-auto bg-white shadow rounded-lg">
+    <div class="bg-white shadow rounded-lg mb-8">
         <table class="min-w-full table-auto hidden sm:table">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Category
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider relative">
+                        <div class="flex items-center gap-1 relative" #categoryFilterWrapper>
+                            Category
+                            <button (click)="toggleCategoryFilter($event)" [class.text-blue-600]="!allCategoriesSelected" class="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors">
+                                <ng-icon name="ionFilter" size="14" />
+                            </button>
+                        
+                            @if (showCategoryFilter) {
+                            <div class="absolute left-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[60] p-2 normal-case font-normal">
+                                <div class="flex items-center mb-2 pb-2 border-b">
+                                    <input type="checkbox" id="selectAllCats" class="mr-2 cursor-pointer w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                        [checked]="allCategoriesSelected"
+                                        (change)="toggleAllCategories()">
+                                    <label for="selectAllCats" class="text-sm text-gray-700 font-medium cursor-pointer w-full">Select All</label>
+                                </div>
+                                <div class="max-h-60 overflow-y-auto space-y-1">
+                                    @for (cat of budgetConfiguration?.categories; track cat.id) {
+                                        @if (cat.is_enabled) {
+                                        <div class="flex items-center py-1 rounded hover:bg-gray-50 px-1">
+                                            <input type="checkbox" [id]="'cat_' + cat.id" class="mr-2 cursor-pointer w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                                [checked]="selectedCategories.has(cat.id!)"
+                                                (change)="onCategoryToggle(cat.id!)">
+                                            <label [for]="'cat_' + cat.id" class="text-sm text-gray-700 truncate cursor-pointer w-full select-none" [title]="cat.name">{{ cat.name }}</label>
+                                        </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                            }
+                        </div>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Amount
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-60">
-                        Description
+                        <div class="flex items-center gap-2">
+                            Description
+                            <div class="relative flex items-center">
+                                <ng-icon name="ionSearch" size="14" class="absolute left-2 text-gray-400 pointer-events-none" />
+                                <input type="text"
+                                    [ngModel]="searchQuery"
+                                    (ngModelChange)="onSearchChange($event)"
+                                    class="pl-7 pr-2 py-1 w-32 md:w-48 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal normal-case text-gray-800 shadow-sm transition-shadow"
+                                    placeholder="Search..." />
+                            </div>
+                        </div>
                     </th>
                     <th></th>
                 </tr>
@@ -87,6 +132,22 @@
                 }}
             </tbody>
         </table>
+        
+        @if (isLoadingMore) {
+        <div class="flex justify-center p-4 bg-white border-t border-gray-200">
+            <app-spinning-icon colour="text-blue-600" size="h-6 w-6" />
+        </div>
+        }
+        @if (!hasMore && purchases.length > 0) {
+        <div class="text-center text-sm text-gray-500 p-4 bg-white border-t border-gray-200 font-medium">
+            No more purchases to load.
+        </div>
+        }
+        @if (!isLoading && purchases.length === 0) {
+        <div class="text-center text-sm text-gray-500 p-8 bg-white border-t border-gray-200">
+            No purchases found.
+        </div>
+        }
     </div>
 
     <!-- Mobile stacked purchases view -->
@@ -129,6 +190,22 @@
             </div>
         </div>
         }
+        }
+        
+        @if (isLoadingMore) {
+        <div class="flex justify-center p-4">
+            <app-spinning-icon colour="text-blue-600" size="h-6 w-6" />
+        </div>
+        }
+        @if (!hasMore && purchases.length > 0) {
+        <div class="text-center text-sm text-gray-500 p-4 font-medium">
+            No more purchases to load.
+        </div>
+        }
+        @if (!isLoading && purchases.length === 0) {
+        <div class="text-center text-sm text-gray-500 p-8 bg-white rounded-lg shadow-sm border border-gray-200">
+            No purchases found.
+        </div>
         }
     </div>
 

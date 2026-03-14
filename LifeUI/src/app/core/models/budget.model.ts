@@ -28,9 +28,12 @@ export interface BudgetPurchase {
 }
 
 export interface BudgetFilter {
-    get_all?: boolean,
-    ordering?: ('purchase_date' | 'amount' | 'category__name')[],
-    category?: number[]
+    get_all?: boolean;
+    ordering?: ('purchase_date' | 'amount' | 'category__name')[];
+    category?: number[];
+    page?: number;
+    description?: string;
+    purchase_date__year?: number;
 }
 
 export interface BudgetPurchaseSummary {

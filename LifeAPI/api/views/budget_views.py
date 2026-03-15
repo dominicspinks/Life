@@ -19,7 +19,8 @@ from api.serializers.serializers_budgets import (
     BudgetPurchaseSummarySerializer,
     BudgetCashFlowSerializer,
     BudgetPurchaseAnalyseInputSerializer,
-    BudgetPurchaseAnalyseOutputSerializer
+    BudgetPurchaseAnalyseOutputSerializer,
+    BudgetBulkImportMappingSerializer
 )
 from api.models import (
     BudgetCategory,
@@ -27,6 +28,7 @@ from api.models import (
     UserModule,
     BudgetCashFlow,
     BudgetCategoryTermFrequency,
+    BudgetBulkImportMapping
 )
 from api.views.mixins import UserModuleAuthorizationMixin
 from api.pagination import Unpaginatable
@@ -326,3 +328,29 @@ class BudgetPurchaseAnalyseViewSet(UserModuleAuthorizationMixin, viewsets.ViewSe
             })
 
         return Response(BudgetPurchaseAnalyseOutputSerializer(results, many=True).data)
+
+class BudgetBulkImportMappingViewSet(UserModuleAuthorizationMixin, viewsets.ModelViewSet):
+    """
+    API endpoint for CRUD operations on budget bulk import mappings
+    """
+    queryset = BudgetBulkImportMapping.objects.none()
+    serializer_class = BudgetBulkImportMappingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+    user_module_kwarg = 'budget_id'
+
+    lookup_field = 'id'
+    lookup_value_regex = r'\d+'
+
+    def get_queryset(self):
+        user_module = self.get_user_module()
+        return BudgetBulkImportMapping.objects.filter(user_module=user_module)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user_module'] = self.get_user_module()
+        return context
+
+    def perform_create(self, serializer):
+        serializer.save(user_module=self.get_serializer_context()['user_module'])
+

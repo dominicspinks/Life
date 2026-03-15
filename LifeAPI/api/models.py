@@ -177,3 +177,13 @@ class BudgetCategoryTermFrequency(models.Model):
 
     def __str__(self):
         return self.term
+
+class BudgetBulkImportMapping(models.Model):
+    user_module = models.ForeignKey(UserModule, on_delete=models.CASCADE)
+    headers = models.JSONField(default=list)
+    mapping = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user_module.name} - {str(self.headers)}"

@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
 import { environment } from '@environments/environment';
-import { BudgetCashFlow, BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetDescriptionCategoryRequest, BudgetDescriptionCategoryResponse, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '@core/models/budget.model';
+import { map, Observable } from 'rxjs';
+import { BudgetBulkImportMapping, BudgetCashFlow, BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetDescriptionCategoryRequest, BudgetDescriptionCategoryResponse, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '@core/models/budget.model';
 import { PaginatedResponse } from '@core/models/pagination.model';
+
 
 @Injectable({
     providedIn: 'root'
@@ -158,4 +159,11 @@ export class BudgetService {
         return this.http.post<BudgetDescriptionCategoryResponse[]>(`${this.apiUrl}/budgets/${budgetId}/purchases/analyse/`, descriptions);
     }
 
+    getBulkImportMappings(budgetId: number): Observable<BudgetBulkImportMapping[]> {
+        return this.http.get<BudgetBulkImportMapping[]>(`${this.apiUrl}/budgets/${budgetId}/purchases/mappings/`);
+    }
+
+    saveBulkImportMapping(budgetId: number, mapping: BudgetBulkImportMapping): Observable<BudgetBulkImportMapping> {
+        return this.http.post<BudgetBulkImportMapping>(`${this.apiUrl}/budgets/${budgetId}/purchases/mappings/`, mapping);
+    }
 }

@@ -16,7 +16,7 @@ import {
 import { PaginatedResponse } from '@core/models/pagination.model';
 import { BudgetService } from '@core/services/budget.service';
 import { LoggerService } from '@core/services/logger.service';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
@@ -81,6 +81,7 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
     hasMore = true;
     isLoadingMore = false;
     private needsScrollCheck = false;
+    private purchaseSubscription?: Subscription;
 
     searchQuery = '';
     searchSubject = new Subject<string>();
@@ -122,14 +123,21 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
 
     // Bulk add purchases
     isBulkImportModalOpen = false;
+    bulkImportStep: 1 | 2 | 3 = 1;
     bulkRawInput = '';
     bulkParsedHeaders: string[] = [];
     bulkFieldMapping: (keyof BudgetPurchase | '')[] = [];
     bulkPreviewRows: { values: string[]; category: number | null }[] = [];
-    bulkInvertPrice = false;
     isParsing = false;
-
+    isSavingBulkImport = false;
     isSearchingCategories = false;
+
+    readonly bulkImportFields: { key: keyof BudgetPurchase; label: string }[] = [
+        { key: 'purchase_date', label: 'Date' },
+        { key: 'amount', label: 'Amount' },
+        { key: 'description', label: 'Description' },
+        { key: 'category', label: 'Category' },
+    ];
 
     showDeleteModal = false;
     deletePurchaseId: number | null = null;
@@ -193,6 +201,7 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
     ngOnDestroy(): void {
         this.searchSubject.complete();
         this.categorySubject.complete();
+        this.purchaseSubscription?.unsubscribe();
     }
 
     ngAfterViewChecked(): void {
@@ -257,7 +266,9 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
             this.hasMore = true;
             this.purchases = [];
             this.isLoading = true;
+            this.purchaseSubscription?.unsubscribe();
         } else {
+            if (this.isLoadingMore || this.isLoading || !this.hasMore) return;
             this.isLoadingMore = true;
         }
 
@@ -269,7 +280,7 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
         const enabledCatsCount = this.budgetConfiguration?.categories.filter(c => c.is_enabled).length || 0;
         const sendCategories = this.selectedCategories.size > 0 && this.selectedCategories.size < enabledCatsCount;
 
-        this.budgetService.getPurchases(this.budgetId, {
+        this.purchaseSubscription = this.budgetService.getPurchases(this.budgetId, {
             page: this.currentPage,
             purchase_date__year: this.selectedYear,
             description: this.searchQuery || undefined,
@@ -277,11 +288,16 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
         }).subscribe({
             next: (res) => {
                 const paginated = res as PaginatedResponse<BudgetPurchase>;
+
                 if (reset) {
                     this.purchases = paginated.results;
                 } else {
-                    this.purchases.push(...paginated.results);
+                    // Prevent pushing duplicates if already loaded
+                    const existingIds = new Set(this.purchases.map(p => p.id));
+                    const newRows = paginated.results.filter(p => !existingIds.has(p.id));
+                    this.purchases.push(...newRows);
                 }
+
                 this.hasMore = !!paginated.next;
                 this.isLoading = false;
                 this.isLoadingMore = false;
@@ -321,11 +337,11 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
 
     openBulkPurchaseModal() {
         this.isBulkImportModalOpen = true;
+        this.bulkImportStep = 1;
         this.bulkRawInput = '';
         this.bulkParsedHeaders = [];
         this.bulkFieldMapping = [];
         this.bulkPreviewRows = [];
-        this.bulkInvertPrice = false;
     }
 
     openImportModal() {
@@ -463,6 +479,18 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
         const dataRows = hasHeader ? rows.slice(1) : rows;
         this.bulkParsedHeaders = rows[0];
 
+        // Clean up data rows (remove + signs, handle decimals, remove quotes)
+        const cleanedDataRows = dataRows.map(row =>
+            row.map(val => {
+                let s = val.trim();
+                // Remove surrounding quotes
+                s = s.replace(/^["'](.*)["']$/, '$1');
+                // Remove leading plus
+                if (s.startsWith('+')) s = s.substring(1);
+                return s;
+            })
+        );
+
         // Try to auto-detect field mapping
         this.bulkFieldMapping = this.bulkParsedHeaders.map((header) => {
             const lower = header.toLowerCase();
@@ -488,19 +516,162 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
             return '';
         });
 
-        this.bulkPreviewRows = dataRows.map((row) => ({
-            values: row.map((val) => val.trim()),
+        this.bulkPreviewRows = cleanedDataRows.map((row) => ({
+            values: row,
             category: null,
         }));
 
+        // Auto-detect if we should invert prices (if most amounts are negative)
+        const amountIndex = this.bulkFieldMapping.indexOf('amount');
+        if (amountIndex !== -1) {
+            let negativeCount = 0;
+            let positiveCount = 0;
+            this.bulkPreviewRows.forEach((row) => {
+                const val = parseFloat(row.values[amountIndex].replace(/[\$,]/g, ''));
+                if (!isNaN(val)) {
+                    if (val < 0) negativeCount++;
+                    else if (val > 0) positiveCount++;
+                }
+            });
+
+            if (negativeCount > positiveCount) {
+                this.invertBulkPrices();
+            }
+        }
+
         this.isParsing = false;
+
+        // Move to step 2 automatically if there is parsed data
+        if (this.bulkParsedHeaders.length > 0) {
+            this.goToBulkStep(2);
+        }
+    }
+
+    goToBulkStep(step: number) {
+        if (step < 1 || step > 3) return;
+        const bulkStep = step as 1 | 2 | 3;
+
+        if (bulkStep === 2) {
+            // Check history for a match on headers
+            if (this.bulkParsedHeaders.length > 0) {
+                 this.budgetService.getBulkImportMappings(this.budgetConfiguration!.id).subscribe({
+                    next: (mappings) => {
+                        const match = mappings.find(m => JSON.stringify(m.headers) === JSON.stringify(this.bulkParsedHeaders));
+                        if(match) {
+                            // ensure mapping length matches headers
+                            if (match.mapping.length === this.bulkParsedHeaders.length) {
+                                this.bulkFieldMapping = match.mapping as (keyof BudgetPurchase | '')[];
+                            }
+                        }
+                    }
+                 });
+            }
+        } else if (step === 3) {
+            // Ensure no duplicate mappings
+            const counts: Record<string, number> = {};
+            for(const m of this.bulkFieldMapping) {
+                if(m === '') continue;
+                counts[m] = (counts[m] || 0) + 1;
+                if(counts[m] > 1) {
+                    this.toastService.show(`Field "${m}" can only be mapped once.`, 'error', 3000);
+                    return;
+                }
+            }
+
+            // Auto predict categories for step 3 if not fully matched via column
+            const mappedCatIndex = this.bulkFieldMapping.indexOf('category' as keyof BudgetPurchase);
+
+            if (mappedCatIndex !== -1) {
+                // We have a category column, try exact matches
+                this.bulkPreviewRows.forEach((row: { values: string[]; category: number | null }) => {
+                    if(!row.category) {
+                        const rawVal = row.values[mappedCatIndex].trim().toLowerCase();
+                        const match = this.budgetConfiguration!.categories.find(c => c.name.toLowerCase() === rawVal);
+                        if(match) row.category = match.id!;
+                    }
+                });
+            } else {
+                // run description-based prediction
+                this.findCategoriesFromDescriptions();
+            }
+        }
+
+        this.bulkImportStep = bulkStep;
+    }
+
+    fileUploadChange(event: Event) {
+        const input = event.target as HTMLInputElement;
+        if (!input.files?.length) return;
+        const file = input.files[0];
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target?.result as string;
+            // Basic CSV to Tab-Separated handling
+            const tsv = text.replace(/,/g, '\t');
+            this.bulkRawInput = tsv;
+            this.parseBulkInput();
+        };
+        reader.readAsText(file);
+    }
+
+    onFieldMappingChange(index: number, val: keyof BudgetPurchase | '') {
+        // Enforce mutual exclusivity
+        if (val !== '') {
+            for (let i = 0; i < this.bulkFieldMapping.length; i++) {
+                if (i !== index && this.bulkFieldMapping[i] === val) {
+                    this.bulkFieldMapping[i] = '';
+                }
+            }
+        }
+        this.bulkFieldMapping[index] = val;
+    }
+
+    mapFieldToColumn(field: keyof BudgetPurchase, colIndex: number | string) {
+        const index = colIndex === '' ? -1 : +colIndex;
+
+        // Remove existing mapping for this field
+        for (let i = 0; i < this.bulkFieldMapping.length; i++) {
+            if (this.bulkFieldMapping[i] === field) {
+                this.bulkFieldMapping[i] = '';
+            }
+        }
+
+        // Set new mapping if not "Skip"
+        if (index !== -1 && index < this.bulkFieldMapping.length) {
+            this.bulkFieldMapping[index] = field;
+        }
+    }
+
+    getMappedColumnIndex(field: keyof BudgetPurchase): number {
+        return this.bulkFieldMapping.indexOf(field);
+    }
+
+    invertBulkPrices() {
+        const amountIndex = this.bulkFieldMapping.indexOf('amount');
+        if (amountIndex === -1) return;
+
+        this.bulkPreviewRows.forEach((row) => {
+            let valStr = row.values[amountIndex].replace(/[\$,]/g, '').trim();
+            if (!valStr) return;
+
+            const val = parseFloat(valStr);
+            if (!isNaN(val)) {
+                // Flip the sign and update the string value
+                const inverted = -val;
+                row.values[amountIndex] = inverted.toString();
+            }
+        });
+
+        // Trigger change detection by re-assigning the array
+        this.bulkPreviewRows = [...this.bulkPreviewRows];
     }
 
     findCategoriesFromDescriptions() {
         this.isSearchingCategories = true;
         const descriptionIndex = this.bulkFieldMapping.indexOf('description');
         const descriptionRequestData: BudgetDescriptionCategoryRequest[] =
-            this.bulkPreviewRows.map((row, i) => ({
+            this.bulkPreviewRows.map((row: { values: string[]; category: number | null }, i: number) => ({
                 index: i,
                 description: row.values[descriptionIndex],
             }));
@@ -512,7 +683,7 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
             )
             .subscribe({
                 next: (res) => {
-                    this.bulkPreviewRows.forEach((row, i) => {
+                    this.bulkPreviewRows.forEach((row: { values: string[]; category: number | null }, i: number) => {
                         // if (row.category) return;
                         const category_id = res.find(
                             (f) => f.index === i
@@ -570,7 +741,7 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
             {
                 regex: /^(\w{3})[ -](\d{1,2})[ -](\d{4})$/,
                 order: ['monthShort', 'day', 'year'],
-            }, // MMM dd yyyy}
+            }, // MMM dd yyyy
         ];
 
         const monthShorts = [
@@ -634,6 +805,14 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
     }
 
     saveBulkImport() {
+        // Save successful mapping to history
+        if (this.bulkParsedHeaders.length > 0) {
+            this.budgetService.saveBulkImportMapping(this.budgetConfiguration!.id, {
+                headers: this.bulkParsedHeaders,
+                mapping: this.bulkFieldMapping as string[]
+            }).subscribe();
+        }
+
         // Ensure required fields are mapped
         const requiredFields: (keyof BudgetPurchase)[] = [
             'purchase_date',
@@ -686,7 +865,7 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
             return;
         }
 
-        const result: BudgetPurchase[] = this.bulkPreviewRows.map((row, i) => {
+        const result: BudgetPurchase[] = this.bulkPreviewRows.map((row: { values: string[]; category: number | null }, i: number) => {
             // Validate dates are in the correct format
             const rawDate = row.values[purchaseDateIndex];
             const parsedDate = this.parseFlexibleDate(rawDate);
@@ -706,12 +885,13 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
 
             return {
                 purchase_date: parsedDate,
-                amount: this.bulkInvertPrice ? -amount : amount,
+                amount: amount, // Use the amount exactly as shown on screen
                 description: row.values[descriptionIndex],
                 category: row.category ?? null,
             };
         });
 
+        this.isSavingBulkImport = true;
         this.budgetService
             .addBulkPurchase(this.budgetConfiguration!.id, result)
             .subscribe({
@@ -723,6 +903,7 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
                     );
                     this.loadPurchases(true);
                     this.isBulkImportModalOpen = false;
+                    this.isSavingBulkImport = false;
                 },
                 error: (error) => {
                     this.toastService.show(
@@ -731,6 +912,7 @@ export class BudgetPurchasesTabComponent implements OnInit, OnDestroy, AfterView
                         3000
                     );
                     this.logger.error('Error importing purchases', error);
+                    this.isSavingBulkImport = false;
                 },
             });
     }

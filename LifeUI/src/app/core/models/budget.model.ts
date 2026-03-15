@@ -60,3 +60,9 @@ export interface BudgetDescriptionCategoryResponse {
     index: number;
     category: number;
 }
+
+export interface BudgetBulkImportMapping {
+    id?: number;
+    headers: string[];
+    mapping: string[];
+}

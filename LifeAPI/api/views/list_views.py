@@ -3,9 +3,11 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, status, serializers
 from rest_framework.response import Response
 from datetime import datetime
+from rest_framework.decorators import action
 
-from api.serializers.serializers_lists import ListConfigurationSerializer, ListFieldSerializer, ListItemSerializer, ListDataSerializer
+from api.serializers.serializers_lists import ListConfigurationSerializer, ListFieldReorderSerializer, ListFieldSerializer, ListItemSerializer, ListDataSerializer
 from api.models import UserModule, ListField, ListFieldRule, ListFieldOption, ListItem
+from api.views.mixins import UserModuleAuthorizationMixin
 from api.pagination import Unpaginatable
 
 class ListConfigurationViewSet(viewsets.ModelViewSet):
@@ -195,6 +197,44 @@ class ListConfigurationFieldViewSet(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=True, methods=['post'], url_path='reorder')
+    def reorder(self, request, configuration_id=None, id=None):
+        """
+        Reorder a list field by moving it to a new position.
+        Expects {"new_order": <int>} in the body.
+        """
+        serializer = ListFieldReorderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        new_order = serializer.validated_data['new_order']
+
+        # Fetch the field and ensure ownership
+        user_module = get_object_or_404(UserModule, id=configuration_id, user=self.request.user)
+        field = get_object_or_404(
+            ListField.objects.select_related('user_module'),
+            id=id,
+            user_module__user=request.user
+        )
+        user_module = field.user_module
+
+        # Fetch fields ordered by current order
+        fields = list(ListField.objects.filter(user_module=user_module).order_by('order'))
+
+        # Move field
+        original_order = field.order
+        if original_order != new_order:
+            moved_field = fields.pop(original_order - 1)
+            fields.insert(new_order - 1, moved_field)
+
+            # Reassign orders
+            with transaction.atomic():
+                for idx, f in enumerate(fields):
+                    f.order = idx + 1
+                ListField.objects.bulk_update(fields, ['order'])
+
+        # Return updated configuration
+        config_serializer = ListConfigurationSerializer(user_module, context={'request': request})
+        return Response(config_serializer.data, status=status.HTTP_200_OK)
+
 class ListDataViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint for view list configuration with the data
@@ -210,7 +250,7 @@ class ListDataViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return UserModule.objects.filter(user=self.request.user, module__name='list')
 
-class ListItemViewSet(viewsets.ModelViewSet):
+class ListItemViewSet(UserModuleAuthorizationMixin, viewsets.ModelViewSet):
     """
     API endpoint for CRUD operations on list items
     """
@@ -218,23 +258,60 @@ class ListItemViewSet(viewsets.ModelViewSet):
     serializer_class = ListItemSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = Unpaginatable
+    user_module_kwarg = 'list_id'
 
     lookup_field = 'id'
     lookup_value_regex = r'\d+'
 
     def get_queryset(self):
-        list_id = self.kwargs.get('list_id')
+        user_module = self.get_user_module()
+        return ListItem.objects.filter(user_module=user_module).order_by('order', '-modified_at')
 
-        user_module = get_object_or_404(
-            UserModule.objects.filter(user=self.request.user),
-            id=list_id
-        )
+    @action(detail=True, methods=['post'], url_path='reorder')
+    def reorder(self, request, list_id=None, id=None):
+        """
+        Reorder a list item by moving it to a new position.
+        Expects {"new_order": <int>} in the body.
+        """
+        new_order = request.data.get('new_order')
+        if new_order is None:
+            return Response({'detail': 'new_order is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            new_order = int(new_order)
+        except ValueError:
+            return Response({'detail': 'Invalid order value.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        return ListItem.objects.filter(user_module=user_module).order_by('-modified_at')
+        user_module = self.get_user_module()
+        item = get_object_or_404(ListItem, id=id, user_module=user_module)
+
+        items = list(ListItem.objects.filter(user_module=user_module).order_by('order', '-modified_at'))
+
+        original_order = item.order
+        if original_order != new_order:
+            moved_item = None
+            for idx, i in enumerate(items):
+                if i.id == item.id:
+                    moved_item = items.pop(idx)
+                    break
+            
+            if moved_item:
+                insert_index = max(0, new_order - 1)
+                items.insert(insert_index, moved_item)
+
+                with transaction.atomic():
+                    for idx, i in enumerate(items):
+                        i.order = idx + 1
+                    ListItem.objects.bulk_update(items, ['order'])
+
+        # Return the updated page of list items, ideally just returning success to refetch
+        page = self.paginate_queryset(self.get_queryset())
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
     def perform_create(self, serializer):
         list_id = self.kwargs.get('list_id')
-        user_module = UserModule.objects.get(id=list_id, user=self.request.user)
+        user_module = self.get_user_module()
         # Validate field IDs before saving
         field_values = self.request.data.get('field_values', [])
         self._validate_field_values(field_values, list_id)

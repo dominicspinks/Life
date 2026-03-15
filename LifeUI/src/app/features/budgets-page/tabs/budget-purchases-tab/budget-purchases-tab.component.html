@@ -1,7 +1,14 @@
-<div class="max-w-7xl mx-auto px-2 py-2 sm:py-0 min-h-[200px]">
+<div class="max-w-7xl mx-auto px-2 py-2 sm:py-0 min-h-[400px] pb-32">
     <!-- Title -->
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">{{ budgetConfiguration?.name }}</h1>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <h1 class="text-2xl font-bold text-gray-800">{{ budgetConfiguration?.name }}</h1>
+            <select [ngModel]="selectedYear" (ngModelChange)="onYearChange($event)" class="border rounded shadow-sm px-2 py-1 text-sm bg-white font-semibold text-gray-700 cursor-pointer w-fit focus:outline-none focus:ring-1 focus:ring-blue-500">
+                @for (year of availableYears; track $index) {
+                <option [value]="year">{{ year }}</option>
+                }
+            </select>
+        </div>
         <div class="relative inline-block text-left" #menuWrapper>
             <button
                 class="text-blue-800 hover:text-blue-900 hover:scale-125 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -27,21 +34,59 @@
     </div>
 
     <!-- Table -->
-    <div class="overflow-x-auto bg-white shadow rounded-lg">
+    <div class="bg-white shadow rounded-lg mb-8">
         <table class="min-w-full table-auto hidden sm:table">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date
                     </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Category
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider relative">
+                        <div class="flex items-center gap-1 relative" #categoryFilterWrapper>
+                            Category
+                            <button (click)="toggleCategoryFilter($event)" [class.text-blue-600]="!allCategoriesSelected" class="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors">
+                                <ng-icon name="ionFilter" size="14" />
+                            </button>
+
+                            @if (showCategoryFilter) {
+                            <div class="absolute left-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[60] p-2 normal-case font-normal">
+                                <div class="flex items-center mb-2 pb-2 border-b">
+                                    <input type="checkbox" id="selectAllCats" class="mr-2 cursor-pointer w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                        [checked]="allCategoriesSelected"
+                                        (change)="toggleAllCategories()">
+                                    <label for="selectAllCats" class="text-sm text-gray-700 font-medium cursor-pointer w-full">Select All</label>
+                                </div>
+                                <div class="max-h-60 overflow-y-auto space-y-1">
+                                    @for (cat of budgetConfiguration?.categories; track cat.id) {
+                                        @if (cat.is_enabled) {
+                                        <div class="flex items-center py-1 rounded hover:bg-gray-50 px-1">
+                                            <input type="checkbox" [id]="'cat_' + cat.id" class="mr-2 cursor-pointer w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                                [checked]="selectedCategories.has(cat.id!)"
+                                                (change)="onCategoryToggle(cat.id!)">
+                                            <label [for]="'cat_' + cat.id" class="text-sm text-gray-700 truncate cursor-pointer w-full select-none" [title]="cat.name">{{ cat.name }}</label>
+                                        </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                            }
+                        </div>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Amount
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-60">
-                        Description
+                        <div class="flex items-center gap-2">
+                            Description
+                            <div class="relative flex items-center">
+                                <ng-icon name="ionSearch" size="14" class="absolute left-2 text-gray-400 pointer-events-none" />
+                                <input type="text"
+                                    [ngModel]="searchQuery"
+                                    (ngModelChange)="onSearchChange($event)"
+                                    class="pl-7 pr-2 py-1 w-32 md:w-48 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 font-normal normal-case text-gray-800 shadow-sm transition-shadow"
+                                    placeholder="Search..." />
+                            </div>
+                        </div>
                     </th>
                     <th></th>
                 </tr>
@@ -87,6 +132,22 @@
                 }}
             </tbody>
         </table>
+
+        @if (isLoadingMore) {
+        <div class="flex justify-center p-4 bg-white border-t border-gray-200">
+            <app-spinning-icon colour="text-blue-600" size="h-6 w-6" />
+        </div>
+        }
+        @if (!hasMore && purchases.length > 0) {
+        <div class="text-center text-sm text-gray-500 p-4 bg-white border-t border-gray-200 font-medium">
+            No more purchases to load.
+        </div>
+        }
+        @if (!isLoading && purchases.length === 0) {
+        <div class="text-center text-sm text-gray-500 p-8 bg-white border-t border-gray-200">
+            No purchases found.
+        </div>
+        }
     </div>
 
     <!-- Mobile stacked purchases view -->
@@ -129,6 +190,22 @@
             </div>
         </div>
         }
+        }
+
+        @if (isLoadingMore) {
+        <div class="flex justify-center p-4">
+            <app-spinning-icon colour="text-blue-600" size="h-6 w-6" />
+        </div>
+        }
+        @if (!hasMore && purchases.length > 0) {
+        <div class="text-center text-sm text-gray-500 p-4 font-medium">
+            No more purchases to load.
+        </div>
+        }
+        @if (!isLoading && purchases.length === 0) {
+        <div class="text-center text-sm text-gray-500 p-8 bg-white rounded-lg shadow-sm border border-gray-200">
+            No purchases found.
+        </div>
         }
     </div>
 
@@ -191,107 +268,183 @@
     </app-modal>
 
     <!-- Bulk add purchases modal -->
-    <app-modal [show]="isBulkImportModalOpen" (closed)="isBulkImportModalOpen = false" title="Bulk Import Purchases">
+    <!-- Bulk add purchases modal -->
+    <app-modal [show]="isBulkImportModalOpen" (closed)="isBulkImportModalOpen = false" [title]="'Bulk Import Purchases - Step ' + bulkImportStep">
         <div modal-content class="flex flex-col gap-4">
-            <!-- Paste Input -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Paste TAB SEPARATED Data</label>
-                <textarea [(ngModel)]="bulkRawInput"
-                    class="w-full border rounded px-3 py-2 min-h-32 font-mono"></textarea>
-                <button (click)="parseBulkInput()"
-                    [class]="`mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 ${isParsing ? 'opacity-50 cursor-not-allowed' : ''}`">
-                    @if (isParsing) {
-                    <app-spinning-icon class="h-4 w-4 text-white" />
-                    }
-                    @else {
-                    Parse
-                    }
-                </button>
-            </div>
 
-            <!-- Invert Price -->
-            <div class="flex items-center gap-2">
-                <input type="checkbox" [(ngModel)]="bulkInvertPrice" id="invertPrice" />
-                <label for="invertPrice" class="text-sm text-gray-700">Invert price</label>
-            </div>
+            <!-- Step 1: Data Input -->
+            @if (bulkImportStep === 1) {
+                <div class="flex flex-col gap-4">
+                    <p class="text-sm text-gray-500">Paste your tab-separated data or upload a CSV file to get started.</p>
 
-            <!-- Parsed Table Preview -->
-            @if (bulkPreviewRows.length > 0) {
-            <div class="overflow-x-auto">
-                <table class="min-w-full border border-gray-300 text-sm">
-                    <thead>
-                        <tr>
-                            @for (colIndex of bulkParsedHeaders; track $index) {
-                            <th class="px-2 py-1 border border-gray-300">
-                                <select [(ngModel)]="bulkFieldMapping[$index]"
-                                    class="text-xs border rounded px-1 py-0.5 w-full">
-                                    <option value="">--</option>
-                                    <option value="purchase_date">Date</option>
-                                    <option value="amount">Amount</option>
-                                    <option value="description">Description</option>
-                                </select>
-                            </th>
-                            }
-                            <th class="px-2 py-1 flex flex-row gap-1 justify-between items-center">
-                                <span>Category </span>
-                                @if (isSearchingCategories) {
-                                <app-spinning-icon size="h-4 w-4" colour="text-blue-950" />
-                                }
-                                @else if (bulkFieldMapping.includes('description')) {
-                                <button (click)="findCategoriesFromDescriptions()"
-                                    class="flex text-blue-950 hover:scale-125 hover:cursor-pointer items-center h-full">
-                                    <ng-icon name="ionSearch" size="16" />
-                                </button>
-                                }
-                                @else {
-                                <!-- Empty space to prevent layout shift -->
-                                <div class="w-3"></div>
-                                }
-                            </th>
-                            <th class="px-2 py-1 border border-gray-300"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (row of bulkPreviewRows; track $index) {
-                        <tr>
-                            @for (val of row.values; track $index) {
-                            <td
-                                [class]="`border border-gray-200 px-2 py-1 ${bulkFieldMapping[$index] === 'description' ? 'min-w-80' : bulkFieldMapping[$index] === 'amount' || bulkFieldMapping[$index] === 'purchase_date' ? 'min-w-24 w-24' : 'min-w-20 w-20'}`">
-                                <input [(ngModel)]="row.values[$index]"
-                                    class="w-full text-xs px-1 py-0.5 border rounded" />
-                            </td>
-                            }
-                            <td class="border border-gray-200 px-2 py-1 whitespace-nowrap">
-                                <select [(ngModel)]="row.category"
-                                    (ngModelChange)="row.category = $event === '' ? null : +$event"
-                                    class="text-xs border rounded px-1 py-0.5 w-full">
-                                    <option value="">-- Select --</option>
-                                    @for (category of budgetConfiguration?.categories; track category.id) {
-                                    <option [value]="category.id">{{ category.name }}</option>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Paste Data</label>
+                        <textarea [(ngModel)]="bulkRawInput"
+                            class="w-full border rounded px-3 py-2 min-h-32 font-mono"
+                            placeholder="Paste columns from Excel or Google Sheets..."></textarea>
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                        <label class="block text-sm font-medium text-gray-700">Or upload a CSV</label>
+                        <input type="file" (change)="fileUploadChange($event)" accept=".csv"
+                            class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                    </div>
+                </div>
+            }
+
+            <!-- Step 2: Column Mapping -->
+            @if (bulkImportStep === 2) {
+                <div class="flex flex-col gap-6 py-2">
+                    <p class="text-sm text-gray-500">Pick which columns from your data correspond to each field. We've tried to auto-detect them for you!</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        @for (field of bulkImportFields; track field.key) {
+                            <div class="flex flex-col gap-2">
+                                <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full" [class]="getMappedColumnIndex(field.key) !== -1 ? 'bg-green-500' : 'bg-red-400'"></span>
+                                    {{ field.label }}
+                                    @if (field.key !== 'category' && getMappedColumnIndex(field.key) === -1) {
+                                        <span class="text-[10px] uppercase font-bold text-red-500 bg-red-50 px-1 rounded">Required</span>
+                                    }
+                                </label>
+
+                                <select [ngModel]="getMappedColumnIndex(field.key)" (ngModelChange)="mapFieldToColumn(field.key, $event)"
+                                    class="block w-full text-sm border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm py-2.5">
+                                    <option [value]="-1">-- Skip / Not in file --</option>
+                                    @for (header of bulkParsedHeaders; track $index) {
+                                        <option [value]="$index">
+                                            {{ header || 'Column ' + ($index + 1) }}
+                                            @if (bulkPreviewRows.length > 0 && bulkPreviewRows[0].values[$index]) {
+                                                ({{ bulkPreviewRows[0].values[$index] | slice:0:20 }}{{ bulkPreviewRows[0].values[$index].length > 20 ? '...' : '' }})
+                                            }
+                                        </option>
                                     }
                                 </select>
-                            </td>
-                            <td class="border border-gray-200 text-center">
-                                <button (click)="removeBulkRow($index)"
-                                    class="text-red-500 hover:text-red-700 text-xs"><ng-icon name="ionClose"
-                                        size="16" /></button>
-                            </td>
-                        </tr>
+                            </div>
                         }
-                    </tbody>
-                </table>
-            </div>
+                    </div>
+
+                </div>
+            }
+
+            <!-- Step 3: Review & Categories -->
+            @if (bulkImportStep === 3) {
+                <div class="flex flex-col gap-4">
+                    <div class="flex justify-between items-center">
+                        <div class="flex flex-col gap-1">
+                            <p class="text-sm text-gray-500">Review the parsed data and assign categories. We've tried to predict them for you!</p>
+                            <button (click)="invertBulkPrices()"
+                                class="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1 w-fit">
+                                <ng-icon name="ionFilter" size="12" class="rotate-180" />
+                                Invert Prices
+                            </button>
+                        </div>
+                        @if (isSearchingCategories) {
+                            <div class="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded text-blue-700 text-xs font-medium">
+                                <app-spinning-icon size="h-3 w-3" colour="text-blue-700" />
+                                Predicting categories...
+                            </div>
+                        }
+                    </div>
+
+                    <div class="overflow-y-auto max-h-[60vh] border rounded">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50 sticky top-0 shadow-sm z-10">
+                                <tr>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Date</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Description</th>
+                                    <th class="px-3 py-2 text-right font-medium text-gray-700">Amount</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Category</th>
+                                    <th class="px-3 py-2"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @for (row of bulkPreviewRows; track $index) {
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-3 py-2 w-28">
+                                            <input [(ngModel)]="row.values[bulkFieldMapping.indexOf('purchase_date')]"
+                                                class="w-full text-xs px-2 py-1 border rounded bg-transparent border-transparent hover:border-gray-300 focus:border-blue-500" />
+                                        </td>
+                                        <td class="px-3 py-2 min-w-[200px]">
+                                            <input [(ngModel)]="row.values[bulkFieldMapping.indexOf('description')]"
+                                                class="w-full text-xs px-2 py-1 border rounded bg-transparent border-transparent hover:border-gray-300 focus:border-blue-500" />
+                                        </td>
+                                        <td class="px-3 py-2 w-24 text-right">
+                                            <input type="number" [(ngModel)]="row.values[bulkFieldMapping.indexOf('amount')]"
+                                                class="w-full text-right text-xs px-2 py-1 border rounded bg-transparent border-transparent hover:border-gray-300 focus:border-blue-500 font-mono" />
+                                        </td>
+                                        <td class="px-3 py-2 w-48">
+                                            <select [(ngModel)]="row.category"
+                                                (ngModelChange)="row.category = $event === '' ? null : +$event"
+                                                class="text-xs border rounded px-2 py-1 w-full bg-transparent border-transparent hover:border-gray-300 focus:border-blue-500"
+                                                [class.text-blue-600]="row.category">
+                                                <option value="">-- Prediction --</option>
+                                                @for (category of budgetConfiguration?.categories; track category.id) {
+                                                    <option [value]="category.id">{{ category.name }}</option>
+                                                }
+                                            </select>
+                                        </td>
+                                        <td class="px-3 py-2 w-10 text-center">
+                                            <button (click)="removeBulkRow($index)" class="text-gray-400 hover:text-red-500 transition-colors">
+                                                <ng-icon name="ionClose" size="16" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             }
         </div>
 
-        <div modal-actions class="flex justify-end gap-2">
-            <button (click)="isBulkImportModalOpen = false" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-                Cancel
-            </button>
-            <button (click)="saveBulkImport()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                Save
-            </button>
+        <div modal-actions class="flex justify-between w-full">
+            <div>
+                @if (bulkImportStep > 1) {
+                    <button (click)="goToBulkStep(bulkImportStep - 1)"
+                        class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium flex items-center gap-1">
+                        &larr; Back
+                    </button>
+                }
+            </div>
+
+            <div class="flex gap-2">
+                <button (click)="isBulkImportModalOpen = false" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                    Cancel
+                </button>
+
+                @if (bulkImportStep === 1) {
+                    <button (click)="parseBulkInput()"
+                        [disabled]="!bulkRawInput.trim() || isParsing"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 flex items-center gap-2">
+                        @if (isParsing) { <app-spinning-icon size="h-4 w-4" /> }
+                        Next &rarr;
+                    </button>
+                }
+
+                @if (bulkImportStep === 2) {
+                    <button (click)="goToBulkStep(3)"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2">
+                        Review Data &rarr;
+                    </button>
+                }
+
+                @if (bulkImportStep === 3) {
+                    <button (click)="saveBulkImport()"
+                        [disabled]="isSavingBulkImport"
+                        class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm flex items-center gap-2">
+                        @if (isSavingBulkImport) {
+                            <app-spinning-icon size="h-4 w-4" colour="text-white" />
+                        }
+                        Import {{ bulkPreviewRows.length }} Purchases
+                    </button>
+                }
+            </div>
         </div>
     </app-modal>
+
+
+    <app-delete-modal [show]="showDeleteModal" [message]="'Are you sure you want to delete this purchase?'"
+        [title]="'Delete Purchase'" (onCancel)="closeDeleteModal()" (onDelete)="deletePurchase()" />
 
 </div>

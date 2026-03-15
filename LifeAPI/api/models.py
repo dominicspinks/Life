@@ -90,8 +90,12 @@ class ListFieldOption(models.Model):
 class ListItem(models.Model):
     user_module = models.ForeignKey(UserModule, on_delete=models.CASCADE)
     is_completed = models.BooleanField(default=False)
+    order = models.IntegerField(default=0)
     modified_at = models.DateTimeField(auto_now=True)
     fields = models.JSONField(default=list)
+
+    class Meta:
+        ordering = ['order', '-modified_at']
 
     def __str__(self):
         return f"{self.user_module.name} - {self.modified_at}"
@@ -173,3 +177,13 @@ class BudgetCategoryTermFrequency(models.Model):
 
     def __str__(self):
         return self.term
+
+class BudgetBulkImportMapping(models.Model):
+    user_module = models.ForeignKey(UserModule, on_delete=models.CASCADE)
+    headers = models.JSONField(default=list)
+    mapping = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user_module.name} - {str(self.headers)}"

@@ -2,8 +2,9 @@ from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from api.models import BudgetCategory, BudgetPurchase, BudgetCashFlow
+from api.models import BudgetCategory, BudgetPurchase, BudgetCashFlow, BudgetBulkImportMapping
 from api.serializers.serializers_modules import UserModuleSerializer
+
 
 User = get_user_model()
 
@@ -74,6 +75,44 @@ class BudgetPurchaseSerializer(serializers.ModelSerializer):
         else:
             validated_data['user_module'] = user_module
             return super().create(validated_data)
+
+class BudgetBulkImportMappingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BudgetBulkImportMapping
+        fields = [
+            'id',
+            'headers',
+            'mapping',
+            'created_at',
+            'modified_at'
+        ]
+        read_only_fields = ['created_at', 'modified_at']
+
+    def validate(self, attrs):
+        # We don't have constraints other than valid JSON lists, which the framework handles.
+        return attrs
+
+    def create(self, validated_data):
+        user_module = self.context.get('user_module')
+        validated_data['user_module'] = user_module
+        
+        # Check if identical headers already exist, and update if so
+        headers = validated_data.get('headers', [])
+        mapping = validated_data.get('mapping', [])
+        
+        # We can just match exactly
+        existing = BudgetBulkImportMapping.objects.filter(
+            user_module=user_module, 
+            headers=headers
+        ).first()
+
+        if existing:
+            existing.mapping = mapping
+            existing.save()
+            return existing
+
+        return super().create(validated_data)
+
 
 class BudgetSerializer(UserModuleSerializer):
     categories = serializers.SerializerMethodField()

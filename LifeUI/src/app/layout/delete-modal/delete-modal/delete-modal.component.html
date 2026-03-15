@@ -1,0 +1,16 @@
+<app-modal [show]="show()" (closed)="handleCancel()" title="{{ title() }}">
+    <div modal-content>
+        <p class="text-sm text-gray-700">
+            {{ message() }}
+        </p>
+    </div>
+
+    <div modal-actions class="flex justify-end gap-2">
+        <button (click)="handleCancel()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+            Cancel
+        </button>
+        <button (click)="handleDelete()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+            Delete
+        </button>
+    </div>
+</app-modal>

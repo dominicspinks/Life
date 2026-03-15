@@ -19,7 +19,8 @@ from api.serializers.serializers_budgets import (
     BudgetPurchaseSummarySerializer,
     BudgetCashFlowSerializer,
     BudgetPurchaseAnalyseInputSerializer,
-    BudgetPurchaseAnalyseOutputSerializer
+    BudgetPurchaseAnalyseOutputSerializer,
+    BudgetBulkImportMappingSerializer
 )
 from api.models import (
     BudgetCategory,
@@ -27,7 +28,9 @@ from api.models import (
     UserModule,
     BudgetCashFlow,
     BudgetCategoryTermFrequency,
+    BudgetBulkImportMapping
 )
+from api.views.mixins import UserModuleAuthorizationMixin
 from api.pagination import Unpaginatable
 from api.filters import PurchaseFilterSet
 from api.services.budget_analysis import (
@@ -67,7 +70,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
 
-class BudgetCategoryViewSet(viewsets.ModelViewSet):
+class BudgetCategoryViewSet(UserModuleAuthorizationMixin, viewsets.ModelViewSet):
     """
     API endpoint for CRUD operations on budget categories
     Allows users to view, create, update and delete their budget categories
@@ -76,6 +79,7 @@ class BudgetCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = BudgetCategorySerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = None
+    user_module_kwarg = 'budget_id'
 
     lookup_field = 'id'
     lookup_value_regex = r'\d+'
@@ -84,17 +88,13 @@ class BudgetCategoryViewSet(viewsets.ModelViewSet):
         """
         Return categories that belong to the current authenticated user
         """
-        budget_id = self.kwargs.get('budget_id')
-        if not UserModule.objects.filter(id=budget_id, user=self.request.user).exists():
-            raise Http404("Budget not found.")
-        return BudgetCategory.objects.filter(user_module__id=budget_id, user_module__user=self.request.user).order_by('order')
+        user_module = self.get_user_module()
+        return BudgetCategory.objects.filter(user_module=user_module).order_by('order')
 
     def get_serializer_context(self):
         # Include the user module in the serializer context
         context = super().get_serializer_context()
-        budget_id = self.kwargs.get('budget_id')
-        user_module = get_object_or_404(UserModule, id=budget_id, user=self.request.user)
-        context['user_module'] = user_module
+        context['user_module'] = self.get_user_module()
         return context
 
     def perform_create(self, serializer):
@@ -117,7 +117,7 @@ class BudgetCategoryViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Invalid order value.'}, status=400)
 
         # Validate user and category ownership
-        user_module = get_object_or_404(UserModule, id=budget_id, user=self.request.user)
+        user_module = self.get_user_module()
         categories = list(BudgetCategory.objects.filter(user_module=user_module).order_by('order'))
 
         # Move category within the list
@@ -138,7 +138,7 @@ class BudgetCategoryViewSet(viewsets.ModelViewSet):
         serializer = BudgetSerializer(user_module, context={'request': request})
         return Response(serializer.data, status=200)
 
-class BudgetPurchaseViewSet(viewsets.ModelViewSet):
+class BudgetPurchaseViewSet(UserModuleAuthorizationMixin, viewsets.ModelViewSet):
     """
     API endpoint for CRUD operations on budget purchases
     Allows users to view, create, update and delete their budget purchases
@@ -151,22 +151,19 @@ class BudgetPurchaseViewSet(viewsets.ModelViewSet):
     filterset_class = PurchaseFilterSet
     ordering_fields = ['purchase_date', 'amount', 'category__name']
     ordering = ['-purchase_date']
+    user_module_kwarg = 'budget_id'
 
     lookup_field = 'id'
     lookup_value_regex = r'\d+'
 
     def get_queryset(self):
-        budget_id = self.kwargs.get('budget_id')
-        if not UserModule.objects.filter(id=budget_id, user=self.request.user).exists():
-            raise Http404("Budget not found.")
-        return BudgetPurchase.objects.filter(user_module__id=budget_id, user_module__user=self.request.user)
+        user_module = self.get_user_module()
+        return BudgetPurchase.objects.filter(user_module=user_module)
 
     def get_serializer_context(self):
         # Include the user module in the serializer context
         context = super().get_serializer_context()
-        budget_id = self.kwargs.get('budget_id')
-        user_module = get_object_or_404(UserModule, id=budget_id, user=self.request.user)
-        context['user_module'] = user_module
+        context['user_module'] = self.get_user_module()
         return context
 
     def perform_create(self, serializer):
@@ -191,7 +188,7 @@ class BudgetPurchaseViewSet(viewsets.ModelViewSet):
         for purchase in instances:
             update_term_frequencies_from_purchase(purchase)
 
-class BudgetPurchaseSummaryViewSet(viewsets.GenericViewSet):
+class BudgetPurchaseSummaryViewSet(UserModuleAuthorizationMixin, viewsets.GenericViewSet):
     """
     API endpoint for retrieving summary data for a budget
     """
@@ -199,12 +196,10 @@ class BudgetPurchaseSummaryViewSet(viewsets.GenericViewSet):
     serializer_class = BudgetPurchaseSummarySerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = None
+    user_module_kwarg = 'budget_id'
 
     def list(self, request, budget_id=None):
-        try:
-            user_module = UserModule.objects.get(id=budget_id, user=request.user)
-        except UserModule.DoesNotExist:
-            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+        user_module = self.get_user_module()
 
         start = request.query_params.get('start_date')
         end = request.query_params.get('end_date')
@@ -244,10 +239,7 @@ class BudgetPurchaseSummaryViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=['get'], url_path='years')
     def list_years(self, request, budget_id=None):
-        try:
-            user_module = UserModule.objects.get(id=budget_id, user=request.user)
-        except UserModule.DoesNotExist:
-            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+        user_module = self.get_user_module()
 
         query = """
             SELECT DISTINCT EXTRACT(YEAR FROM purchase_date)::int AS year
@@ -262,7 +254,7 @@ class BudgetPurchaseSummaryViewSet(viewsets.GenericViewSet):
         years = sorted({int(row[0]) for row in rows})
         return Response(years)
 
-class BudgetCashFlowViewSet(viewsets.ModelViewSet):
+class BudgetCashFlowViewSet(UserModuleAuthorizationMixin, viewsets.ModelViewSet):
     """
     API endpoint for CRUD operations on cash flow data for a budget
     Allows users to view, create, update and delete their cash flow data
@@ -271,38 +263,36 @@ class BudgetCashFlowViewSet(viewsets.ModelViewSet):
     serializer_class = BudgetCashFlowSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = None
+    user_module_kwarg = 'budget_id'
 
     lookup_field = 'id'
     lookup_value_regex = r'\d+'
 
     def get_queryset(self):
-        budget_id = self.kwargs.get('budget_id')
-        if not UserModule.objects.filter(id=budget_id, user=self.request.user).exists():
-            raise Http404("Budget not found.")
-        return BudgetCashFlow.objects.filter(user_module__id=budget_id, user_module__user=self.request.user)
+        user_module = self.get_user_module()
+        return BudgetCashFlow.objects.filter(user_module=user_module)
 
     def get_serializer_context(self):
         # Include the user module in the serializer context
         context = super().get_serializer_context()
-        budget_id = self.kwargs.get('budget_id')
-        user_module = get_object_or_404(UserModule, id=budget_id, user=self.request.user)
-        context['user_module'] = user_module
+        context['user_module'] = self.get_user_module()
         return context
 
     def perform_create(self, serializer):
         serializer.save(user_module=self.get_serializer_context()['user_module'])
 
-class BudgetPurchaseAnalyseViewSet(viewsets.ViewSet):
+class BudgetPurchaseAnalyseViewSet(UserModuleAuthorizationMixin, viewsets.ViewSet):
     """
     API endpoint for analysing budget purchase descriptions.
     Includes a reprocess endpoint for resetting and rebuilding term frequency data.
     """
     queryset = UserModule.objects.none()
     permission_classes = [permissions.IsAuthenticated]
+    user_module_kwarg = 'budget_id'
 
     @action(detail=False, methods=['post'])
     def reprocess(self, request, budget_id=None):
-        user_module = get_object_or_404(UserModule, id=budget_id, user=request.user)
+        user_module = self.get_user_module()
 
         # Clear all term frequencies for this budget's categories
         category_ids = BudgetCategory.objects.filter(user_module=user_module).values_list('id', flat=True)
@@ -325,7 +315,7 @@ class BudgetPurchaseAnalyseViewSet(viewsets.ViewSet):
         serializer = BudgetPurchaseAnalyseInputSerializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
 
-        user_module = get_object_or_404(UserModule, id=budget_id, user=request.user)
+        user_module = self.get_user_module()
 
         results = []
         for item in serializer.validated_data:
@@ -338,3 +328,29 @@ class BudgetPurchaseAnalyseViewSet(viewsets.ViewSet):
             })
 
         return Response(BudgetPurchaseAnalyseOutputSerializer(results, many=True).data)
+
+class BudgetBulkImportMappingViewSet(UserModuleAuthorizationMixin, viewsets.ModelViewSet):
+    """
+    API endpoint for CRUD operations on budget bulk import mappings
+    """
+    queryset = BudgetBulkImportMapping.objects.none()
+    serializer_class = BudgetBulkImportMappingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+    user_module_kwarg = 'budget_id'
+
+    lookup_field = 'id'
+    lookup_value_regex = r'\d+'
+
+    def get_queryset(self):
+        user_module = self.get_user_module()
+        return BudgetBulkImportMapping.objects.filter(user_module=user_module)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user_module'] = self.get_user_module()
+        return context
+
+    def perform_create(self, serializer):
+        serializer.save(user_module=self.get_serializer_context()['user_module'])
+

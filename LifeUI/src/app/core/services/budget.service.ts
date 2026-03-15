@@ -1,8 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
 import { environment } from '@environments/environment';
-import { BudgetCashFlow, BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetDescriptionCategoryRequest, BudgetDescriptionCategoryResponse, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '@core/models/budget.model';
+import { map, Observable } from 'rxjs';
+import { BudgetBulkImportMapping, BudgetCashFlow, BudgetCategory, BudgetConfiguration, BudgetConfigurationDetails, BudgetDescriptionCategoryRequest, BudgetDescriptionCategoryResponse, BudgetFilter, BudgetPurchase, BudgetPurchaseSummary } from '@core/models/budget.model';
+import { PaginatedResponse } from '@core/models/pagination.model';
+
 
 @Injectable({
     providedIn: 'root'
@@ -11,6 +13,19 @@ export class BudgetService {
     private http = inject(HttpClient);
 
     private readonly apiUrl = environment.apiUrl;
+    private _selectedYear: Record<number, number> = {};
+
+    getSelectedYear(budgetId: number): number | undefined {
+        return this._selectedYear[budgetId];
+    }
+
+    setSelectedYear(budgetId: number, year: number | undefined): void {
+        if (year) {
+            this._selectedYear[budgetId] = year;
+        } else {
+            delete this._selectedYear[budgetId];
+        }
+    }
 
     getBudgetConfiguration(id: number): Observable<BudgetConfiguration> {
         return this.http.get<BudgetConfiguration>(`${this.apiUrl}/budgets/${id}/`);
@@ -36,7 +51,7 @@ export class BudgetService {
         return this.http.post<BudgetConfiguration>(`${this.apiUrl}/budgets/${budgetId}/categories/${categoryId}/reorder/`, { new_order: newOrder });
     }
 
-    getPurchases(id: number, filters?: BudgetFilter): Observable<BudgetPurchase[]> {
+    getPurchases(id: number, filters?: BudgetFilter): Observable<PaginatedResponse<BudgetPurchase> | BudgetPurchase[]> {
         const filterList: string[] = [];
         let searchFilters = '';
         if (filters) {
@@ -53,12 +68,32 @@ export class BudgetService {
                     filterList.push(`category=${cat}`);
                 }
             }
+            if (filters.page) {
+                filterList.push(`page=${filters.page}`);
+            }
+            if (filters.description) {
+                filterList.push(`description=${encodeURIComponent(filters.description)}`);
+            }
+            if (filters.purchase_date__year) {
+                filterList.push(`purchase_date__year=${filters.purchase_date__year}`);
+            }
             if (filterList.length > 0) {
                 searchFilters += filterList.join('&');
             }
         }
-        return this.http.get<BudgetPurchase[]>(`${this.apiUrl}/budgets/${id}/purchases/${searchFilters}`).pipe(
-            map(purchases => purchases.map(this.parsePurchaseResponse)));
+        return this.http.get<any>(`${this.apiUrl}/budgets/${id}/purchases/${searchFilters}`).pipe(
+            map(response => {
+                // If get_all is true, it returns an array
+                if (Array.isArray(response)) {
+                    return response.map(this.parsePurchaseResponse.bind(this));
+                }
+                // Otherwise it's paginated
+                return {
+                    ...response,
+                    results: response.results.map(this.parsePurchaseResponse.bind(this))
+                };
+            })
+        );
     }
 
     deletePurchase(budgetId: number, purchaseId: number): Observable<void> {
@@ -124,4 +159,11 @@ export class BudgetService {
         return this.http.post<BudgetDescriptionCategoryResponse[]>(`${this.apiUrl}/budgets/${budgetId}/purchases/analyse/`, descriptions);
     }
 
+    getBulkImportMappings(budgetId: number): Observable<BudgetBulkImportMapping[]> {
+        return this.http.get<BudgetBulkImportMapping[]>(`${this.apiUrl}/budgets/${budgetId}/purchases/mappings/`);
+    }
+
+    saveBulkImportMapping(budgetId: number, mapping: BudgetBulkImportMapping): Observable<BudgetBulkImportMapping> {
+        return this.http.post<BudgetBulkImportMapping>(`${this.apiUrl}/budgets/${budgetId}/purchases/mappings/`, mapping);
+    }
 }

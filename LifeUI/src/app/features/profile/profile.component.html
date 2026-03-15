@@ -1,0 +1,33 @@
+<div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
+    <!-- Profile Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Profile</h1>
+    </div>
+
+    <!-- User Info -->
+    <div class="rounded-2xl bg-white shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">Account Details</h2>
+        <div class="space-y-2">
+            <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-600">Email:</span>
+                <span class="text-sm text-gray-800">{{ userEmail }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account -->
+    <div class="rounded-2xl bg-white shadow p-6">
+        <h2 class="text-xl font-semibold mb-4 text-red-700">Danger Zone</h2>
+        <p class="text-sm text-gray-600 mb-4">
+            Deleting your account is permanent and cannot be undone.
+        </p>
+        <button (click)="confirmDeleteAccount()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+            Delete Account
+        </button>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <app-delete-modal [show]="showDeleteModal"
+        [message]="'Are you sure you want to delete your account? This action cannot be undone.'"
+        [title]="'Delete Account'" (onCancel)="closeDeleteModal()" (onDelete)="deleteAccount()" />
+</div>

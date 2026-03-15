@@ -112,6 +112,14 @@ class BudgetCategoryViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(BudgetCategory.objects.filter(id=self.category.id).exists())
 
+    def test_user_cannot_access_other_budget(self):
+        self.client.force_authenticate(user=self.user)
+        other_user = User.objects.create_user(email='other@example.com', password='password456')
+        other_budget = UserModule.objects.create(user=other_user, module=self.budget_type, name='Other Budget', order=1, is_enabled=True)
+        
+        response = self.client.get(f'/api/budgets/{other_budget.id}/categories/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
 
 class BudgetPurchaseViewSetTests(APITestCase):
     def setUp(self):
@@ -175,6 +183,14 @@ class BudgetPurchaseViewSetTests(APITestCase):
         response = self.client.delete(f'{self.base_url}{self.purchase.id}/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(BudgetPurchase.objects.filter(id=self.purchase.id).exists())
+
+    def test_user_cannot_access_other_budget(self):
+        self.client.force_authenticate(user=self.user)
+        other_user = User.objects.create_user(email='other2@example.com', password='password456')
+        other_budget = UserModule.objects.create(user=other_user, module=self.budget_type, name='Other Budget', order=1, is_enabled=True)
+        
+        response = self.client.get(f'/api/budgets/{other_budget.id}/purchases/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_invalid_category(self):
         self.client.force_authenticate(user=self.user)

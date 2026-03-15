@@ -110,6 +110,10 @@
                 @if (isUserMenuOpen) {
                 <div class="absolute right-0 top-full mt-0 w-48 p-1 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50"
                     (mouseenter)="toggleUserMenu(true)">
+                    <a [routerLink]="`/profile`"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Profile
+                    </a>
                     <button (click)="logout()"
                         class="block px-4 py-2 text-sm w-full text-left text-gray-700 hover:bg-gray-100">
                         Sign out

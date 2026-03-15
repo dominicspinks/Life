@@ -8,7 +8,8 @@ from api.views import (
     BudgetViewSet,
     BudgetPurchaseSummaryViewSet,
     BudgetCashFlowViewSet,
-    BudgetPurchaseAnalyseViewSet
+    BudgetPurchaseAnalyseViewSet,
+    BudgetBulkImportMappingViewSet
 )
 
 
@@ -21,6 +22,7 @@ nested_router.register(r'purchases', BudgetPurchaseViewSet, basename='budget-pur
 nested_router.register(r'summary', BudgetPurchaseSummaryViewSet, basename='budget-summary')
 nested_router.register(r'cashflows', BudgetCashFlowViewSet, basename='budget-cashflow')
 nested_router.register(r'purchases/analyse', BudgetPurchaseAnalyseViewSet, basename='budget-purchase-analyse')
+nested_router.register(r'purchases/mappings', BudgetBulkImportMappingViewSet, basename='budget-bulk-import-mapping')
 
 urlpatterns = [
     path('', include(router.urls)),
